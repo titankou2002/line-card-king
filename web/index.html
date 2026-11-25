@@ -846,11 +846,58 @@ async function convertYoutube() {
   }
 }
 
-/* 拍紙本名片 AI 自動辨識填入 */
+/* 從名片照片自動裁切 Logo ＋ 智慧去背（採樣四角紙張底色）＋ 可選純色跟隨 */
+function cropLogoFromCard(img, box, mono, accentHex) {
+  if (!Array.isArray(box) || box.length !== 4) return "";
+  let [ymin, xmin, ymax, xmax] = box.map(Number);
+  if ([ymin, xmin, ymax, xmax].some(v => isNaN(v))) return "";
+  if (ymax <= ymin || xmax <= xmin) return "";
+  const iw = img.naturalWidth, ih = img.naturalHeight;
+  const padX = (xmax - xmin) * 0.04, padY = (ymax - ymin) * 0.04;
+  const sx = Math.max(0, Math.round(((xmin - padX) / 1000) * iw));
+  const sy = Math.max(0, Math.round(((ymin - padY) / 1000) * ih));
+  const sw = Math.min(iw - sx, Math.max(10, Math.round(((xmax - xmin + padX * 2) / 1000) * iw)));
+  const sh = Math.min(ih - sy, Math.max(10, Math.round(((ymax - ymin + padY * 2) / 1000) * ih)));
+
+  const c = document.createElement("canvas");
+  const sc = Math.min(1, 520 / sw);
+  c.width = Math.max(1, Math.round(sw * sc));
+  c.height = Math.max(1, Math.round(sh * sc));
+  const ctx = c.getContext("2d");
+  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, c.width, c.height);
+
+  // 採樣四個角落平均色作為名片底色，進行柔邊去背
+  const imgData = ctx.getImageData(0, 0, c.width, c.height);
+  const px = imgData.data;
+  const w = c.width, h = c.height;
+  const corners = [0, (w - 1) * 4, ((h - 1) * w) * 4, ((h - 1) * w + (w - 1)) * 4];
+  let br = 0, bg = 0, bb = 0;
+  corners.forEach(idx => { br += px[idx]; bg += px[idx + 1]; bb += px[idx + 2]; });
+  br /= 4; bg /= 4; bb /= 4;
+
+  const hCol = accentHex.replace("#", "");
+  const ar = parseInt(hCol.slice(0, 2), 16), ag = parseInt(hCol.slice(2, 4), 16), ab = parseInt(hCol.slice(4, 6), 16);
+
+  for (let i = 0; i < px.length; i += 4) {
+    const dist = Math.hypot(px[i] - br, px[i + 1] - bg, px[i + 2] - bb);
+    if (dist < 42) {
+      px[i + 3] = 0;
+    } else if (dist < 72) {
+      px[i + 3] = Math.round(((dist - 42) / 30) * 255);
+    }
+    if (mono && px[i + 3] > 0) {
+      px[i] = ar; px[i + 1] = ag; px[i + 2] = ab;
+    }
+  }
+  ctx.putImageData(imgData, 0, 0);
+  return c.toDataURL("image/png");
+}
+
+/* 拍紙本名片 AI 自動辨識填入 ＋ 自動裁切去背 Logo */
 function onOcrPick(e) {
   const f = e.target.files && e.target.files[0]; if (!f) return;
   const btn = document.getElementById("btnOcr");
-  btn.disabled = true; btn.textContent = "辨識名片中...";
+  btn.disabled = true; btn.textContent = "辨識名片與 Logo 中...";
   const img = new Image();
   img.onload = async () => {
     try {
@@ -880,9 +927,15 @@ function onOcrPick(e) {
         { label: "地址", value: d.address || "" }
       ].filter(x => x.value);
       if (!state.infoRows.length) state.infoRows = defaultState().infoRows;
+
+      let gotLogo = false;
+      if (d.logoBox) {
+        const cropped = cropLogoFromCard(img, d.logoBox, state.logoMono !== false, state.color);
+        if (cropped) { state.logoUrl = cropped; gotLogo = true; }
+      }
       renderInputs();
       renderPreview();
-      toast("名片資料已自動填入");
+      toast(gotLogo ? "名片資料與 Logo 已自動填入" : "名片資料已自動填入");
     } catch (err) {
       toast("辨識連線失敗");
     } finally {
