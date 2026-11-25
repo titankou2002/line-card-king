@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LINE 名片王</title>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif;
+    background: #f6f4ef; color: #1f1b16; min-height: 100vh;
+    display: flex; align-items: center; justify-content: center; padding: 24px;
+  }
+  .box {
+    max-width: 360px; width: 100%; background: #fffdf9;
+    border: 1px solid rgba(31,27,22,0.1); border-radius: 18px;
+    padding: 24px; text-align: center; box-shadow: 0 8px 28px rgba(31,27,22,0.08);
+  }
+  .co { font-size: 11px; font-weight: 700; color: #b59e63; margin-bottom: 6px; }
+  h2 { font-size: 20px; font-weight: 700; margin-bottom: 12px; }
+  p { font-size: 13px; color: #5e554a; margin-bottom: 18px; }
+  button {
+    width: 100%; height: 46px; border: none; border-radius: 10px;
+    background: #06c755; color: #fff; font-size: 15px; font-weight: 700;
+    cursor: pointer; font-family: inherit;
+  }
+  button:disabled { opacity: 0.45; cursor: not-allowed; }
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="co" id="co"></div>
+  <h2 id="title">載入中...</h2>
+  <p id="msg"></p>
+  <button type="button" id="btn" disabled>傳送名片</button>
+</div>
+
+<script>
+const CFG = window.CARD_KING_CONFIG || {};
+const sb = (CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY)
+  ? window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY) : null;
+
+function getSlug() {
+  const p = new URLSearchParams(location.search);
+  let id = p.get("id") || "";
+  if (!id) {
+    const st = decodeURIComponent(p.get("liff.state") || "");
+    const m = st.match(/(?:^|[?&])id=([A-Za-z0-9_-]{1,32})/);
+    if (m) id = m[1];
+  }
+  return id.toLowerCase().replace(/[^a-z0-9_-]/g, "");
+}
+
+function parseYtId(u) {
+  const m = String(u || "").match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : "";
+}
+
+function buildFlex(slug, s) {
+  const shareUrl = `https://liff.line.me/${CFG.LIFF_ID}?id=${encodeURIComponent(slug)}`;
+  const accent = /^#[0-9a-fA-F]{6}$/.test(s.color || "") ? s.color.toUpperCase() : "#C5AE6E";
+  const telDigits = String(s.mobile || "").replace(/[^0-9+]/g, "");
+  const webUri = /^https?:\/\//i.test(s.website || "") ? s.website : "";
+  const logoUrl = /^https:\/\//i.test(s.logoUrl || "") ? s.logoUrl : "";
+  const photo = /^https:\/\//i.test(s.photoUrl || "") ? s.photoUrl : "";
+
+  const row = (lbl, val, lc, vc) => ({
+    type: "box", layout: "horizontal", spacing: "md", alignItems: "center",
+    contents: [
+      { type: "text", text: lbl, size: "xs", color: lc, weight: "bold", flex: 0 },
+      { type: "text", text: val, size: "xs", color: vc, flex: 1, wrap: true }
+    ]
+  });
+  const rows = (lc, vc) => {
+    const a = [];
+    if (s.mobile) a.push(row("手機", s.mobile, lc, vc));
+    if (s.email) a.push(row("信箱", s.email, lc, vc));
+    if (s.tel) a.push(row("電話", s.tel, lc, vc));
+    if (s.address) a.push(row("門市", s.address, lc, vc));
+    return a;
+  };
+  const brandRow = (cc) => {
+    const c = [];
+    if (logoUrl) c.push({ type: "image", url: logoUrl, size: "xs", aspectRatio: "346:100", aspectMode: "fit", align: "start", flex: 3 });
+    if (s.company) c.push({ type: "text", text: s.company, size: "xxs", color: cc, align: logoUrl ? "end" : "start", flex: 5 });
+    return { type: "box", layout: "horizontal", alignItems: "center", justifyContent: "space-between", spacing: "sm", contents: c.length ? c : [{ type: "filler" }] };
+  };
+  const nameRow = (nc, ec) => ({
+    type: "box", layout: "baseline", spacing: "md", margin: "md",
+    contents: [
+      { type: "text", text: s.name || " ", size: "xl", weight: "bold", color: nc, flex: 0 },
+      ...(s.enName ? [{ type: "text", text: s.enName, size: "md", weight: "bold", color: ec, flex: 0 }] : [])
+    ]
+  });
+  const socialRow = (isIvory) => {
+    const pills = [];
+    const add = (label, uri) => pills.push({
+      type: "box", layout: "vertical", flex: 1, height: "32px", cornerRadius: "6px",
+      backgroundColor: isIvory ? "#EBE5D9" : "#2E2A23", borderWidth: "1px", borderColor: isIvory ? "#DDD5C5" : "#463E31",
+      justifyContent: "center", alignItems: "center", action: { type: "uri", label, uri },
+      contents: [{ type: "text", text: label, size: "xxs", weight: "bold", color: isIvory ? "#4D453B" : accent }]
+    });
+    if (s.oaOn && s.oaId) { const o = s.oaId.trim(); add("LINE@", /^https?:\/\//i.test(o) ? o : "https://line.me/R/ti/p/" + (o.startsWith("@") ? o : "@" + o)); }
+    if (s.mailBtnOn && s.email) add("Email", "mailto:" + s.email.trim());
+    if (s.igOn && s.igId) add("IG", "https://instagram.com/" + s.igId.trim().replace(/^@/, ""));
+    if (s.fbOn && s.fbId) add("FB", "https://facebook.com/" + s.fbId.trim().replace(/^@/, ""));
+    if (s.thOn && s.thId) add("Threads", "https://www.threads.net/@" + s.thId.trim().replace(/^@/, ""));
+    return pills.length ? { type: "box", layout: "horizontal", spacing: "xs", contents: pills } : null;
+  };
+  const footerBtns = (isIvory, secBg, linkCol) => {
+    const pair = [];
+    if (telDigits) pair.push({ type: "button", style: "primary", color: accent, height: "sm", flex: 1, action: { type: "uri", label: "撥打手機", uri: "tel:" + telDigits } });
+    if (webUri) pair.push({ type: "button", style: isIvory ? "secondary" : "primary", color: secBg, height: "sm", flex: 1, action: { type: "uri", label: "官方網站", uri: webUri } });
+    const out = [];
+    if (pair.length) out.push({ type: "box", layout: "horizontal", spacing: "sm", contents: pair });
+    const sr = socialRow(isIvory);
+    if (sr) out.push(sr);
+    out.push({ type: "button", style: "link", color: linkCol, height: "sm", action: { type: "uri", label: "轉傳這張名片", uri: shareUrl } });
+    return out;
+  };
+
+  const ytId = parseYtId(s.videoUrl);
+  if (s.style === "video" && ytId) {
+    return {
+      type: "bubble", size: "mega",
+      body: {
+        type: "box", layout: "vertical", paddingAll: "0px", backgroundColor: "#23201B",
+        contents: [
+          {
+            type: "box", layout: "vertical", paddingAll: "0px", backgroundColor: "#14120F",
+            action: { type: "uri", label: "觀看影片", uri: "https://www.youtube.com/watch?v=" + ytId },
+            contents: [
+              { type: "image", url: `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg`, size: "full", aspectRatio: "16:9", aspectMode: "cover" },
+              {
+                type: "box", layout: "vertical", position: "absolute", offsetTop: "0px", offsetBottom: "0px", offsetStart: "0px", offsetEnd: "0px",
+                backgroundColor: "#00000044", justifyContent: "center", alignItems: "center",
+                contents: [{ type: "box", layout: "vertical", width: "54px", height: "38px", cornerRadius: "10px", backgroundColor: "#000000B8", borderWidth: "1px", borderColor: "#FFFFFF55", justifyContent: "center", alignItems: "center", contents: [{ type: "text", text: "▶", size: "lg", color: "#FFFFFF", align: "center" }] }]
+              }
+            ]
+          },
+          { type: "box", layout: "vertical", paddingTop: "16px", paddingBottom: "14px", paddingStart: "20px", paddingEnd: "20px", spacing: "md", contents: [brandRow("#B8AFA2"), nameRow("#FFFDF9", accent), { type: "separator", color: "#3E382C", margin: "md" }, { type: "box", layout: "vertical", spacing: "sm", contents: rows(accent, "#F1ECE2") }] }
+        ]
+      },
+      footer: { type: "box", layout: "vertical", backgroundColor: "#23201B", spacing: "sm", paddingTop: "2px", paddingBottom: "16px", paddingStart: "20px", paddingEnd: "20px", contents: footerBtns(false, "#332E27", accent) }
+    };
+  }
+  if (s.style === "video" && /^https:\/\//i.test(s.videoUrl || "")) {
+    const cover = photo || "https://bigt.cc/web/assets/video/refin-moon-poster.jpg";
+    return {
+      type: "bubble", size: "mega",
+      hero: { type: "video", url: s.videoUrl, previewUrl: cover, altContent: { type: "image", size: "full", aspectRatio: "16:9", aspectMode: "cover", url: cover }, aspectRatio: "16:9" },
+      body: { type: "box", layout: "vertical", backgroundColor: "#23201B", paddingTop: "16px", paddingBottom: "14px", paddingStart: "20px", paddingEnd: "20px", spacing: "md", contents: [brandRow("#B8AFA2"), nameRow("#FFFDF9", accent), { type: "separator", color: "#3E382C", margin: "md" }, { type: "box", layout: "vertical", spacing: "sm", contents: rows(accent, "#F1ECE2") }] },
+      footer: { type: "box", layout: "vertical", backgroundColor: "#23201B", spacing: "sm", paddingTop: "2px", paddingBottom: "16px", paddingStart: "20px", paddingEnd: "20px", contents: footerBtns(false, "#332E27", accent) }
+    };
+  }
+  const isIvory = s.style === "ivory";
+  const bg = isIvory ? "#FAF7F0" : "#23201B";
+  const head = [{ type: "box", layout: "vertical", flex: 1, contents: [nameRow(isIvory ? "#1F1B16" : "#FFFDF9", isIvory ? "#8E7740" : accent)] }];
+  if (s.showPhoto && photo) head.push({ type: "box", layout: "vertical", width: "64px", height: "78px", cornerRadius: "10px", borderWidth: "1px", borderColor: accent, flex: 0, contents: [{ type: "image", url: photo, size: "full", aspectMode: "cover", aspectRatio: "64:78" }] });
+  return {
+    type: "bubble", size: "mega",
+    header: { type: "box", layout: "vertical", paddingAll: "0px", backgroundColor: bg, contents: [{ type: "box", layout: "vertical", height: "4px", backgroundColor: accent, contents: [{ type: "filler" }] }, { type: "box", layout: "vertical", paddingTop: "16px", paddingBottom: "14px", paddingStart: "20px", paddingEnd: "20px", contents: [brandRow(isIvory ? "#7B7266" : "#B8AFA2"), { type: "box", layout: "horizontal", spacing: "md", alignItems: "center", contents: head }] }] },
+    body: { type: "box", layout: "vertical", backgroundColor: bg, paddingTop: "0px", paddingBottom: "14px", paddingStart: "20px", paddingEnd: "20px", spacing: "md", contents: [{ type: "separator", color: isIvory ? "#E6E0D4" : "#3E382C" }, { type: "box", layout: "vertical", spacing: "sm", contents: rows(isIvory ? "#8C8377" : accent, isIvory ? "#1F1B16" : "#F1ECE2") }] },
+    footer: { type: "box", layout: "vertical", backgroundColor: bg, spacing: "sm", paddingTop: "2px", paddingBottom: "16px", paddingStart: "20px", paddingEnd: "20px", contents: footerBtns(isIvory, isIvory ? "#EBE5D9" : "#332E27", isIvory ? "#6F5E32" : accent) }
+  };
+}
+
+async function main() {
+  const slug = getSlug();
+  if (!slug || !sb) { document.getElementById("title").textContent = "無效連結"; return; }
+  await liff.init({ liffId: CFG.LIFF_ID });
+  if (!liff.isLoggedIn()) { liff.login(); return; }
+
+  const { data } = await sb.rpc("get_public_card", { p_slug: slug });
+  if (!data || !data.ok) {
+    document.getElementById("title").textContent = (data && data.reason) || "無法讀取";
+    return;
+  }
+  const s = data.config || {};
+  document.getElementById("co").textContent = s.company || "";
+  document.getElementById("title").textContent = (s.name || slug) + (s.enName ? " " + s.enName : "");
+  const btn = document.getElementById("btn");
+  btn.disabled = false;
+
+  async function go() {
+    if (!liff.isApiAvailable("shareTargetPicker")) { document.getElementById("msg").textContent = "無法開啟好友選取器"; return; }
+    const res = await liff.shareTargetPicker([{ type: "flex", altText: (s.name || "電子名片"), contents: buildFlex(slug, s) }]);
+    if (res) {
+      document.getElementById("msg").textContent = "已送出";
+      sb.rpc("ping_card_send", { p_slug: slug });
+    }
+  }
+  btn.onclick = go;
+  go();
+}
+main();
+</script>
+</body>
+</html>

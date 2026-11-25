@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LINE 名片王 · 管理後台</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style>
+  :root {
+    --bg: #f6f4ef; --surface: #fffdf9; --raised: #eeeae2; --border: rgba(31,27,22,0.11);
+    --t1: #1f1b16; --t2: #5e554a; --t3: #7b7266; --ok: #2f6b4b; --err: #b4412f;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif; background: var(--bg); color: var(--t1); min-height: 100vh; }
+  .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .topbar h1 { font-size: 16px; font-weight: 700; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 24px 20px 60px; display: flex; flex-direction: column; gap: 18px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+  .stat .k { font-size: 12px; color: var(--t3); }
+  .stat .v { font-size: 24px; font-weight: 700; margin-top: 4px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px; overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; font-size: 12px; color: var(--t3); padding: 10px 8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  td { padding: 12px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  .btn { border: 1px solid var(--border); background: var(--surface); color: var(--t1); font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 7px; cursor: pointer; font-family: inherit; }
+  .btn:hover { background: var(--raised); }
+  .btn-pri { background: #23201b; border-color: #23201b; color: #fff; }
+  .btn-danger { color: var(--err); border-color: rgba(180,65,47,0.3); }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11.5px; font-weight: 700; }
+  .b-ok { background: rgba(47,107,75,0.12); color: var(--ok); }
+  .b-off { background: rgba(180,65,47,0.12); color: var(--err); }
+  .login { max-width: 360px; margin: 80px auto; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 12px; }
+  .login input { height: 38px; padding: 0 10px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: #1f1b16; color: #fff; padding: 10px 18px; border-radius: 10px; font-size: 13px; opacity: 0; pointer-events: none; transition: 0.2s; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <h1>LINE 名片王 · 管理後台</h1>
+  <div id="topAct" style="display:none;gap:8px;">
+    <button class="btn" onclick="loadList()">重新整理</button>
+    <button class="btn" onclick="logout()">登出</button>
+  </div>
+</header>
+
+<section id="loginBox" class="login">
+  <div style="font-size:16px;font-weight:700;">管理員登入</div>
+  <input type="password" id="inKey" placeholder="管理金鑰" onkeydown="if(event.key==='Enter')login()">
+  <button class="btn btn-pri" style="height:40px;" onclick="login()">登入</button>
+</section>
+
+<main id="mainBox" class="wrap" style="display:none;">
+  <section class="stats">
+    <div class="stat"><div class="k">註冊人數</div><div class="v" id="stTotal">0</div></div>
+    <div class="stat"><div class="k">R2 影片總量</div><div class="v" id="stMb">0 MB</div></div>
+    <div class="stat"><div class="k">累計傳送</div><div class="v" id="stSend">0</div></div>
+  </section>
+  <section class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>會員 / 代號</th>
+          <th>名片資訊</th>
+          <th>狀態</th>
+          <th>影片額度 / 容量</th>
+          <th>傳送</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const CFG = window.CARD_KING_CONFIG || {};
+let adminKey = sessionStorage.getItem("ck_admin_key") || "";
+
+function esc(s) { return String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+async function api(path, opts = {}) {
+  const r = await fetch(CFG.WORKER_API.replace(/\/$/, "") + path, {
+    ...opts,
+    headers: { "Content-Type": "application/json", "X-Admin-Key": adminKey, ...(opts.headers || {}) }
+  });
+  return r.json();
+}
+
+async function login() {
+  adminKey = document.getElementById("inKey").value.trim();
+  if (!adminKey) return;
+  const ok = await loadList();
+  if (ok) {
+    sessionStorage.setItem("ck_admin_key", adminKey);
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("mainBox").style.display = "flex";
+    document.getElementById("topAct").style.display = "flex";
+  }
+}
+
+function logout() { sessionStorage.removeItem("ck_admin_key"); location.reload(); }
+
+async function loadList() {
+  if (!CFG.WORKER_API) { toast("尚未設定 WORKER_API"); return false; }
+  const d = await api("/api/admin/list");
+  if (!d.ok) { toast(d.error || "登入失敗"); return false; }
+  const items = d.items || [];
+  document.getElementById("stTotal").textContent = items.length;
+  const bytes = items.reduce((s, x) => s + (x.video_size_bytes || 0), 0);
+  document.getElementById("stMb").textContent = (bytes / (1024 * 1024)).toFixed(1) + " MB";
+  document.getElementById("stSend").textContent = items.reduce((s, x) => s + (x.send_count || 0), 0);
+
+  document.getElementById("tbody").innerHTML = items.map(it => {
+    const c = it.config || {};
+    const mb = it.video_size_bytes ? ((it.video_size_bytes / (1024 * 1024)).toFixed(1) + " MB") : "0 MB";
+    return `
+      <tr>
+        <td><b>${esc(it.email)}</b><div style="font-size:11.5px;color:var(--t3);">${esc(it.slug)}</div></td>
+        <td>${esc(c.company || "")} ${esc(c.name || "")}<div style="font-size:11.5px;color:var(--t3);">${esc(c.mobile || "")}</div></td>
+        <td><span class="badge ${it.status === 'active' ? 'b-ok' : 'b-off'}">${it.status === 'active' ? '啟用' : '停權'}</span></td>
+        <td>${it.video_key ? 1 : 0} / ${it.video_quota}（${mb}）</td>
+        <td>${it.send_count || 0}</td>
+        <td style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn" onclick="setQuota('${it.id}', ${(it.video_quota || 1) + 1})">額度 +1</button>
+          <button class="btn" onclick="toggle('${it.id}', '${it.status === 'active' ? 'suspended' : 'active'}')">${it.status === 'active' ? '停權' : '恢復'}</button>
+          <button class="btn btn-danger" onclick="delUser('${it.id}', '${esc(it.email)}')">刪除</button>
+        </td>
+      </tr>
+    `;
+  }).join("");
+  return true;
+}
+
+async function setQuota(id, q) {
+  const d = await api("/api/admin/update", { method: "POST", body: JSON.stringify({ id, video_quota: q }) });
+  if (d.ok) { toast("已更新額度"); loadList(); }
+}
+async function toggle(id, status) {
+  const d = await api("/api/admin/update", { method: "POST", body: JSON.stringify({ id, status }) });
+  if (d.ok) { toast("已更新狀態"); loadList(); }
+}
+async function delUser(id, email) {
+  if (!confirm("確定刪除 " + email + " 與其 R2 檔案？")) return;
+  const d = await api("/api/admin/delete", { method: "POST", body: JSON.stringify({ id }) });
+  if (d.ok) { toast("已刪除"); loadList(); }
+}
+
+let t;
+function toast(m) { const el = document.getElementById("toast"); el.textContent = m; el.classList.add("show"); clearTimeout(t); t = setTimeout(() => el.classList.remove("show"), 2500); }
+
+if (adminKey) { document.getElementById("inKey").value = adminKey; login(); }
+</script>
+</body>
+</html>

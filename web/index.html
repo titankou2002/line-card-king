@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>LINE 名片王</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style>
+  :root {
+    --bg: #f6f4ef;
+    --surface: #fffdf9;
+    --raised: #eeeae2;
+    --border: rgba(31, 27, 22, 0.11);
+    --t1: #1f1b16;
+    --t2: #5e554a;
+    --t3: #7b7266;
+    --accent: #c5ae6e;
+    --accent-text: #1f1b16;
+    --line-green: #06c755;
+    --chat-bg-light: #8cabd9;
+    --chat-bg-dark: #111315;
+    --err: #b4412f;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif;
+    background: var(--bg);
+    color: var(--t1);
+    min-height: 100vh;
+  }
+
+  .topbar {
+    position: sticky; top: 0; z-index: 30;
+    background: rgba(255, 253, 249, 0.96);
+    border-bottom: 1px solid var(--border);
+    padding: 11px 20px;
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  .topbar-title { display: flex; align-items: center; gap: 10px; }
+  .brand-mark {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: #23201b; color: var(--accent);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px;
+  }
+  .topbar h1 { font-size: 16px; font-weight: 700; }
+  .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+  .btn {
+    appearance: none; border: 1px solid var(--border); background: var(--surface);
+    color: var(--t1); font-size: 13px; font-weight: 600; padding: 7px 14px;
+    border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center;
+    justify-content: center; gap: 6px; text-decoration: none; font-family: inherit;
+  }
+  .btn:hover { background: var(--raised); }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-pri { background: #23201b; border-color: #23201b; color: #fff; }
+  .btn-pri:hover { background: #363129; }
+  .btn-line { background: var(--line-green); border-color: var(--line-green); color: #fff; }
+  .btn-line:hover { background: #05b04b; }
+  .btn-danger { color: var(--err); border-color: rgba(180,65,47,0.3); }
+  .btn-sm { padding: 5px 10px; font-size: 12px; border-radius: 7px; }
+
+  /* 註冊 / 登入框 */
+  .auth-box {
+    max-width: 380px; margin: 72px auto; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 16px; padding: 26px;
+    box-shadow: 0 12px 32px rgba(31,27,22,0.06);
+  }
+  .auth-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: var(--raised); padding: 4px; border-radius: 10px; margin-bottom: 18px; }
+  .auth-tab { border: none; background: transparent; padding: 8px; border-radius: 7px; font-size: 13.5px; font-weight: 700; color: var(--t2); cursor: pointer; font-family: inherit; }
+  .auth-tab.active { background: var(--surface); color: var(--t1); }
+
+  /* 主編輯區 */
+  .stage {
+    max-width: 1140px; margin: 0 auto; padding: 24px 20px 64px;
+    display: grid; grid-template-columns: 430px 1fr; gap: 28px; align-items: start;
+  }
+  @media (max-width: 920px) { .stage { grid-template-columns: 1fr; padding: 16px 12px 48px; } }
+  .preview-col { position: sticky; top: 72px; }
+  @media (max-width: 920px) { .preview-col { position: static; } }
+
+  .phone-shell {
+    background: #1c1e21; border-radius: 36px; padding: 12px;
+    box-shadow: 0 24px 60px rgba(31, 27, 22, 0.16); max-width: 430px; width: 100%; margin: 0 auto;
+  }
+  .phone-screen {
+    border-radius: 26px; overflow: hidden; background: var(--chat-bg-light);
+    display: flex; flex-direction: column; min-height: 640px;
+  }
+  .phone-screen.dark-chat { background: var(--chat-bg-dark); }
+
+  .line-header {
+    padding: 14px 16px 12px; display: flex; align-items: center; justify-content: space-between;
+    background: rgba(140, 171, 217, 0.92); color: #111; border-bottom: 1px solid rgba(0,0,0,0.06);
+  }
+  .phone-screen.dark-chat .line-header { background: rgba(24,26,29,0.96); color: #f3f4f6; }
+  .chat-body { flex: 1; padding: 18px 18px 24px; display: flex; flex-direction: column; gap: 14px; align-items: center; }
+
+  /* 單張 Mega 卡片 */
+  .mega-card { width: 100%; max-width: 340px; border-radius: 18px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.20); }
+  .mc-brand-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+  .mc-logo { height: 22px; color: var(--accent); }
+  .mc-logo svg, .mc-logo img { height: 22px; width: auto; max-width: 132px; object-fit: contain; display: block; }
+  .mc-co-name { font-size: 11px; font-weight: 600; color: #b8afa2; white-space: nowrap; }
+  .style-ivory .mc-co-name { color: #7b7266; }
+
+  .mc-name-line { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; }
+  .mc-en-name { font-size: 15px; font-weight: 700; color: var(--accent); }
+  .style-ivory .mc-en-name { color: #8e7740; }
+  .style-hero .mc-en-name { color: #e8d59e; }
+
+  .mc-video-box { position: relative; width: 100%; aspect-ratio: 16/9; background: #14120f; overflow: hidden; }
+  .mc-video-box video, .mc-video-box img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .mc-yt-play {
+    position: absolute; inset: 0; background: rgba(0,0,0,0.26);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .mc-yt-play span {
+    width: 54px; height: 38px; border-radius: 10px; background: rgba(0,0,0,0.72);
+    border: 1px solid rgba(255,255,255,0.35); color: #fff; font-size: 16px;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+
+  .mega-card.style-dark { background: #23201b; color: #f6f2ea; }
+  .style-dark .mc-top-bar { height: 4px; background: var(--accent); }
+  .style-dark .mc-head { padding: 18px 22px 14px; display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+  .style-dark .mc-name { font-size: 22px; font-weight: 700; color: #fffdf9; }
+  .style-dark .mc-photo { width: 64px; height: 78px; border-radius: 10px; overflow: hidden; flex-shrink: 0; border: 1.5px solid var(--accent); }
+  .style-dark .mc-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .style-dark .mc-sep { height: 1px; background: rgba(197, 174, 110, 0.24); margin: 0 22px; }
+  .style-dark .mc-body { padding: 15px 22px; display: flex; flex-direction: column; gap: 8px; }
+  .style-dark .mc-row { display: flex; align-items: baseline; gap: 10px; font-size: 12.5px; }
+  .style-dark .mc-lbl { width: 34px; flex-shrink: 0; color: var(--accent); font-size: 11.5px; font-weight: 700; }
+  .style-dark .mc-val { color: #f1ece2; }
+  .style-dark .mc-foot { padding: 2px 22px 18px; display: flex; flex-direction: column; gap: 8px; }
+
+  .mega-card.style-hero { background: #fffdf9; color: #1f1b16; }
+  .style-hero .mc-hero-box { position: relative; height: 196px; background: #2c2822; overflow: hidden; }
+  .style-hero .mc-hero-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .style-hero .mc-hero-grad {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(20,18,15,0.12) 0%, rgba(20,18,15,0.2) 42%, rgba(20,18,15,0.88) 100%);
+    display: flex; flex-direction: column; justify-content: space-between; padding: 14px 18px;
+  }
+  .style-hero .mc-hero-top { display: flex; align-items: center; justify-content: space-between; }
+  .style-hero .mc-logo-pill { background: rgba(255,253,249,0.92); padding: 4px 9px; border-radius: 6px; color: var(--accent); display: inline-flex; }
+  .style-hero .mc-logo-pill svg, .style-hero .mc-logo-pill img { height: 18px; width: auto; max-width: 108px; display: block; }
+  .style-hero .mc-name { font-size: 22px; font-weight: 700; color: #fff; }
+  .style-hero .mc-body { padding: 15px 20px 12px; display: flex; flex-direction: column; gap: 8px; }
+  .style-hero .mc-row { display: flex; align-items: baseline; gap: 10px; font-size: 12.5px; }
+  .style-hero .mc-lbl { width: 34px; flex-shrink: 0; color: #8c8377; font-size: 11.5px; font-weight: 700; }
+  .style-hero .mc-val { color: #1f1b16; }
+  .style-hero .mc-foot { padding: 2px 20px 16px; display: flex; flex-direction: column; gap: 8px; }
+
+  .mega-card.style-ivory { background: #faf7f0; color: #1f1b16; border: 1px solid rgba(31,27,22,0.08); }
+  .style-ivory .mc-top-bar { height: 5px; background: var(--accent); }
+  .style-ivory .mc-head { padding: 16px 22px 14px; display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+  .style-ivory .mc-name { font-size: 22px; font-weight: 700; color: #1f1b16; }
+  .style-ivory .mc-photo { width: 64px; height: 78px; border-radius: 10px; overflow: hidden; flex-shrink: 0; border: 1px solid rgba(31,27,22,0.12); }
+  .style-ivory .mc-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .style-ivory .mc-sep { height: 1px; background: #e6e0d4; margin: 0 22px; }
+  .style-ivory .mc-body { padding: 14px 22px; display: flex; flex-direction: column; gap: 8px; }
+  .style-ivory .mc-row { display: flex; align-items: baseline; gap: 10px; font-size: 12.5px; }
+  .style-ivory .mc-lbl { width: 34px; flex-shrink: 0; color: #8c8377; font-size: 11.5px; font-weight: 700; }
+  .style-ivory .mc-val { color: #1f1b16; }
+  .style-ivory .mc-foot { padding: 2px 22px 18px; display: flex; flex-direction: column; gap: 8px; }
+
+  .mc-btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .mc-btn-pri {
+    height: 40px; border-radius: 8px; background: var(--accent); color: var(--accent-text);
+    display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; text-decoration: none;
+  }
+  .mc-btn-sec {
+    height: 40px; border-radius: 8px; background: #332e27; color: #f6f2ea;
+    display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; text-decoration: none;
+  }
+  .style-ivory .mc-btn-sec, .style-hero .mc-btn-sec { background: #ebe5d9; color: #1f1b16; }
+  .mc-btn-link {
+    height: 30px; background: transparent; border: none; color: var(--accent);
+    font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit;
+  }
+  .style-ivory .mc-btn-link, .style-hero .mc-btn-link { color: #6f5e32; }
+
+  /* 橫排社群小膠囊列 */
+  .mc-social-row { display: flex; gap: 6px; }
+  .mc-social-pill {
+    flex: 1; height: 32px; border-radius: 6px;
+    background: #2e2a23; border: 1px solid #463e31; color: var(--accent);
+    font-size: 11.5px; font-weight: 700; text-decoration: none;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .style-ivory .mc-social-pill, .style-hero .mc-social-pill {
+    background: #ebe5d9; border-color: #ddd5c5; color: #4d453b;
+  }
+
+  /* 右側編輯面板 */
+  .editor-panel {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 16px;
+  }
+  .sec-title { font-size: 13.5px; font-weight: 700; color: var(--t1); }
+  .sep { height: 1px; background: var(--border); }
+
+  .style-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; }
+  @media (max-width: 560px) { .style-grid { grid-template-columns: repeat(2, 1fr); } }
+  .style-opt {
+    border: 1.5px solid var(--border); border-radius: 9px; padding: 10px 6px;
+    background: var(--bg); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 700; color: var(--t1);
+  }
+  .style-opt.active { border-color: #1f1b16; background: #fff; }
+
+  .color-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .color-picker-wrap { position: relative; width: 40px; height: 36px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); flex-shrink: 0; }
+  .color-picker-wrap input[type="color"] { position: absolute; inset: -6px; width: 54px; height: 50px; border: none; cursor: pointer; }
+  .swatches { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .swatch { width: 26px; height: 26px; border-radius: 999px; border: 2px solid transparent; cursor: pointer; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.12); }
+  .swatch.active { border-color: #1f1b16; }
+
+  .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 560px) { .field-grid { grid-template-columns: 1fr; } }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label { font-size: 12px; font-weight: 600; color: var(--t2); }
+  .field input {
+    width: 100%; height: 36px; padding: 0 10px; border: 1px solid var(--border);
+    border-radius: 8px; font-size: 13px; background: #fff; color: var(--t1); font-family: inherit;
+  }
+  .field input:focus { outline: none; border-color: var(--accent); }
+
+  .quota-bar {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 10px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+    font-size: 12.5px; font-weight: 600;
+  }
+
+  .ext-stack { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+  .ext-row {
+    display: grid; grid-template-columns: 112px 1fr; align-items: center; gap: 8px;
+    padding: 7px 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 9px;
+  }
+  .ext-chk { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+  .ext-chk input { width: 15px; height: 15px; accent-color: #23201b; cursor: pointer; }
+  .ext-row input[type="text"] {
+    height: 32px; padding: 0 9px; border: 1px solid var(--border); border-radius: 7px;
+    font-size: 12.5px; background: #fff; color: var(--t1); font-family: inherit; width: 100%;
+  }
+
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: #1f1b16; color: #fff; padding: 10px 18px; border-radius: 10px; font-size: 13px;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s; z-index: 100;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-title">
+    <span class="brand-mark">王</span>
+    <h1>LINE 名片王</h1>
+  </div>
+  <div class="toolbar" id="editorToolbar" style="display:none;">
+    <button type="button" class="btn" id="btnTheme" onclick="toggleChatTheme()">深色背景</button>
+    <button type="button" class="btn" onclick="copyShareLink()">複製連結</button>
+    <button type="button" class="btn btn-pri" id="btnSave" onclick="saveCard()">儲存</button>
+    <button type="button" class="btn btn-line" onclick="shareToLine()">傳送 LINE</button>
+    <button type="button" class="btn" id="btnLogout" style="display:none;" onclick="doLogout()">登出</button>
+  </div>
+</header>
+
+<!-- 註冊 / 登入畫面 -->
+<section id="authView" class="auth-box" style="display:none;">
+  <div class="auth-tabs">
+    <button type="button" class="auth-tab active" id="tabLogin" onclick="setAuthMode('login')">登入</button>
+    <button type="button" class="auth-tab" id="tabReg" onclick="setAuthMode('register')">免費註冊</button>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:12px;">
+    <div class="field"><label>Email</label><input type="email" id="authEmail"></div>
+    <div class="field"><label>密碼</label><input type="password" id="authPass"></div>
+    <div class="field" id="authSlugWrap" style="display:none;"><label>名片代號（英數）</label><input type="text" id="authSlug" placeholder="例：wang"></div>
+    <button type="button" class="btn btn-pri" id="btnAuthGo" style="width:100%;height:42px;margin-top:4px;" onclick="submitAuth()">登入</button>
+  </div>
+</section>
+
+<!-- 主編輯畫面 -->
+<main id="editorView" class="stage" style="display:none;">
+  <section class="preview-col">
+    <div class="phone-shell">
+      <div class="phone-screen" id="phoneScreen">
+        <div class="line-header">
+          <span style="font-size:15px;font-weight:700;">LINE 預覽</span>
+        </div>
+        <div class="chat-body">
+          <div id="cardMount" style="width:100%;display:flex;justify-content:center;"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <aside class="editor-panel">
+    <div>
+      <div class="sec-title">版型</div>
+      <div class="style-grid" id="styleGrid">
+        <button type="button" class="style-opt" data-style="video" onclick="setStyle('video')">動態影片</button>
+        <button type="button" class="style-opt active" data-style="dark" onclick="setStyle('dark')">深岩燙金</button>
+        <button type="button" class="style-opt" data-style="hero" onclick="setStyle('hero')">雜誌封面</button>
+        <button type="button" class="style-opt" data-style="ivory" onclick="setStyle('ivory')">極簡象牙</button>
+      </div>
+    </div>
+
+    <div class="sep"></div>
+
+    <div>
+      <div class="sec-title">調色盤</div>
+      <div class="color-row">
+        <div class="color-picker-wrap"><input type="color" id="inColor" value="#c5ae6e" oninput="applyColor(this.value)"></div>
+        <div class="field" style="flex:1;"><input type="text" id="inColorHex" value="#C5AE6E" maxlength="7" oninput="onHexInput(this.value)"></div>
+      </div>
+      <div class="swatches" id="swatches">
+        <button type="button" class="swatch active" style="background:#c5ae6e" data-hex="#c5ae6e" onclick="applyColor('#c5ae6e')"></button>
+        <button type="button" class="swatch" style="background:#b59e63" data-hex="#b59e63" onclick="applyColor('#b59e63')"></button>
+        <button type="button" class="swatch" style="background:#d2be8a" data-hex="#d2be8a" onclick="applyColor('#d2be8a')"></button>
+        <button type="button" class="swatch" style="background:#9ca389" data-hex="#9ca389" onclick="applyColor('#9ca389')"></button>
+        <button type="button" class="swatch" style="background:#b88d78" data-hex="#b88d78" onclick="applyColor('#b88d78')"></button>
+        <button type="button" class="swatch" style="background:#8aa0ae" data-hex="#8aa0ae" onclick="applyColor('#8aa0ae')"></button>
+      </div>
+    </div>
+
+    <div class="sep"></div>
+
+    <div>
+      <div class="sec-title">Logo / 照片 / 影片</div>
+      <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+        <input type="file" id="logoFile" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden onchange="onLogoPick(event)">
+        <button type="button" class="btn btn-sm" onclick="document.getElementById('logoFile').click()">上傳 Logo</button>
+        <button type="button" class="btn btn-sm" onclick="deleteAsset('logo')">刪除 Logo</button>
+        <label class="ext-chk"><input type="checkbox" id="chkLogoMono" checked onchange="setField('logoMono', this.checked)">純色跟隨</label>
+      </div>
+      <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+        <input type="file" id="photoFile" accept="image/*" hidden onchange="onPhotoPick(event)">
+        <button type="button" class="btn btn-sm" onclick="document.getElementById('photoFile').click()">上傳照片</button>
+        <button type="button" class="btn btn-sm" onclick="deleteAsset('photo')">刪除照片</button>
+        <label class="ext-chk"><input type="checkbox" id="chkPhoto" onchange="setField('showPhoto', this.checked)">顯示右側照片</label>
+      </div>
+      <div class="quota-bar" style="margin-top:10px;">
+        <span id="videoQuotaText">影片額度：0 / 1（≤10秒 / ≤10MB）</span>
+        <div style="display:flex;gap:6px;">
+          <input type="file" id="videoFile" accept="video/mp4" hidden onchange="onVideoPick(event)">
+          <button type="button" class="btn btn-sm btn-pri" id="btnUploadVideo" onclick="document.getElementById('videoFile').click()">上傳 MP4</button>
+          <button type="button" class="btn btn-sm btn-danger" id="btnDeleteVideo" style="display:none;" onclick="deleteAsset('video')">刪除舊影片</button>
+        </div>
+      </div>
+      <div class="field" style="margin-top:8px;">
+        <label>YouTube 或 MP4 網址</label>
+        <input type="url" id="inVideoUrl" oninput="setField('videoUrl', this.value)" placeholder="https://youtu.be/... 或 .mp4">
+      </div>
+    </div>
+
+    <div class="sep"></div>
+
+    <div>
+      <div class="sec-title">基本資料</div>
+      <div class="field" style="margin-top:8px;"><label>公司名稱</label><input type="text" id="inCompany" oninput="setField('company', this.value)"></div>
+      <div class="field-grid" style="margin-top:8px;">
+        <div class="field"><label>中文姓名</label><input type="text" id="inName" oninput="setField('name', this.value)"></div>
+        <div class="field"><label>英文名</label><input type="text" id="inEnName" oninput="setField('enName', this.value)"></div>
+        <div class="field"><label>手機</label><input type="text" id="inMobile" oninput="setField('mobile', this.value)"></div>
+        <div class="field"><label>Email</label><input type="email" id="inEmail" oninput="setField('email', this.value)"></div>
+        <div class="field"><label>公司電話</label><input type="text" id="inTel" oninput="setField('tel', this.value)"></div>
+        <div class="field"><label>官方網站</label><input type="url" id="inWeb" oninput="setField('website', this.value)"></div>
+      </div>
+      <div class="field" style="margin-top:8px;"><label>門市</label><input type="text" id="inAddr" oninput="setField('address', this.value)"></div>
+    </div>
+
+    <div class="sep"></div>
+
+    <div>
+      <div class="sec-title">延伸功能（勾選開啟）</div>
+      <div class="ext-stack">
+        <div class="ext-row">
+          <label class="ext-chk"><input type="checkbox" id="chkOa" onchange="setField('oaOn', this.checked)">LINE 官方帳號</label>
+          <input type="text" id="inOaId" placeholder="@帳號ID" oninput="setField('oaId', this.value)">
+        </div>
+        <div class="ext-row">
+          <label class="ext-chk"><input type="checkbox" id="chkMailBtn" onchange="setField('mailBtnOn', this.checked)">一鍵寄信</label>
+          <input type="text" value="自動帶入上方 Email" readonly style="background:var(--bg);color:var(--t3);">
+        </div>
+        <div class="ext-row">
+          <label class="ext-chk"><input type="checkbox" id="chkIg" onchange="setField('igOn', this.checked)">Instagram</label>
+          <input type="text" id="inIgId" placeholder="IG 帳號" oninput="setField('igId', this.value)">
+        </div>
+        <div class="ext-row">
+          <label class="ext-chk"><input type="checkbox" id="chkFb" onchange="setField('fbOn', this.checked)">Facebook</label>
+          <input type="text" id="inFbId" placeholder="FB 帳號或粉專 ID" oninput="setField('fbId', this.value)">
+        </div>
+        <div class="ext-row">
+          <label class="ext-chk"><input type="checkbox" id="chkTh" onchange="setField('thOn', this.checked)">Threads</label>
+          <input type="text" id="inThId" placeholder="Threads 帳號" oninput="setField('thId', this.value)">
+        </div>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const CFG = window.CARD_KING_CONFIG || {};
+const HAS_BACKEND = !!(CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY);
+const sb = HAS_BACKEND ? window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY) : null;
+
+let authMode = "login";
+let session = null;
+let profile = null;
+let state = defaultState();
+
+function defaultState() {
+  return {
+    style: "dark", color: "#C5AE6E", logoMono: true, showPhoto: false,
+    logoUrl: "", videoUrl: "", photoUrl: "",
+    company: "高雅瓷國際企業有限公司", name: "高弘治", enName: "Big-T",
+    mobile: "0977-393-811", email: "titankou2002@gmail.com",
+    tel: "03-486-3978", address: "台北市內湖區行愛路77巷16號5樓", website: "https://bigt.cc/web/",
+    oaOn: false, oaId: "", mailBtnOn: false,
+    igOn: false, igId: "", fbOn: false, fbId: "", thOn: false, thId: ""
+  };
+}
+
+function esc(s) { return String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function parseYtId(u) { const m = String(u || "").match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/); return m ? m[1] : ""; }
+function getContrast(hex) { const h = hex.replace("#",""); return (parseInt(h.slice(0,2),16)*299 + parseInt(h.slice(2,4),16)*587 + parseInt(h.slice(4,6),16)*114)/1000 >= 165 ? "#1F1B16" : "#FFFFFF"; }
+
+function setAuthMode(m) {
+  authMode = m;
+  document.getElementById("tabLogin").classList.toggle("active", m === "login");
+  document.getElementById("tabReg").classList.toggle("active", m === "register");
+  document.getElementById("authSlugWrap").style.display = m === "register" ? "flex" : "none";
+  document.getElementById("btnAuthGo").textContent = m === "register" ? "註冊" : "登入";
+}
+
+async function submitAuth() {
+  const email = document.getElementById("authEmail").value.trim();
+  const password = document.getElementById("authPass").value;
+  if (!email || !password) { showToast("請填寫 Email 與密碼"); return; }
+
+  if (authMode === "register") {
+    const { data, error } = await sb.auth.signUp({ email, password });
+    if (error) { showToast(error.message); return; }
+    if (data.user) {
+      const slug = (document.getElementById("authSlug").value.trim().toLowerCase().replace(/[^a-z0-9_-]/g, "") || ("u" + Math.random().toString(36).slice(2, 8)));
+      await sb.from("card_profiles").insert({ id: data.user.id, slug, email, config: state });
+    }
+    showToast("註冊完成");
+    await bootSession();
+  } else {
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) { showToast(error.message); return; }
+    await bootSession();
+  }
+}
+
+async function doLogout() {
+  if (sb) await sb.auth.signOut();
+  location.reload();
+}
+
+async function bootSession() {
+  if (!HAS_BACKEND) {
+    document.getElementById("editorView").style.display = "grid";
+    document.getElementById("editorToolbar").style.display = "flex";
+    applyColor(state.color); renderInputs(); renderPreview();
+    return;
+  }
+  const { data } = await sb.auth.getSession();
+  session = data.session;
+  if (!session) {
+    document.getElementById("authView").style.display = "block";
+    document.getElementById("editorView").style.display = "none";
+    document.getElementById("editorToolbar").style.display = "none";
+    return;
+  }
+  document.getElementById("authView").style.display = "none";
+  document.getElementById("editorView").style.display = "grid";
+  document.getElementById("editorToolbar").style.display = "flex";
+  document.getElementById("btnLogout").style.display = "inline-flex";
+
+  let { data: prof } = await sb.from("card_profiles").select("*").eq("id", session.user.id).single();
+  if (!prof) {
+    const slug = "u" + Math.random().toString(36).slice(2, 8);
+    const ins = await sb.from("card_profiles").insert({ id: session.user.id, slug, email: session.user.email, config: state }).select("*").single();
+    prof = ins.data;
+  }
+  profile = prof;
+  state = Object.assign(defaultState(), prof.config || {});
+  updateQuotaUI();
+  applyColor(state.color);
+  renderInputs();
+  renderPreview();
+}
+
+function updateQuotaUI() {
+  if (!profile) return;
+  const used = profile.video_key ? 1 : 0;
+  const quota = profile.video_quota || 1;
+  document.getElementById("videoQuotaText").textContent = `影片額度：${used} / ${quota}（≤10秒 / ≤10MB）`;
+  document.getElementById("btnUploadVideo").disabled = used >= quota;
+  document.getElementById("btnDeleteVideo").style.display = used > 0 ? "inline-flex" : "none";
+}
+
+function setStyle(s) {
+  state.style = s;
+  document.querySelectorAll("#styleGrid .style-opt").forEach(el => el.classList.toggle("active", el.dataset.style === s));
+  renderPreview();
+}
+
+function applyColor(hex) {
+  if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return;
+  const u = hex.toUpperCase();
+  state.color = u;
+  document.documentElement.style.setProperty("--accent", u);
+  document.documentElement.style.setProperty("--accent-text", getContrast(u));
+  document.getElementById("inColor").value = u.toLowerCase();
+  document.getElementById("inColorHex").value = u;
+  document.querySelectorAll("#swatches .swatch").forEach(b => b.classList.toggle("active", b.dataset.hex.toUpperCase() === u));
+  renderPreview();
+}
+
+function onHexInput(v) { const c = v.trim().startsWith("#") ? v.trim() : "#" + v.trim(); if (/^#[0-9a-fA-F]{6}$/.test(c)) applyColor(c); }
+function setField(k, v) { state[k] = v; renderPreview(); }
+
+async function uploadToWorker(kind, blob, contentType) {
+  if (!HAS_BACKEND || !CFG.WORKER_API) { showToast("尚未設定 Worker API"); return null; }
+  const r = await fetch(CFG.WORKER_API.replace(/\/$/, "") + "/api/upload?kind=" + kind, {
+    method: "POST",
+    headers: { Authorization: "Bearer " + session.access_token, "Content-Type": contentType },
+    body: blob
+  });
+  const d = await r.json();
+  if (!d.ok) { showToast(d.error || "上傳失敗"); return null; }
+  return d;
+}
+
+async function onLogoPick(e) {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  const url = URL.createObjectURL(f);
+  const img = new Image();
+  img.onload = async () => {
+    const c = document.createElement("canvas");
+    const scale = Math.min(1, 560 / img.naturalWidth);
+    c.width = Math.round(img.naturalWidth * scale); c.height = Math.round(img.naturalHeight * scale);
+    const ctx = c.getContext("2d");
+    ctx.drawImage(img, 0, 0, c.width, c.height);
+    if (state.logoMono) { ctx.globalCompositeOperation = "source-in"; ctx.fillStyle = state.color; ctx.fillRect(0, 0, c.width, c.height); }
+    c.toBlob(async (blob) => {
+      if (HAS_BACKEND && CFG.WORKER_API) {
+        const up = await uploadToWorker("logo", blob, "image/png");
+        if (up) { state.logoUrl = up.url; profile.logo_key = up.key; showToast("Logo 已上傳"); }
+      } else {
+        state.logoUrl = URL.createObjectURL(blob);
+      }
+      renderPreview();
+    }, "image/png");
+  };
+  img.src = url;
+}
+
+async function onPhotoPick(e) {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  const url = URL.createObjectURL(f);
+  const img = new Image();
+  img.onload = async () => {
+    const c = document.createElement("canvas");
+    const scale = Math.min(1, 900 / Math.max(img.naturalWidth, img.naturalHeight));
+    c.width = Math.round(img.naturalWidth * scale); c.height = Math.round(img.naturalHeight * scale);
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    c.toBlob(async (blob) => {
+      if (HAS_BACKEND && CFG.WORKER_API) {
+        const up = await uploadToWorker("photo", blob, "image/jpeg");
+        if (up) { state.photoUrl = up.url; profile.photo_key = up.key; state.showPhoto = true; document.getElementById("chkPhoto").checked = true; showToast("照片已上傳"); }
+      } else {
+        state.photoUrl = URL.createObjectURL(blob); state.showPhoto = true; document.getElementById("chkPhoto").checked = true;
+      }
+      renderPreview();
+    }, "image/jpeg", 0.86);
+  };
+  img.src = url;
+}
+
+async function onVideoPick(e) {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  if (f.size > 10 * 1024 * 1024) { showToast("影片超過 10MB"); e.target.value = ""; return; }
+  const objUrl = URL.createObjectURL(f);
+  const v = document.createElement("video");
+  v.preload = "metadata";
+  v.onloadedmetadata = async () => {
+    if (v.duration > 10.5) { showToast("影片超過 10 秒"); URL.revokeObjectURL(objUrl); e.target.value = ""; return; }
+    if (HAS_BACKEND && CFG.WORKER_API) {
+      showToast("上傳影片中...");
+      const up = await uploadToWorker("video", f, "video/mp4");
+      if (up) {
+        state.videoUrl = up.url;
+        state.style = "video";
+        profile.video_key = up.key;
+        document.getElementById("inVideoUrl").value = up.url;
+        updateQuotaUI();
+        setStyle("video");
+        showToast("影片已上傳");
+      }
+    } else {
+      state.videoUrl = objUrl;
+      setStyle("video");
+    }
+    e.target.value = "";
+  };
+  v.src = objUrl;
+}
+
+async function deleteAsset(kind) {
+  if (HAS_BACKEND && CFG.WORKER_API) {
+    const r = await fetch(CFG.WORKER_API.replace(/\/$/, "") + "/api/asset?kind=" + kind, {
+      method: "DELETE", headers: { Authorization: "Bearer " + session.access_token }
+    });
+    const d = await r.json();
+    if (!d.ok) { showToast(d.error || "刪除失敗"); return; }
+    if (kind === "video") { profile.video_key = ""; state.videoUrl = ""; document.getElementById("inVideoUrl").value = ""; updateQuotaUI(); }
+    if (kind === "logo") { profile.logo_key = ""; state.logoUrl = ""; }
+    if (kind === "photo") { profile.photo_key = ""; state.photoUrl = ""; }
+    showToast("已刪除");
+  } else {
+    if (kind === "video") { state.videoUrl = ""; document.getElementById("inVideoUrl").value = ""; }
+    if (kind === "logo") state.logoUrl = "";
+    if (kind === "photo") state.photoUrl = "";
+  }
+  renderPreview();
+}
+
+async function saveCard() {
+  if (!HAS_BACKEND || !profile) { showToast("已暫存預覽"); return; }
+  const { error } = await sb.from("card_profiles").update({ config: state }).eq("id", profile.id);
+  showToast(error ? error.message : "已儲存");
+}
+
+function getShareUrl() {
+  const slug = (profile && profile.slug) || "demo";
+  return `https://liff.line.me/${CFG.LIFF_ID}?id=${encodeURIComponent(slug)}`;
+}
+
+async function copyShareLink() {
+  try { await navigator.clipboard.writeText(getShareUrl()); showToast("已複製連結"); } catch (e) {}
+}
+function shareToLine() { window.open(getShareUrl(), "_blank", "noopener"); }
+
+function renderInputs() {
+  document.querySelectorAll("#styleGrid .style-opt").forEach(el => el.classList.toggle("active", el.dataset.style === state.style));
+  document.getElementById("chkLogoMono").checked = state.logoMono !== false;
+  document.getElementById("chkPhoto").checked = !!state.showPhoto;
+  document.getElementById("inVideoUrl").value = state.videoUrl || "";
+  document.getElementById("inCompany").value = state.company || "";
+  document.getElementById("inName").value = state.name || "";
+  document.getElementById("inEnName").value = state.enName || "";
+  document.getElementById("inMobile").value = state.mobile || "";
+  document.getElementById("inEmail").value = state.email || "";
+  document.getElementById("inTel").value = state.tel || "";
+  document.getElementById("inAddr").value = state.address || "";
+  document.getElementById("inWeb").value = state.website || "";
+  document.getElementById("chkOa").checked = !!state.oaOn; document.getElementById("inOaId").value = state.oaId || "";
+  document.getElementById("chkMailBtn").checked = !!state.mailBtnOn;
+  document.getElementById("chkIg").checked = !!state.igOn; document.getElementById("inIgId").value = state.igId || "";
+  document.getElementById("chkFb").checked = !!state.fbOn; document.getElementById("inFbId").value = state.fbId || "";
+  document.getElementById("chkTh").checked = !!state.thOn; document.getElementById("inThId").value = state.thId || "";
+}
+
+function buildSocialHtml() {
+  const list = [];
+  if (state.oaOn && state.oaId) {
+    const id = state.oaId.trim();
+    const u = /^https?:\/\//i.test(id) ? id : "https://line.me/R/ti/p/" + (id.startsWith("@") ? id : "@" + id);
+    list.push(`<a class="mc-social-pill" href="${esc(u)}" target="_blank">LINE@</a>`);
+  }
+  if (state.mailBtnOn && state.email) list.push(`<a class="mc-social-pill" href="mailto:${esc(state.email)}">Email</a>`);
+  if (state.igOn && state.igId) list.push(`<a class="mc-social-pill" href="https://instagram.com/${esc(state.igId.replace(/^@/,''))}" target="_blank">IG</a>`);
+  if (state.fbOn && state.fbId) list.push(`<a class="mc-social-pill" href="https://facebook.com/${esc(state.fbId.replace(/^@/,''))}" target="_blank">FB</a>`);
+  if (state.thOn && state.thId) list.push(`<a class="mc-social-pill" href="https://www.threads.net/@${esc(state.thId.replace(/^@/,''))}" target="_blank">Threads</a>`);
+  return list.length ? `<div class="mc-social-row">${list.join("")}</div>` : "";
+}
+
+function renderPreview() {
+  const mount = document.getElementById("cardMount");
+  const telDigits = String(state.mobile || "").replace(/[^0-9+]/g, "");
+  const rows = [];
+  if (state.mobile) rows.push(`<div class="mc-row"><span class="mc-lbl">手機</span><span class="mc-val">${esc(state.mobile)}</span></div>`);
+  if (state.email) rows.push(`<div class="mc-row"><span class="mc-lbl">信箱</span><span class="mc-val">${esc(state.email)}</span></div>`);
+  if (state.tel) rows.push(`<div class="mc-row"><span class="mc-lbl">電話</span><span class="mc-val">${esc(state.tel)}</span></div>`);
+  if (state.address) rows.push(`<div class="mc-row"><span class="mc-lbl">門市</span><span class="mc-val">${esc(state.address)}</span></div>`);
+
+  const pair = [];
+  if (telDigits) pair.push(`<a class="mc-btn-pri" href="tel:${esc(telDigits)}">撥打手機</a>`);
+  if (state.website) pair.push(`<a class="mc-btn-sec" href="${esc(state.website)}" target="_blank">官方網站</a>`);
+
+  const foot = `
+    <div class="mc-foot">
+      ${pair.length ? `<div class="mc-btn-row" style="${pair.length === 1 ? 'grid-template-columns:1fr;' : ''}">${pair.join("")}</div>` : ""}
+      ${buildSocialHtml()}
+      <button type="button" class="mc-btn-link" onclick="shareToLine()">轉傳這張名片</button>
+    </div>
+  `;
+  const logoHtml = state.logoUrl ? `<div class="mc-logo"><img src="${esc(state.logoUrl)}" alt="Logo"></div>` : "";
+  const brandRow = `<div class="mc-brand-row">${logoHtml}<span class="mc-co-name">${esc(state.company)}</span></div>`;
+  const nameLine = `<div class="mc-name-line"><span class="mc-name">${esc(state.name)}</span>${state.enName ? `<span class="mc-en-name">${esc(state.enName)}</span>` : ""}</div>`;
+
+  if (state.style === "video") {
+    const ytId = parseYtId(state.videoUrl);
+    const mediaHtml = ytId
+      ? `<img src="https://i.ytimg.com/vi/${ytId}/hqdefault.jpg"><div class="mc-yt-play"><span>▶</span></div>`
+      : (state.videoUrl ? `<video autoplay muted loop playsinline src="${esc(state.videoUrl)}" ${state.photoUrl ? `poster="${esc(state.photoUrl)}"` : ""}></video>` : "");
+    mount.innerHTML = `<article class="mega-card style-dark"><div class="mc-video-box">${mediaHtml}</div><div class="mc-head" style="display:block;">${brandRow}${nameLine}</div><div class="mc-sep"></div><div class="mc-body">${rows.join("")}</div>${foot}</article>`;
+    return;
+  }
+  if (state.style === "hero") {
+    mount.innerHTML = `<article class="mega-card style-hero"><div class="mc-hero-box">${state.photoUrl ? `<img class="mc-hero-img" src="${esc(state.photoUrl)}">` : ""}<div class="mc-hero-grad"><div class="mc-hero-top">${state.logoUrl ? `<span class="mc-logo-pill"><img src="${esc(state.logoUrl)}"></span>` : "<span></span>"}<span style="font-size:11px;color:#fff;">${esc(state.company)}</span></div><div>${nameLine}</div></div></div><div class="mc-body">${rows.join("")}</div>${foot}</article>`;
+    return;
+  }
+  const cls = state.style === "ivory" ? "style-ivory" : "style-dark";
+  mount.innerHTML = `<article class="mega-card ${cls}"><div class="mc-top-bar"></div><div style="padding:18px 22px 0;">${brandRow}</div><div class="mc-head" style="padding-top:2px;"><div style="flex:1;">${nameLine}</div>${state.showPhoto && state.photoUrl ? `<div class="mc-photo"><img src="${esc(state.photoUrl)}"></div>` : ""}</div><div class="mc-sep"></div><div class="mc-body">${rows.join("")}</div>${foot}</article>`;
+}
+
+function toggleChatTheme() {
+  const s = document.getElementById("phoneScreen");
+  const d = s.classList.toggle("dark-chat");
+  document.getElementById("btnTheme").textContent = d ? "淺色背景" : "深色背景";
+}
+
+let tTimer;
+function showToast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg; el.classList.add("show");
+  clearTimeout(tTimer); tTimer = setTimeout(() => el.classList.remove("show"), 2600);
+}
+
+bootSession();
+</script>
+</body>
+</html>

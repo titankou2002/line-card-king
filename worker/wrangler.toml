@@ -1,0 +1,12 @@
+name = "line-card-king-api"
+main = "src/index.js"
+compatibility_date = "2026-11-01"
+
+[[r2_buckets]]
+binding = "CARD_BUCKET"
+bucket_name = "line-card-king"
+
+[vars]
+# 綁定 R2 公開網域後填入（例如 https://card-cdn.bigt.cc），留空則自動走本 Worker 的 /f/<key> 端點
+R2_PUBLIC_URL = ""
+# SUPABASE_URL 與 SUPABASE_SERVICE_KEY 請透過 wrangler secret put 設定

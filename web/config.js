@@ -1,0 +1,6 @@
+window.CARD_KING_CONFIG = {
+  SUPABASE_URL: "",
+  SUPABASE_ANON_KEY: "",
+  WORKER_API: "",
+  LIFF_ID: "2007666611-fbGOItDt"
+};
