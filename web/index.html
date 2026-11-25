@@ -3,9 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2323201B'/%3E%3Crect x='12' y='18' width='40' height='28' rx='5' fill='none' stroke='%23C5AE6E' stroke-width='4'/%3E%3Cline x1='18' y1='27' x2='36' y2='27' stroke='%23C5AE6E' stroke-width='3.5' stroke-linecap='round'/%3E%3Cline x1='18' y1='35' x2='30' y2='35' stroke='%23E8D9AD' stroke-width='3' stroke-linecap='round'/%3E%3Ccircle cx='43' cy='31' r='4' fill='%23C5AE6E'/%3E%3C/svg%3E">
 <title>LINE 名片王</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;700&family=Noto+Serif+TC:wght@500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js"></script>
+<script>
+window.CARD_KING_CONFIG = {
+  SUPABASE_URL: "https://vzpizjhlwxsfzbiguvfo.supabase.co",
+  SUPABASE_ANON_KEY: "sb_publishable_wXvQ3jLB3tXGdkp-8Vgl7w_8A3Vn4gT",
+  GAS_API: "https://script.google.com/macros/s/AKfycbxB2wyCEt-0xeXL43Ak7NvkB2oNGVMfXwJRJvMZcCR0GYhpNlIbTtEwqy_G4pVJ5N-x/exec",
+  YT_CONVERTER_API: "",
+  LIFF_ID: "2007666611-fbGOItDt",
+  DONATE_URL: "https://line.me/R/ti/p/@297azzax"
+};
+</script>
 <style>
   :root {
     --bg: #f6f4ef;
@@ -17,6 +30,9 @@
     --t3: #7b7266;
     --accent: #c5ae6e;
     --accent-text: #1f1b16;
+    --card-bg: #23201b;
+    --card-fg: #f1ece2;
+    --card-font: "Microsoft JhengHei", "微軟正黑體", sans-serif;
     --line-green: #06c755;
     --chat-bg-light: #8cabd9;
     --chat-bg-dark: #111315;
@@ -36,8 +52,8 @@
     position: sticky; top: 0; z-index: 30;
     background: rgba(255, 253, 249, 0.96);
     border-bottom: 1px solid var(--border);
-    padding: 11px 20px;
-    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 10px 20px;
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;
   }
   .topbar-title { display: flex; align-items: center; gap: 10px; }
   .brand-mark {
@@ -47,11 +63,15 @@
     font-weight: 700; font-size: 13px;
   }
   .topbar h1 { font-size: 16px; font-weight: 700; }
+  .quota-pill {
+    font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px;
+    background: var(--raised); color: var(--t1);
+  }
   .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 
   .btn {
     appearance: none; border: 1px solid var(--border); background: var(--surface);
-    color: var(--t1); font-size: 13px; font-weight: 600; padding: 7px 14px;
+    color: var(--t1); font-size: 13px; font-weight: 600; padding: 7px 13px;
     border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center;
     justify-content: center; gap: 6px; text-decoration: none; font-family: inherit;
   }
@@ -64,23 +84,13 @@
   .btn-danger { color: var(--err); border-color: rgba(180,65,47,0.3); }
   .btn-sm { padding: 5px 10px; font-size: 12px; border-radius: 7px; }
 
-  /* 註冊 / 登入框 */
-  .auth-box {
-    max-width: 380px; margin: 72px auto; background: var(--surface);
-    border: 1px solid var(--border); border-radius: 16px; padding: 26px;
-    box-shadow: 0 12px 32px rgba(31,27,22,0.06);
-  }
-  .auth-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: var(--raised); padding: 4px; border-radius: 10px; margin-bottom: 18px; }
-  .auth-tab { border: none; background: transparent; padding: 8px; border-radius: 7px; font-size: 13.5px; font-weight: 700; color: var(--t2); cursor: pointer; font-family: inherit; }
-  .auth-tab.active { background: var(--surface); color: var(--t1); }
-
   /* 主編輯區 */
   .stage {
-    max-width: 1140px; margin: 0 auto; padding: 24px 20px 64px;
-    display: grid; grid-template-columns: 430px 1fr; gap: 28px; align-items: start;
+    max-width: 1160px; margin: 0 auto; padding: 22px 20px 64px;
+    display: grid; grid-template-columns: 430px 1fr; gap: 26px; align-items: start;
   }
-  @media (max-width: 920px) { .stage { grid-template-columns: 1fr; padding: 16px 12px 48px; } }
-  .preview-col { position: sticky; top: 72px; }
+  @media (max-width: 920px) { .stage { grid-template-columns: 1fr; padding: 14px 12px 48px; } }
+  .preview-col { position: sticky; top: 70px; }
   @media (max-width: 920px) { .preview-col { position: static; } }
 
   .phone-shell {
@@ -92,126 +102,121 @@
     display: flex; flex-direction: column; min-height: 640px;
   }
   .phone-screen.dark-chat { background: var(--chat-bg-dark); }
-
   .line-header {
-    padding: 14px 16px 12px; display: flex; align-items: center; justify-content: space-between;
+    padding: 13px 16px 11px; display: flex; align-items: center; justify-content: space-between;
     background: rgba(140, 171, 217, 0.92); color: #111; border-bottom: 1px solid rgba(0,0,0,0.06);
   }
   .phone-screen.dark-chat .line-header { background: rgba(24,26,29,0.96); color: #f3f4f6; }
-  .chat-body { flex: 1; padding: 18px 18px 24px; display: flex; flex-direction: column; gap: 14px; align-items: center; }
+  .chat-body { flex: 1; padding: 16px 16px 24px; display: flex; flex-direction: column; gap: 10px; align-items: center; }
 
-  /* 單張 Mega 卡片 */
-  .mega-card { width: 100%; max-width: 340px; border-radius: 18px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.20); }
-  .mc-brand-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+  /* 可點擊調色區域提示框 */
+  [data-cslot] { cursor: pointer; transition: outline 0.15s; }
+  [data-cslot]:hover { outline: 2px dashed rgba(197, 174, 110, 0.85); outline-offset: -2px; }
+
+  /* ===== 單張 Mega 卡片共用 ===== */
+  .mega-card {
+    width: 100%; max-width: 344px; border-radius: 18px; overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.20);
+    font-family: var(--card-font);
+    background: var(--card-bg);
+    color: var(--card-fg);
+  }
+  .mc-top-bar { height: 5px; background: var(--accent); }
+  .mc-brand-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
   .mc-logo { height: 22px; color: var(--accent); }
-  .mc-logo svg, .mc-logo img { height: 22px; width: auto; max-width: 132px; object-fit: contain; display: block; }
-  .mc-co-name { font-size: 11px; font-weight: 600; color: #b8afa2; white-space: nowrap; }
-  .style-ivory .mc-co-name { color: #7b7266; }
-
+  .mc-logo svg, .mc-logo img { height: 22px; width: auto; max-width: 130px; object-fit: contain; display: block; }
+  .mc-co-name { font-size: 11px; font-weight: 600; opacity: 0.72; white-space: nowrap; }
   .mc-name-line { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; }
+  .mc-name { font-size: 22px; font-weight: 700; line-height: 1.25; }
   .mc-en-name { font-size: 15px; font-weight: 700; color: var(--accent); }
-  .style-ivory .mc-en-name { color: #8e7740; }
-  .style-hero .mc-en-name { color: #e8d59e; }
+  .mc-slogan { font-size: 12px; opacity: 0.82; margin-top: 6px; line-height: 1.45; }
+  .mc-sep { height: 1px; background: currentColor; opacity: 0.14; margin: 0 20px; }
+  .mc-body { padding: 14px 20px; display: flex; flex-direction: column; gap: 8px; }
+  .mc-row { display: flex; align-items: baseline; gap: 10px; font-size: 12.5px; line-height: 1.45; }
+  .mc-lbl { width: 34px; flex-shrink: 0; color: var(--accent); font-size: 11.5px; font-weight: 700; }
+  .mc-val { word-break: break-word; }
+  .mc-foot { padding: 2px 20px 16px; display: flex; flex-direction: column; gap: 8px; }
+  .mc-btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .mc-btn-pri {
+    height: 39px; border-radius: 8px; background: var(--accent); color: var(--accent-text);
+    display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; text-decoration: none;
+  }
+  .mc-btn-sec {
+    height: 39px; border-radius: 8px; background: rgba(128,128,128,0.18); color: var(--card-fg);
+    display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; text-decoration: none;
+  }
+  .mc-btn-link {
+    height: 28px; background: transparent; border: none; color: var(--accent);
+    font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit;
+  }
+  .mc-social-row { display: flex; gap: 6px; }
+  .mc-social-pill {
+    flex: 1; height: 30px; border-radius: 6px;
+    background: rgba(128,128,128,0.14); border: 1px solid rgba(197,174,110,0.35); color: var(--accent);
+    font-size: 11px; font-weight: 700; text-decoration: none;
+    display: flex; align-items: center; justify-content: center;
+  }
 
   .mc-video-box { position: relative; width: 100%; aspect-ratio: 16/9; background: #14120f; overflow: hidden; }
   .mc-video-box video, .mc-video-box img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .mc-yt-play {
-    position: absolute; inset: 0; background: rgba(0,0,0,0.26);
-    display: flex; align-items: center; justify-content: center;
-  }
+  .mc-yt-play { position: absolute; inset: 0; background: rgba(0,0,0,0.24); display: flex; align-items: center; justify-content: center; }
   .mc-yt-play span {
-    width: 54px; height: 38px; border-radius: 10px; background: rgba(0,0,0,0.72);
-    border: 1px solid rgba(255,255,255,0.35); color: #fff; font-size: 16px;
+    width: 52px; height: 36px; border-radius: 10px; background: rgba(0,0,0,0.72);
+    border: 1px solid rgba(255,255,255,0.35); color: #fff; font-size: 15px;
     display: inline-flex; align-items: center; justify-content: center;
   }
+  .mc-photo { width: 64px; height: 78px; border-radius: 10px; overflow: hidden; flex-shrink: 0; border: 1.5px solid var(--accent); }
+  .mc-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-  .mega-card.style-dark { background: #23201b; color: #f6f2ea; }
-  .style-dark .mc-top-bar { height: 4px; background: var(--accent); }
-  .style-dark .mc-head { padding: 18px 22px 14px; display: flex; align-items: center; justify-content: space-between; gap: 14px; }
-  .style-dark .mc-name { font-size: 22px; font-weight: 700; color: #fffdf9; }
-  .style-dark .mc-photo { width: 64px; height: 78px; border-radius: 10px; overflow: hidden; flex-shrink: 0; border: 1.5px solid var(--accent); }
-  .style-dark .mc-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .style-dark .mc-sep { height: 1px; background: rgba(197, 174, 110, 0.24); margin: 0 22px; }
-  .style-dark .mc-body { padding: 15px 22px; display: flex; flex-direction: column; gap: 8px; }
-  .style-dark .mc-row { display: flex; align-items: baseline; gap: 10px; font-size: 12.5px; }
-  .style-dark .mc-lbl { width: 34px; flex-shrink: 0; color: var(--accent); font-size: 11.5px; font-weight: 700; }
-  .style-dark .mc-val { color: #f1ece2; }
-  .style-dark .mc-foot { padding: 2px 22px 18px; display: flex; flex-direction: column; gap: 8px; }
-
-  .mega-card.style-hero { background: #fffdf9; color: #1f1b16; }
-  .style-hero .mc-hero-box { position: relative; height: 196px; background: #2c2822; overflow: hidden; }
-  .style-hero .mc-hero-img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .style-hero .mc-hero-grad {
+  /* 風格 3：雜誌封面 */
+  .mc-hero-box { position: relative; height: 190px; background: #2c2822; overflow: hidden; }
+  .mc-hero-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .mc-hero-grad {
     position: absolute; inset: 0;
     background: linear-gradient(180deg, rgba(20,18,15,0.12) 0%, rgba(20,18,15,0.2) 42%, rgba(20,18,15,0.88) 100%);
     display: flex; flex-direction: column; justify-content: space-between; padding: 14px 18px;
   }
-  .style-hero .mc-hero-top { display: flex; align-items: center; justify-content: space-between; }
-  .style-hero .mc-logo-pill { background: rgba(255,253,249,0.92); padding: 4px 9px; border-radius: 6px; color: var(--accent); display: inline-flex; }
-  .style-hero .mc-logo-pill svg, .style-hero .mc-logo-pill img { height: 18px; width: auto; max-width: 108px; display: block; }
-  .style-hero .mc-name { font-size: 22px; font-weight: 700; color: #fff; }
-  .style-hero .mc-body { padding: 15px 20px 12px; display: flex; flex-direction: column; gap: 8px; }
-  .style-hero .mc-row { display: flex; align-items: baseline; gap: 10px; font-size: 12.5px; }
-  .style-hero .mc-lbl { width: 34px; flex-shrink: 0; color: #8c8377; font-size: 11.5px; font-weight: 700; }
-  .style-hero .mc-val { color: #1f1b16; }
-  .style-hero .mc-foot { padding: 2px 20px 16px; display: flex; flex-direction: column; gap: 8px; }
+  .mc-logo-pill { background: rgba(255,253,249,0.92); padding: 4px 9px; border-radius: 6px; color: var(--accent); display: inline-flex; }
+  .mc-logo-pill img, .mc-logo-pill svg { height: 17px; width: auto; max-width: 104px; display: block; }
 
-  .mega-card.style-ivory { background: #faf7f0; color: #1f1b16; border: 1px solid rgba(31,27,22,0.08); }
-  .style-ivory .mc-top-bar { height: 5px; background: var(--accent); }
-  .style-ivory .mc-head { padding: 16px 22px 14px; display: flex; align-items: center; justify-content: space-between; gap: 14px; }
-  .style-ivory .mc-name { font-size: 22px; font-weight: 700; color: #1f1b16; }
-  .style-ivory .mc-photo { width: 64px; height: 78px; border-radius: 10px; overflow: hidden; flex-shrink: 0; border: 1px solid rgba(31,27,22,0.12); }
-  .style-ivory .mc-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .style-ivory .mc-sep { height: 1px; background: #e6e0d4; margin: 0 22px; }
-  .style-ivory .mc-body { padding: 14px 22px; display: flex; flex-direction: column; gap: 8px; }
-  .style-ivory .mc-row { display: flex; align-items: baseline; gap: 10px; font-size: 12.5px; }
-  .style-ivory .mc-lbl { width: 34px; flex-shrink: 0; color: #8c8377; font-size: 11.5px; font-weight: 700; }
-  .style-ivory .mc-val { color: #1f1b16; }
-  .style-ivory .mc-foot { padding: 2px 22px 18px; display: flex; flex-direction: column; gap: 8px; }
+  /* 風格 6：側邊影像直式卡 */
+  .mc-side-grid { display: grid; grid-template-columns: 118px 1fr; min-height: 220px; }
+  .mc-side-media { position: relative; background: #181613; overflow: hidden; }
+  .mc-side-media img, .mc-side-media video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .mc-side-info { padding: 16px 14px; display: flex; flex-direction: column; justify-content: center; gap: 7px; }
 
-  .mc-btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .mc-btn-pri {
-    height: 40px; border-radius: 8px; background: var(--accent); color: var(--accent-text);
-    display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; text-decoration: none;
-  }
-  .mc-btn-sec {
-    height: 40px; border-radius: 8px; background: #332e27; color: #f6f2ea;
-    display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; text-decoration: none;
-  }
-  .style-ivory .mc-btn-sec, .style-hero .mc-btn-sec { background: #ebe5d9; color: #1f1b16; }
-  .mc-btn-link {
-    height: 30px; background: transparent; border: none; color: var(--accent);
-    font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit;
-  }
-  .style-ivory .mc-btn-link, .style-hero .mc-btn-link { color: #6f5e32; }
+  /* 風格 7：莫蘭迪撞色 */
+  .mc-block-top { background: var(--accent); color: var(--accent-text); padding: 18px 20px 16px; }
+  .mc-block-top .mc-en-name { color: inherit; opacity: 0.82; }
+  .mc-block-top .mc-co-name { color: inherit; opacity: 0.8; }
 
-  /* 橫排社群小膠囊列 */
-  .mc-social-row { display: flex; gap: 6px; }
-  .mc-social-pill {
-    flex: 1; height: 32px; border-radius: 6px;
-    background: #2e2a23; border: 1px solid #463e31; color: var(--accent);
-    font-size: 11.5px; font-weight: 700; text-decoration: none;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .style-ivory .mc-social-pill, .style-hero .mc-social-pill {
-    background: #ebe5d9; border-color: #ddd5c5; color: #4d453b;
-  }
+  /* 風格 8：建築黑框 */
+  .mega-card.style-frame { border: 3px solid var(--card-fg); border-radius: 12px; }
 
   /* 右側編輯面板 */
   .editor-panel {
     background: var(--surface); border: 1px solid var(--border);
-    border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 16px;
+    border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 15px;
   }
-  .sec-title { font-size: 13.5px; font-weight: 700; color: var(--t1); }
+  .sec-title { font-size: 13.5px; font-weight: 700; color: var(--t1); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .sep { height: 1px; background: var(--border); }
 
-  .style-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; }
+  /* 8 款版型（4x2） */
+  .style-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin-top: 8px; }
   @media (max-width: 560px) { .style-grid { grid-template-columns: repeat(2, 1fr); } }
   .style-opt {
-    border: 1.5px solid var(--border); border-radius: 9px; padding: 10px 6px;
-    background: var(--bg); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 700; color: var(--t1);
+    border: 1.5px solid var(--border); border-radius: 9px; padding: 9px 6px;
+    background: var(--bg); cursor: pointer; font-family: inherit; font-size: 12.5px; font-weight: 700; color: var(--t1);
   }
-  .style-opt.active { border-color: #1f1b16; background: #fff; }
+  .style-opt.active { border-color: #1f1b16; background: #fff; box-shadow: 0 2px 8px rgba(31,27,22,0.08); }
+
+  /* 調色槽切換 */
+  .slot-tabs { display: inline-flex; gap: 4px; background: var(--raised); padding: 3px; border-radius: 8px; }
+  .slot-tab {
+    border: none; background: transparent; padding: 4px 10px; border-radius: 6px;
+    font-size: 12px; font-weight: 700; color: var(--t2); cursor: pointer; font-family: inherit;
+  }
+  .slot-tab.active { background: var(--surface); color: var(--t1); }
 
   .color-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
   .color-picker-wrap { position: relative; width: 40px; height: 36px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); flex-shrink: 0; }
@@ -224,34 +229,44 @@
   @media (max-width: 560px) { .field-grid { grid-template-columns: 1fr; } }
   .field { display: flex; flex-direction: column; gap: 4px; }
   .field label { font-size: 12px; font-weight: 600; color: var(--t2); }
-  .field input {
+  .field input, .field select {
     width: 100%; height: 36px; padding: 0 10px; border: 1px solid var(--border);
     border-radius: 8px; font-size: 13px; background: #fff; color: var(--t1); font-family: inherit;
   }
-  .field input:focus { outline: none; border-color: var(--accent); }
+  .field input:focus, .field select:focus { outline: none; border-color: var(--accent); }
 
   .quota-bar {
     display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px;
-    padding: 10px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+    padding: 9px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
     font-size: 12.5px; font-weight: 600;
   }
 
-  .ext-stack { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+  .ext-stack { display: flex; flex-direction: column; gap: 7px; margin-top: 8px; }
   .ext-row {
     display: grid; grid-template-columns: 112px 1fr; align-items: center; gap: 8px;
-    padding: 7px 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 9px;
+    padding: 6px 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 9px;
   }
   .ext-chk { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 600; cursor: pointer; }
   .ext-chk input { width: 15px; height: 15px; accent-color: #23201b; cursor: pointer; }
-  .ext-row input[type="text"] {
+  .ext-row input[type="text"], .ext-row input[type="email"] {
     height: 32px; padding: 0 9px; border: 1px solid var(--border); border-radius: 7px;
     font-size: 12.5px; background: #fff; color: var(--t1); font-family: inherit; width: 100%;
+  }
+
+  .modal-bg {
+    display: none; position: fixed; inset: 0; z-index: 200;
+    background: rgba(31,27,22,0.58); align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-card {
+    background: #fffdf9; border-radius: 18px; padding: 24px; max-width: 360px; width: 100%;
+    text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.24);
+    display: flex; flex-direction: column; gap: 14px;
   }
 
   .toast {
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
     background: #1f1b16; color: #fff; padding: 10px 18px; border-radius: 10px; font-size: 13px;
-    opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s; z-index: 100;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s; z-index: 250;
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
@@ -262,37 +277,23 @@
   <div class="topbar-title">
     <span class="brand-mark">王</span>
     <h1>LINE 名片王</h1>
+    <span class="quota-pill" id="editQuotaPill">免費修改：3 / 3</span>
   </div>
-  <div class="toolbar" id="editorToolbar" style="display:none;">
+  <div class="toolbar">
     <button type="button" class="btn" id="btnTheme" onclick="toggleChatTheme()">深色背景</button>
-    <button type="button" class="btn" onclick="copyShareLink()">複製連結</button>
+    <button type="button" class="btn" id="btnAuthOpen" onclick="openAuthModal()">登入 / 註冊</button>
     <button type="button" class="btn btn-pri" id="btnSave" onclick="saveCard()">儲存</button>
     <button type="button" class="btn btn-line" onclick="shareToLine()">傳送 LINE</button>
-    <button type="button" class="btn" id="btnLogout" style="display:none;" onclick="doLogout()">登出</button>
   </div>
 </header>
 
-<!-- 註冊 / 登入畫面 -->
-<section id="authView" class="auth-box" style="display:none;">
-  <div class="auth-tabs">
-    <button type="button" class="auth-tab active" id="tabLogin" onclick="setAuthMode('login')">登入</button>
-    <button type="button" class="auth-tab" id="tabReg" onclick="setAuthMode('register')">免費註冊</button>
-  </div>
-  <div style="display:flex;flex-direction:column;gap:12px;">
-    <div class="field"><label>Email</label><input type="email" id="authEmail"></div>
-    <div class="field"><label>密碼</label><input type="password" id="authPass"></div>
-    <div class="field" id="authSlugWrap" style="display:none;"><label>名片代號（英數）</label><input type="text" id="authSlug" placeholder="例：wang"></div>
-    <button type="button" class="btn btn-pri" id="btnAuthGo" style="width:100%;height:42px;margin-top:4px;" onclick="submitAuth()">登入</button>
-  </div>
-</section>
-
-<!-- 主編輯畫面 -->
-<main id="editorView" class="stage" style="display:none;">
+<main class="stage">
+  <!-- 左側：LINE 預覽（點擊色塊直接調色） -->
   <section class="preview-col">
     <div class="phone-shell">
       <div class="phone-screen" id="phoneScreen">
         <div class="line-header">
-          <span style="font-size:15px;font-weight:700;">LINE 預覽</span>
+          <span style="font-size:15px;font-weight:700;">LINE 預覽（點擊區塊調色）</span>
         </div>
         <div class="chat-body">
           <div id="cardMount" style="width:100%;display:flex;justify-content:center;"></div>
@@ -301,380 +302,462 @@
     </div>
   </section>
 
+  <!-- 右側：極簡編輯器 -->
   <aside class="editor-panel">
+    <!-- 8 款版型 -->
     <div>
-      <div class="sec-title">版型</div>
+      <div class="sec-title"><span>版型（8 款）</span></div>
       <div class="style-grid" id="styleGrid">
         <button type="button" class="style-opt" data-style="video" onclick="setStyle('video')">動態影片</button>
         <button type="button" class="style-opt active" data-style="dark" onclick="setStyle('dark')">深岩燙金</button>
         <button type="button" class="style-opt" data-style="hero" onclick="setStyle('hero')">雜誌封面</button>
         <button type="button" class="style-opt" data-style="ivory" onclick="setStyle('ivory')">極簡象牙</button>
+        <button type="button" class="style-opt" data-style="full" onclick="setStyle('full')">全資訊旗艦</button>
+        <button type="button" class="style-opt" data-style="side" onclick="setStyle('side')">側邊影像</button>
+        <button type="button" class="style-opt" data-style="block" onclick="setStyle('block')">莫蘭迪撞色</button>
+        <button type="button" class="style-opt" data-style="frame" onclick="setStyle('frame')">建築黑框</button>
       </div>
     </div>
 
     <div class="sep"></div>
 
-    <div>
-      <div class="sec-title">調色盤</div>
-      <div class="color-row">
-        <div class="color-picker-wrap"><input type="color" id="inColor" value="#c5ae6e" oninput="applyColor(this.value)"></div>
-        <div class="field" style="flex:1;"><input type="text" id="inColorHex" value="#C5AE6E" maxlength="7" oninput="onHexInput(this.value)"></div>
-      </div>
-      <div class="swatches" id="swatches">
-        <button type="button" class="swatch active" style="background:#c5ae6e" data-hex="#c5ae6e" onclick="applyColor('#c5ae6e')"></button>
-        <button type="button" class="swatch" style="background:#b59e63" data-hex="#b59e63" onclick="applyColor('#b59e63')"></button>
-        <button type="button" class="swatch" style="background:#d2be8a" data-hex="#d2be8a" onclick="applyColor('#d2be8a')"></button>
-        <button type="button" class="swatch" style="background:#9ca389" data-hex="#9ca389" onclick="applyColor('#9ca389')"></button>
-        <button type="button" class="swatch" style="background:#b88d78" data-hex="#b88d78" onclick="applyColor('#b88d78')"></button>
-        <button type="button" class="swatch" style="background:#8aa0ae" data-hex="#8aa0ae" onclick="applyColor('#8aa0ae')"></button>
-      </div>
-    </div>
-
-    <div class="sep"></div>
-
-    <div>
-      <div class="sec-title">Logo / 照片 / 影片</div>
-      <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
-        <input type="file" id="logoFile" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden onchange="onLogoPick(event)">
-        <button type="button" class="btn btn-sm" onclick="document.getElementById('logoFile').click()">上傳 Logo</button>
-        <button type="button" class="btn btn-sm" onclick="deleteAsset('logo')">刪除 Logo</button>
-        <label class="ext-chk"><input type="checkbox" id="chkLogoMono" checked onchange="setField('logoMono', this.checked)">純色跟隨</label>
-      </div>
-      <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
-        <input type="file" id="photoFile" accept="image/*" hidden onchange="onPhotoPick(event)">
-        <button type="button" class="btn btn-sm" onclick="document.getElementById('photoFile').click()">上傳照片</button>
-        <button type="button" class="btn btn-sm" onclick="deleteAsset('photo')">刪除照片</button>
-        <label class="ext-chk"><input type="checkbox" id="chkPhoto" onchange="setField('showPhoto', this.checked)">顯示右側照片</label>
-      </div>
-      <div class="quota-bar" style="margin-top:10px;">
-        <span id="videoQuotaText">影片額度：0 / 1（≤10秒 / ≤10MB）</span>
-        <div style="display:flex;gap:6px;">
-          <input type="file" id="videoFile" accept="video/mp4" hidden onchange="onVideoPick(event)">
-          <button type="button" class="btn btn-sm btn-pri" id="btnUploadVideo" onclick="document.getElementById('videoFile').click()">上傳 MP4</button>
-          <button type="button" class="btn btn-sm btn-danger" id="btnDeleteVideo" style="display:none;" onclick="deleteAsset('video')">刪除舊影片</button>
+    <!-- 點擊調色盤 + 字體 -->
+    <div class="field-grid">
+      <div>
+        <div class="sec-title">
+          <span>配色</span>
+          <div class="slot-tabs">
+            <button type="button" class="slot-tab active" data-slot="accent" onclick="selectColorSlot('accent')">主色</button>
+            <button type="button" class="slot-tab" data-slot="bg" onclick="selectColorSlot('bg')">背景</button>
+            <button type="button" class="slot-tab" data-slot="fg" onclick="selectColorSlot('fg')">文字</button>
+          </div>
+        </div>
+        <div class="color-row">
+          <div class="color-picker-wrap"><input type="color" id="inColor" value="#c5ae6e" oninput="applySlotColor(this.value)"></div>
+          <div class="field" style="flex:1;"><input type="text" id="inColorHex" value="#C5AE6E" maxlength="7" oninput="onHexInput(this.value)"></div>
+        </div>
+        <div class="swatches" id="swatches">
+          <button type="button" class="swatch active" style="background:#c5ae6e" data-hex="#c5ae6e" onclick="applySlotColor('#c5ae6e')"></button>
+          <button type="button" class="swatch" style="background:#b59e63" data-hex="#b59e63" onclick="applySlotColor('#b59e63')"></button>
+          <button type="button" class="swatch" style="background:#9ca389" data-hex="#9ca389" onclick="applySlotColor('#9ca389')"></button>
+          <button type="button" class="swatch" style="background:#b88d78" data-hex="#b88d78" onclick="applySlotColor('#b88d78')"></button>
+          <button type="button" class="swatch" style="background:#8aa0ae" data-hex="#8aa0ae" onclick="applySlotColor('#8aa0ae')"></button>
+          <button type="button" class="swatch" style="background:#23201b" data-hex="#23201b" onclick="applySlotColor('#23201b')"></button>
+          <button type="button" class="swatch" style="background:#faf7f0" data-hex="#faf7f0" onclick="applySlotColor('#faf7f0')"></button>
         </div>
       </div>
-      <div class="field" style="margin-top:8px;">
-        <label>YouTube 或 MP4 網址</label>
-        <input type="url" id="inVideoUrl" oninput="setField('videoUrl', this.value)" placeholder="https://youtu.be/... 或 .mp4">
+
+      <div class="field">
+        <label>字體</label>
+        <select id="inFont" onchange="setFont(this.value)">
+          <option value="jhenghei">微軟正黑體</option>
+          <option value="notosans">思源黑體</option>
+          <option value="notoserif">思源宋體</option>
+          <option value="rounded">圓體</option>
+        </select>
+        <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
+          <input type="file" id="logoFile" accept="image/*" hidden onchange="onLogoPick(event)">
+          <button type="button" class="btn btn-sm" onclick="document.getElementById('logoFile').click()">上傳 Logo</button>
+          <button type="button" class="btn btn-sm" onclick="clearLogo()">刪除</button>
+          <label class="ext-chk"><input type="checkbox" id="chkLogoMono" checked onchange="setField('logoMono', this.checked)">純色</label>
+        </div>
+        <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
+          <input type="file" id="photoFile" accept="image/*" hidden onchange="onPhotoPick(event)">
+          <button type="button" class="btn btn-sm" onclick="document.getElementById('photoFile').click()">上傳照片</button>
+          <label class="ext-chk"><input type="checkbox" id="chkPhoto" onchange="setField('showPhoto', this.checked)">顯示照片</label>
+        </div>
       </div>
     </div>
 
     <div class="sep"></div>
 
+    <!-- 影片上傳 + YouTube 轉 10 秒 MP4 -->
     <div>
-      <div class="sec-title">基本資料</div>
-      <div class="field" style="margin-top:8px;"><label>公司名稱</label><input type="text" id="inCompany" oninput="setField('company', this.value)"></div>
-      <div class="field-grid" style="margin-top:8px;">
+      <div class="quota-bar">
+        <span id="videoQuotaText">影片：≤10秒 / ≤10MB</span>
+        <div style="display:flex;gap:6px;">
+          <input type="file" id="videoFile" accept="video/mp4" hidden onchange="onVideoPick(event)">
+          <button type="button" class="btn btn-sm btn-pri" onclick="document.getElementById('videoFile').click()">上傳 MP4</button>
+          <button type="button" class="btn btn-sm btn-danger" id="btnDelVideo" style="display:none;" onclick="clearVideo()">刪除影片</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr auto;gap:6px;margin-top:8px;">
+        <input type="url" id="inVideoUrl" oninput="setField('videoUrl', this.value)" placeholder="YouTube 網址或 MP4 網址" style="height:36px;padding:0 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:#fff;font-family:inherit;">
+        <button type="button" class="btn btn-sm btn-pri" id="btnYtConv" onclick="convertYoutube()">轉 10 秒 MP4</button>
+      </div>
+    </div>
+
+    <div class="sep"></div>
+
+    <!-- 基本資料 -->
+    <div>
+      <div class="field-grid">
+        <div class="field"><label>公司名稱</label><input type="text" id="inCompany" oninput="setField('company', this.value)"></div>
+        <div class="field"><label>標語（全資訊版型用）</label><input type="text" id="inSlogan" oninput="setField('slogan', this.value)"></div>
         <div class="field"><label>中文姓名</label><input type="text" id="inName" oninput="setField('name', this.value)"></div>
         <div class="field"><label>英文名</label><input type="text" id="inEnName" oninput="setField('enName', this.value)"></div>
-        <div class="field"><label>手機</label><input type="text" id="inMobile" oninput="setField('mobile', this.value)"></div>
-        <div class="field"><label>Email</label><input type="email" id="inEmail" oninput="setField('email', this.value)"></div>
-        <div class="field"><label>公司電話</label><input type="text" id="inTel" oninput="setField('tel', this.value)"></div>
-        <div class="field"><label>官方網站</label><input type="url" id="inWeb" oninput="setField('website', this.value)"></div>
+        <div class="field"><label>撥打按鈕電話</label><input type="tel" id="inCallTel" placeholder="0977393811" oninput="setField('mobile', this.value)"></div>
+        <div class="field"><label>官方網站</label><input type="url" id="inWeb" placeholder="https://..." oninput="setField('website', this.value)"></div>
       </div>
-      <div class="field" style="margin-top:8px;"><label>門市</label><input type="text" id="inAddr" oninput="setField('address', this.value)"></div>
     </div>
 
     <div class="sep"></div>
 
+    <!-- 顯示欄位（全部標籤可改） -->
     <div>
-      <div class="sec-title">延伸功能（勾選開啟）</div>
+      <div class="sec-title">
+        <span>顯示欄位</span>
+        <button type="button" class="btn btn-sm" onclick="addInfoRow()">＋ 新增</button>
+      </div>
+      <div class="ext-stack" id="infoRowsBox"></div>
+    </div>
+
+    <div class="sep"></div>
+
+    <!-- 延伸社群功能（預設關閉） -->
+    <div>
+      <div class="sec-title"><span>延伸按鈕</span></div>
       <div class="ext-stack">
         <div class="ext-row">
           <label class="ext-chk"><input type="checkbox" id="chkOa" onchange="setField('oaOn', this.checked)">LINE 官方帳號</label>
-          <input type="text" id="inOaId" placeholder="@帳號ID" oninput="setField('oaId', this.value)">
+          <input type="text" id="inOaId" placeholder="@297azzax（有無 @ 皆可）" oninput="setField('oaId', this.value)">
         </div>
         <div class="ext-row">
           <label class="ext-chk"><input type="checkbox" id="chkMailBtn" onchange="setField('mailBtnOn', this.checked)">一鍵寄信</label>
-          <input type="text" value="自動帶入上方 Email" readonly style="background:var(--bg);color:var(--t3);">
+          <input type="email" id="inMailBtnAddr" placeholder="name@example.com" oninput="setField('email', this.value)">
         </div>
         <div class="ext-row">
           <label class="ext-chk"><input type="checkbox" id="chkIg" onchange="setField('igOn', this.checked)">Instagram</label>
-          <input type="text" id="inIgId" placeholder="IG 帳號" oninput="setField('igId', this.value)">
+          <input type="text" id="inIgId" placeholder="elitile_tw（有無 @ 皆可）" oninput="setField('igId', this.value)">
         </div>
         <div class="ext-row">
           <label class="ext-chk"><input type="checkbox" id="chkFb" onchange="setField('fbOn', this.checked)">Facebook</label>
-          <input type="text" id="inFbId" placeholder="FB 帳號或粉專 ID" oninput="setField('fbId', this.value)">
+          <input type="text" id="inFbId" placeholder="粉專或帳號 ID" oninput="setField('fbId', this.value)">
         </div>
         <div class="ext-row">
           <label class="ext-chk"><input type="checkbox" id="chkTh" onchange="setField('thOn', this.checked)">Threads</label>
-          <input type="text" id="inThId" placeholder="Threads 帳號" oninput="setField('thId', this.value)">
+          <input type="text" id="inThId" placeholder="@elitile_tw（有無 @ 皆可）" oninput="setField('thId', this.value)">
         </div>
       </div>
     </div>
   </aside>
 </main>
 
+<!-- 登入 / 註冊彈窗 -->
+<div class="modal-bg" id="authModal" onclick="if(event.target===this)closeAuthModal()">
+  <div class="modal-card">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--raised);padding:4px;border-radius:10px;">
+      <button type="button" class="slot-tab active" id="tabLogin" onclick="setAuthMode('login')">登入</button>
+      <button type="button" class="slot-tab" id="tabReg" onclick="setAuthMode('register')">免費註冊</button>
+    </div>
+    <input type="email" id="authEmail" placeholder="Email" style="height:38px;padding:0 10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;">
+    <input type="password" id="authPass" placeholder="密碼（至少 6 碼）" style="height:38px;padding:0 10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;">
+    <button type="button" class="btn btn-pri" id="btnAuthGo" style="height:40px;" onclick="submitAuth()">登入</button>
+    <button type="button" class="btn" onclick="closeAuthModal()">關閉</button>
+  </div>
+</div>
+
+<!-- 3 次免費額度用完：Donate 贊助彈窗 -->
+<div class="modal-bg" id="donateModal" onclick="if(event.target===this)closeDonateModal()">
+  <div class="modal-card">
+    <div style="font-size:18px;font-weight:700;">免費 3 次修改已用完</div>
+    <div style="font-size:13px;color:var(--t2);line-height:1.6;">感謝使用 LINE 名片王！贊助支持即可解鎖無限次修改。</div>
+    <a id="donateLink" href="https://line.me/R/ti/p/@297azzax" target="_blank" rel="noopener" class="btn btn-line" style="height:42px;">前往贊助解鎖</a>
+    <button type="button" class="btn" onclick="closeDonateModal()">稍後再說</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
 const CFG = window.CARD_KING_CONFIG || {};
-const HAS_BACKEND = !!(CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY);
-const sb = HAS_BACKEND ? window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY) : null;
+const sb = (CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY)
+  ? window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY) : null;
+
+const FONTS = {
+  jhenghei: '"Microsoft JhengHei", "微軟正黑體", sans-serif',
+  notosans: '"Noto Sans TC", "Microsoft JhengHei", sans-serif',
+  notoserif: '"Noto Serif TC", "PMingLiU", serif',
+  rounded: '"Hiragino Maru Gothic ProN", "Microsoft JhengHei", sans-serif'
+};
+
+const STYLE_DEFAULTS = {
+  video: { bg: "#23201B", fg: "#F1ECE2" },
+  dark:  { bg: "#23201B", fg: "#F1ECE2" },
+  hero:  { bg: "#FFFDF9", fg: "#1F1B16" },
+  ivory: { bg: "#FAF7F0", fg: "#1F1B16" },
+  full:  { bg: "#23201B", fg: "#F1ECE2" },
+  side:  { bg: "#23201B", fg: "#F1ECE2" },
+  block: { bg: "#FAF7F0", fg: "#1F1B16" },
+  frame: { bg: "#FFFFFF", fg: "#1F1B16" }
+};
 
 let authMode = "login";
 let session = null;
 let profile = null;
-let state = defaultState();
+let colorSlot = "accent"; // accent | bg | fg
+let localEditUsed = Number(localStorage.getItem("ck_local_edit_used") || 0);
 
 function defaultState() {
   return {
-    style: "dark", color: "#C5AE6E", logoMono: true, showPhoto: false,
-    logoUrl: "", videoUrl: "", photoUrl: "",
-    company: "高雅瓷國際企業有限公司", name: "高弘治", enName: "Big-T",
-    mobile: "0977-393-811", email: "titankou2002@gmail.com",
-    tel: "03-486-3978", address: "台北市內湖區行愛路77巷16號5樓", website: "https://bigt.cc/web/",
+    style: "dark",
+    font: "jhenghei",
+    color: "#C5AE6E",
+    cardBg: "#23201B",
+    cardFg: "#F1ECE2",
+    logoMono: true,
+    showPhoto: false,
+    logoUrl: "https://bigt.cc/line/elitile-logo.png",
+    videoUrl: "https://bigt.cc/web/assets/video/refin-moon-1920.mp4",
+    photoUrl: "https://bigt.cc/web/assets/video/refin-moon-poster.jpg",
+    company: "高雅瓷國際企業有限公司",
+    slogan: "歐洲精品磁磚 · 建築與室內設計專業夥伴",
+    name: "高弘治",
+    enName: "Big-T",
+    mobile: "0977-393-811",
+    email: "titankou2002@gmail.com",
+    website: "https://bigt.cc/web/",
+    infoRows: [
+      { label: "手機", value: "0977-393-811" },
+      { label: "信箱", value: "titankou2002@gmail.com" },
+      { label: "電話", value: "03-486-3978" },
+      { label: "門市", value: "台北市內湖區行愛路77巷16號5樓" }
+    ],
     oaOn: false, oaId: "", mailBtnOn: false,
     igOn: false, igId: "", fbOn: false, fbId: "", thOn: false, thId: ""
   };
 }
 
+let state = (function () {
+  try {
+    const raw = localStorage.getItem("ck_state_v6");
+    if (raw) return Object.assign(defaultState(), JSON.parse(raw));
+  } catch (e) {}
+  return defaultState();
+})();
+
 function esc(s) { return String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 function parseYtId(u) { const m = String(u || "").match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/); return m ? m[1] : ""; }
 function getContrast(hex) { const h = hex.replace("#",""); return (parseInt(h.slice(0,2),16)*299 + parseInt(h.slice(2,4),16)*587 + parseInt(h.slice(4,6),16)*114)/1000 >= 165 ? "#1F1B16" : "#FFFFFF"; }
+
+function updateEditQuotaUI() {
+  const pill = document.getElementById("editQuotaPill");
+  if (profile && profile.donated) {
+    pill.textContent = "已贊助 · 無限修改";
+    return;
+  }
+  const quota = (profile && profile.edit_quota) || 3;
+  const used = profile ? (profile.edit_used || 0) : localEditUsed;
+  const left = Math.max(0, quota - used);
+  pill.textContent = `免費修改：${left} / ${quota}`;
+}
+
+function setStyle(s) {
+  state.style = s;
+  const def = STYLE_DEFAULTS[s] || STYLE_DEFAULTS.dark;
+  state.cardBg = def.bg;
+  state.cardFg = def.fg;
+  document.querySelectorAll("#styleGrid .style-opt").forEach(el => el.classList.toggle("active", el.dataset.style === s));
+  syncCssVars();
+  renderPreview();
+}
+
+function setFont(f) {
+  state.font = f;
+  document.documentElement.style.setProperty("--card-font", FONTS[f] || FONTS.jhenghei);
+  renderPreview();
+}
+
+function selectColorSlot(slot) {
+  colorSlot = slot;
+  document.querySelectorAll(".slot-tab[data-slot]").forEach(b => b.classList.toggle("active", b.dataset.slot === slot));
+  const cur = slot === "bg" ? state.cardBg : (slot === "fg" ? state.cardFg : state.color);
+  document.getElementById("inColor").value = cur.toLowerCase();
+  document.getElementById("inColorHex").value = cur.toUpperCase();
+  document.querySelectorAll("#swatches .swatch").forEach(b => b.classList.toggle("active", b.dataset.hex.toUpperCase() === cur.toUpperCase()));
+}
+
+function syncCssVars() {
+  document.documentElement.style.setProperty("--accent", state.color);
+  document.documentElement.style.setProperty("--accent-text", getContrast(state.color));
+  document.documentElement.style.setProperty("--card-bg", state.cardBg);
+  document.documentElement.style.setProperty("--card-fg", state.cardFg);
+  document.documentElement.style.setProperty("--card-font", FONTS[state.font] || FONTS.jhenghei);
+  selectColorSlot(colorSlot);
+}
+
+function applySlotColor(hex) {
+  if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return;
+  const u = hex.toUpperCase();
+  if (colorSlot === "bg") state.cardBg = u;
+  else if (colorSlot === "fg") state.cardFg = u;
+  else state.color = u;
+  syncCssVars();
+  renderPreview();
+}
+
+function onHexInput(v) { const c = v.trim().startsWith("#") ? v.trim() : "#" + v.trim(); if (/^#[0-9a-fA-F]{6}$/.test(c)) applySlotColor(c); }
+function setField(k, v) { state[k] = v; renderPreview(); }
+
+/* 顯示欄位動態編輯 */
+function ensureRows() { if (!Array.isArray(state.infoRows) || !state.infoRows.length) state.infoRows = defaultState().infoRows; }
+function addInfoRow() { ensureRows(); state.infoRows.push({ label: "地址", value: "" }); renderInfoRowsEditor(); renderPreview(); }
+function editInfoRow(i, k, v) { ensureRows(); if (state.infoRows[i]) state.infoRows[i][k] = v; renderPreview(); }
+function delInfoRow(i) { ensureRows(); state.infoRows.splice(i, 1); renderInfoRowsEditor(); renderPreview(); }
+function renderInfoRowsEditor() {
+  ensureRows();
+  document.getElementById("infoRowsBox").innerHTML = state.infoRows.map((r, i) => `
+    <div style="display:grid;grid-template-columns:68px 1fr auto;gap:6px;align-items:center;padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;">
+      <input type="text" value="${esc(r.label)}" placeholder="標籤" oninput="editInfoRow(${i},'label',this.value)" style="height:32px;padding:0 8px;border:1px solid var(--border);border-radius:6px;font-size:12.5px;background:#fff;font-family:inherit;">
+      <input type="text" value="${esc(r.value)}" placeholder="內容" oninput="editInfoRow(${i},'value',this.value)" style="height:32px;padding:0 8px;border:1px solid var(--border);border-radius:6px;font-size:12.5px;background:#fff;font-family:inherit;">
+      <button type="button" class="btn btn-sm btn-danger" onclick="delInfoRow(${i})">刪除</button>
+    </div>
+  `).join("");
+}
+
+/* 素材上傳 */
+function onLogoPick(e) {
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  const img = new Image();
+  img.onload = () => {
+    const c = document.createElement("canvas");
+    const sc = Math.min(1, 560 / img.naturalWidth);
+    c.width = Math.round(img.naturalWidth * sc); c.height = Math.round(img.naturalHeight * sc);
+    const ctx = c.getContext("2d");
+    ctx.drawImage(img, 0, 0, c.width, c.height);
+    if (state.logoMono) { ctx.globalCompositeOperation = "source-in"; ctx.fillStyle = state.color; ctx.fillRect(0, 0, c.width, c.height); }
+    state.logoUrl = c.toDataURL("image/png");
+    renderPreview();
+  };
+  img.src = URL.createObjectURL(f);
+}
+function clearLogo() { state.logoUrl = ""; renderPreview(); }
+
+function onPhotoPick(e) {
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  const img = new Image();
+  img.onload = () => {
+    const c = document.createElement("canvas");
+    const sc = Math.min(1, 900 / Math.max(img.naturalWidth, img.naturalHeight));
+    c.width = Math.round(img.naturalWidth * sc); c.height = Math.round(img.naturalHeight * sc);
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    state.photoUrl = c.toDataURL("image/jpeg", 0.86);
+    state.showPhoto = true; document.getElementById("chkPhoto").checked = true;
+    renderPreview();
+  };
+  img.src = URL.createObjectURL(f);
+}
+
+function onVideoPick(e) {
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  if (f.size > 10 * 1024 * 1024) { toast("超過 10MB"); e.target.value = ""; return; }
+  const objUrl = URL.createObjectURL(f);
+  const v = document.createElement("video");
+  v.preload = "metadata";
+  v.onloadedmetadata = () => {
+    if (v.duration > 10.5) { toast("超過 10 秒"); URL.revokeObjectURL(objUrl); e.target.value = ""; return; }
+    state.videoUrl = objUrl;
+    document.getElementById("inVideoUrl").value = f.name;
+    document.getElementById("btnDelVideo").style.display = "inline-flex";
+    setStyle("video");
+    toast("已載入影片");
+  };
+  v.src = objUrl;
+}
+function clearVideo() {
+  state.videoUrl = "";
+  document.getElementById("inVideoUrl").value = "";
+  document.getElementById("btnDelVideo").style.display = "none";
+  renderPreview();
+}
+
+async function convertYoutube() {
+  const ytId = parseYtId(state.videoUrl);
+  if (!ytId) { toast("請先貼入 YouTube 網址"); return; }
+  if (!CFG.YT_CONVERTER_API) {
+    setStyle("video");
+    toast("已套用 YouTube 封面與播放鈕");
+    return;
+  }
+  const btn = document.getElementById("btnYtConv");
+  btn.disabled = true; btn.textContent = "轉檔中...";
+  try {
+    const r = await fetch(CFG.YT_CONVERTER_API.replace(/\/$/, "") + "/convert", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: state.videoUrl, start: 0, slug: (profile && profile.slug) || "bigt" })
+    }).then(x => x.json());
+    if (!r.ok) { toast(r.error || "轉檔失敗"); return; }
+    state.videoUrl = r.videoUrl;
+    if (r.posterUrl) state.photoUrl = r.posterUrl;
+    document.getElementById("inVideoUrl").value = r.videoUrl;
+    setStyle("video");
+    toast("已轉為 10 秒 MP4");
+  } finally {
+    btn.disabled = false; btn.textContent = "轉 10 秒 MP4";
+  }
+}
+
+/* 儲存（含 3 次免費額度檢查與 Donate 彈窗） */
+async function saveCard() {
+  if (sb && session) {
+    const { data, error } = await sb.rpc("save_user_card", { p_config: state });
+    if (error) { toast(error.message); return; }
+    if (data && data.need_donate) { openDonateModal(); return; }
+    if (data && data.ok) {
+      if (profile) profile.edit_used = data.edit_used;
+      updateEditQuotaUI();
+      toast("已儲存");
+      return;
+    }
+  }
+  if (localEditUsed >= 3) { openDonateModal(); return; }
+  localEditUsed++;
+  localStorage.setItem("ck_local_edit_used", String(localEditUsed));
+  localStorage.setItem("ck_state_v6", JSON.stringify(state));
+  updateEditQuotaUI();
+  toast("已儲存");
+}
+
+/* 登入 / 註冊 */
+function openAuthModal() { document.getElementById("authModal").style.display = "flex"; }
+function closeAuthModal() { document.getElementById("authModal").style.display = "none"; }
+function openDonateModal() { document.getElementById("donateLink").href = CFG.DONATE_URL || "https://line.me/R/ti/p/@297azzax"; document.getElementById("donateModal").style.display = "flex"; }
+function closeDonateModal() { document.getElementById("donateModal").style.display = "none"; }
 
 function setAuthMode(m) {
   authMode = m;
   document.getElementById("tabLogin").classList.toggle("active", m === "login");
   document.getElementById("tabReg").classList.toggle("active", m === "register");
-  document.getElementById("authSlugWrap").style.display = m === "register" ? "flex" : "none";
   document.getElementById("btnAuthGo").textContent = m === "register" ? "註冊" : "登入";
 }
 
 async function submitAuth() {
+  if (!sb) { toast("尚未設定資料庫"); return; }
   const email = document.getElementById("authEmail").value.trim();
   const password = document.getElementById("authPass").value;
-  if (!email || !password) { showToast("請填寫 Email 與密碼"); return; }
-
-  if (authMode === "register") {
-    const { data, error } = await sb.auth.signUp({ email, password });
-    if (error) { showToast(error.message); return; }
-    if (data.user) {
-      const slug = (document.getElementById("authSlug").value.trim().toLowerCase().replace(/[^a-z0-9_-]/g, "") || ("u" + Math.random().toString(36).slice(2, 8)));
-      await sb.from("card_profiles").insert({ id: data.user.id, slug, email, config: state });
-    }
-    showToast("註冊完成");
-    await bootSession();
-  } else {
-    const { error } = await sb.auth.signInWithPassword({ email, password });
-    if (error) { showToast(error.message); return; }
-    await bootSession();
-  }
+  if (!email || !password) { toast("請輸入 Email 與密碼"); return; }
+  const res = authMode === "register"
+    ? await sb.auth.signUp({ email, password })
+    : await sb.auth.signInWithPassword({ email, password });
+  if (res.error) { toast(res.error.message); return; }
+  closeAuthModal();
+  toast(authMode === "register" ? "註冊成功" : "已登入");
+  await initSession();
 }
 
-async function doLogout() {
-  if (sb) await sb.auth.signOut();
-  location.reload();
-}
-
-async function bootSession() {
-  if (!HAS_BACKEND) {
-    document.getElementById("editorView").style.display = "grid";
-    document.getElementById("editorToolbar").style.display = "flex";
-    applyColor(state.color); renderInputs(); renderPreview();
-    return;
-  }
+async function initSession() {
+  if (!sb) return;
   const { data } = await sb.auth.getSession();
   session = data.session;
-  if (!session) {
-    document.getElementById("authView").style.display = "block";
-    document.getElementById("editorView").style.display = "none";
-    document.getElementById("editorToolbar").style.display = "none";
-    return;
+  if (!session) return;
+  document.getElementById("btnAuthOpen").textContent = session.user.email.split("@")[0];
+  const { data: prof } = await sb.from("card_profiles").select("*").eq("id", session.user.id).single();
+  if (prof) {
+    profile = prof;
+    if (prof.config) state = Object.assign(defaultState(), prof.config);
+    syncCssVars(); renderInputs(); renderPreview(); updateEditQuotaUI();
   }
-  document.getElementById("authView").style.display = "none";
-  document.getElementById("editorView").style.display = "grid";
-  document.getElementById("editorToolbar").style.display = "flex";
-  document.getElementById("btnLogout").style.display = "inline-flex";
-
-  let { data: prof } = await sb.from("card_profiles").select("*").eq("id", session.user.id).single();
-  if (!prof) {
-    const slug = "u" + Math.random().toString(36).slice(2, 8);
-    const ins = await sb.from("card_profiles").insert({ id: session.user.id, slug, email: session.user.email, config: state }).select("*").single();
-    prof = ins.data;
-  }
-  profile = prof;
-  state = Object.assign(defaultState(), prof.config || {});
-  updateQuotaUI();
-  applyColor(state.color);
-  renderInputs();
-  renderPreview();
-}
-
-function updateQuotaUI() {
-  if (!profile) return;
-  const used = profile.video_key ? 1 : 0;
-  const quota = profile.video_quota || 1;
-  document.getElementById("videoQuotaText").textContent = `影片額度：${used} / ${quota}（≤10秒 / ≤10MB）`;
-  document.getElementById("btnUploadVideo").disabled = used >= quota;
-  document.getElementById("btnDeleteVideo").style.display = used > 0 ? "inline-flex" : "none";
-}
-
-function setStyle(s) {
-  state.style = s;
-  document.querySelectorAll("#styleGrid .style-opt").forEach(el => el.classList.toggle("active", el.dataset.style === s));
-  renderPreview();
-}
-
-function applyColor(hex) {
-  if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return;
-  const u = hex.toUpperCase();
-  state.color = u;
-  document.documentElement.style.setProperty("--accent", u);
-  document.documentElement.style.setProperty("--accent-text", getContrast(u));
-  document.getElementById("inColor").value = u.toLowerCase();
-  document.getElementById("inColorHex").value = u;
-  document.querySelectorAll("#swatches .swatch").forEach(b => b.classList.toggle("active", b.dataset.hex.toUpperCase() === u));
-  renderPreview();
-}
-
-function onHexInput(v) { const c = v.trim().startsWith("#") ? v.trim() : "#" + v.trim(); if (/^#[0-9a-fA-F]{6}$/.test(c)) applyColor(c); }
-function setField(k, v) { state[k] = v; renderPreview(); }
-
-async function uploadToWorker(kind, blob, contentType) {
-  if (!HAS_BACKEND || !CFG.WORKER_API) { showToast("尚未設定 Worker API"); return null; }
-  const r = await fetch(CFG.WORKER_API.replace(/\/$/, "") + "/api/upload?kind=" + kind, {
-    method: "POST",
-    headers: { Authorization: "Bearer " + session.access_token, "Content-Type": contentType },
-    body: blob
-  });
-  const d = await r.json();
-  if (!d.ok) { showToast(d.error || "上傳失敗"); return null; }
-  return d;
-}
-
-async function onLogoPick(e) {
-  const f = e.target.files && e.target.files[0];
-  if (!f) return;
-  const url = URL.createObjectURL(f);
-  const img = new Image();
-  img.onload = async () => {
-    const c = document.createElement("canvas");
-    const scale = Math.min(1, 560 / img.naturalWidth);
-    c.width = Math.round(img.naturalWidth * scale); c.height = Math.round(img.naturalHeight * scale);
-    const ctx = c.getContext("2d");
-    ctx.drawImage(img, 0, 0, c.width, c.height);
-    if (state.logoMono) { ctx.globalCompositeOperation = "source-in"; ctx.fillStyle = state.color; ctx.fillRect(0, 0, c.width, c.height); }
-    c.toBlob(async (blob) => {
-      if (HAS_BACKEND && CFG.WORKER_API) {
-        const up = await uploadToWorker("logo", blob, "image/png");
-        if (up) { state.logoUrl = up.url; profile.logo_key = up.key; showToast("Logo 已上傳"); }
-      } else {
-        state.logoUrl = URL.createObjectURL(blob);
-      }
-      renderPreview();
-    }, "image/png");
-  };
-  img.src = url;
-}
-
-async function onPhotoPick(e) {
-  const f = e.target.files && e.target.files[0];
-  if (!f) return;
-  const url = URL.createObjectURL(f);
-  const img = new Image();
-  img.onload = async () => {
-    const c = document.createElement("canvas");
-    const scale = Math.min(1, 900 / Math.max(img.naturalWidth, img.naturalHeight));
-    c.width = Math.round(img.naturalWidth * scale); c.height = Math.round(img.naturalHeight * scale);
-    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
-    c.toBlob(async (blob) => {
-      if (HAS_BACKEND && CFG.WORKER_API) {
-        const up = await uploadToWorker("photo", blob, "image/jpeg");
-        if (up) { state.photoUrl = up.url; profile.photo_key = up.key; state.showPhoto = true; document.getElementById("chkPhoto").checked = true; showToast("照片已上傳"); }
-      } else {
-        state.photoUrl = URL.createObjectURL(blob); state.showPhoto = true; document.getElementById("chkPhoto").checked = true;
-      }
-      renderPreview();
-    }, "image/jpeg", 0.86);
-  };
-  img.src = url;
-}
-
-async function onVideoPick(e) {
-  const f = e.target.files && e.target.files[0];
-  if (!f) return;
-  if (f.size > 10 * 1024 * 1024) { showToast("影片超過 10MB"); e.target.value = ""; return; }
-  const objUrl = URL.createObjectURL(f);
-  const v = document.createElement("video");
-  v.preload = "metadata";
-  v.onloadedmetadata = async () => {
-    if (v.duration > 10.5) { showToast("影片超過 10 秒"); URL.revokeObjectURL(objUrl); e.target.value = ""; return; }
-    if (HAS_BACKEND && CFG.WORKER_API) {
-      showToast("上傳影片中...");
-      const up = await uploadToWorker("video", f, "video/mp4");
-      if (up) {
-        state.videoUrl = up.url;
-        state.style = "video";
-        profile.video_key = up.key;
-        document.getElementById("inVideoUrl").value = up.url;
-        updateQuotaUI();
-        setStyle("video");
-        showToast("影片已上傳");
-      }
-    } else {
-      state.videoUrl = objUrl;
-      setStyle("video");
-    }
-    e.target.value = "";
-  };
-  v.src = objUrl;
-}
-
-async function deleteAsset(kind) {
-  if (HAS_BACKEND && CFG.WORKER_API) {
-    const r = await fetch(CFG.WORKER_API.replace(/\/$/, "") + "/api/asset?kind=" + kind, {
-      method: "DELETE", headers: { Authorization: "Bearer " + session.access_token }
-    });
-    const d = await r.json();
-    if (!d.ok) { showToast(d.error || "刪除失敗"); return; }
-    if (kind === "video") { profile.video_key = ""; state.videoUrl = ""; document.getElementById("inVideoUrl").value = ""; updateQuotaUI(); }
-    if (kind === "logo") { profile.logo_key = ""; state.logoUrl = ""; }
-    if (kind === "photo") { profile.photo_key = ""; state.photoUrl = ""; }
-    showToast("已刪除");
-  } else {
-    if (kind === "video") { state.videoUrl = ""; document.getElementById("inVideoUrl").value = ""; }
-    if (kind === "logo") state.logoUrl = "";
-    if (kind === "photo") state.photoUrl = "";
-  }
-  renderPreview();
-}
-
-async function saveCard() {
-  if (!HAS_BACKEND || !profile) { showToast("已暫存預覽"); return; }
-  const { error } = await sb.from("card_profiles").update({ config: state }).eq("id", profile.id);
-  showToast(error ? error.message : "已儲存");
-}
-
-function getShareUrl() {
-  const slug = (profile && profile.slug) || "demo";
-  return `https://liff.line.me/${CFG.LIFF_ID}?id=${encodeURIComponent(slug)}`;
-}
-
-async function copyShareLink() {
-  try { await navigator.clipboard.writeText(getShareUrl()); showToast("已複製連結"); } catch (e) {}
-}
-function shareToLine() { window.open(getShareUrl(), "_blank", "noopener"); }
-
-function renderInputs() {
-  document.querySelectorAll("#styleGrid .style-opt").forEach(el => el.classList.toggle("active", el.dataset.style === state.style));
-  document.getElementById("chkLogoMono").checked = state.logoMono !== false;
-  document.getElementById("chkPhoto").checked = !!state.showPhoto;
-  document.getElementById("inVideoUrl").value = state.videoUrl || "";
-  document.getElementById("inCompany").value = state.company || "";
-  document.getElementById("inName").value = state.name || "";
-  document.getElementById("inEnName").value = state.enName || "";
-  document.getElementById("inMobile").value = state.mobile || "";
-  document.getElementById("inEmail").value = state.email || "";
-  document.getElementById("inTel").value = state.tel || "";
-  document.getElementById("inAddr").value = state.address || "";
-  document.getElementById("inWeb").value = state.website || "";
-  document.getElementById("chkOa").checked = !!state.oaOn; document.getElementById("inOaId").value = state.oaId || "";
-  document.getElementById("chkMailBtn").checked = !!state.mailBtnOn;
-  document.getElementById("chkIg").checked = !!state.igOn; document.getElementById("inIgId").value = state.igId || "";
-  document.getElementById("chkFb").checked = !!state.fbOn; document.getElementById("inFbId").value = state.fbId || "";
-  document.getElementById("chkTh").checked = !!state.thOn; document.getElementById("inThId").value = state.thId || "";
 }
 
 function buildSocialHtml() {
@@ -685,50 +768,140 @@ function buildSocialHtml() {
     list.push(`<a class="mc-social-pill" href="${esc(u)}" target="_blank">LINE@</a>`);
   }
   if (state.mailBtnOn && state.email) list.push(`<a class="mc-social-pill" href="mailto:${esc(state.email)}">Email</a>`);
-  if (state.igOn && state.igId) list.push(`<a class="mc-social-pill" href="https://instagram.com/${esc(state.igId.replace(/^@/,''))}" target="_blank">IG</a>`);
-  if (state.fbOn && state.fbId) list.push(`<a class="mc-social-pill" href="https://facebook.com/${esc(state.fbId.replace(/^@/,''))}" target="_blank">FB</a>`);
-  if (state.thOn && state.thId) list.push(`<a class="mc-social-pill" href="https://www.threads.net/@${esc(state.thId.replace(/^@/,''))}" target="_blank">Threads</a>`);
+  if (state.igOn && state.igId) { const ig = state.igId.trim().replace(/^@/, ""); list.push(`<a class="mc-social-pill" href="https://instagram.com/${esc(ig)}" target="_blank">IG</a>`); }
+  if (state.fbOn && state.fbId) { const fb = state.fbId.trim().replace(/^@/, ""); list.push(`<a class="mc-social-pill" href="https://facebook.com/${esc(fb)}" target="_blank">FB</a>`); }
+  if (state.thOn && state.thId) { const th = state.thId.trim().replace(/^@/, ""); list.push(`<a class="mc-social-pill" href="https://www.threads.net/@${esc(th)}" target="_blank">Threads</a>`); }
   return list.length ? `<div class="mc-social-row">${list.join("")}</div>` : "";
 }
 
 function renderPreview() {
+  ensureRows();
   const mount = document.getElementById("cardMount");
   const telDigits = String(state.mobile || "").replace(/[^0-9+]/g, "");
-  const rows = [];
-  if (state.mobile) rows.push(`<div class="mc-row"><span class="mc-lbl">手機</span><span class="mc-val">${esc(state.mobile)}</span></div>`);
-  if (state.email) rows.push(`<div class="mc-row"><span class="mc-lbl">信箱</span><span class="mc-val">${esc(state.email)}</span></div>`);
-  if (state.tel) rows.push(`<div class="mc-row"><span class="mc-lbl">電話</span><span class="mc-val">${esc(state.tel)}</span></div>`);
-  if (state.address) rows.push(`<div class="mc-row"><span class="mc-lbl">門市</span><span class="mc-val">${esc(state.address)}</span></div>`);
+  const rowsHtml = state.infoRows.filter(r => r.label || r.value)
+    .map(r => `<div class="mc-row"><span class="mc-lbl" data-cslot="accent">${esc(r.label)}</span><span class="mc-val" data-cslot="fg">${esc(r.value)}</span></div>`).join("");
 
   const pair = [];
-  if (telDigits) pair.push(`<a class="mc-btn-pri" href="tel:${esc(telDigits)}">撥打手機</a>`);
-  if (state.website) pair.push(`<a class="mc-btn-sec" href="${esc(state.website)}" target="_blank">官方網站</a>`);
+  if (telDigits) pair.push(`<a class="mc-btn-pri" data-cslot="accent" href="tel:${esc(telDigits)}" onclick="event.preventDefault()">撥打手機</a>`);
+  if (state.website) pair.push(`<a class="mc-btn-sec" data-cslot="fg" href="${esc(state.website)}" onclick="event.preventDefault()">官方網站</a>`);
 
-  const foot = `
-    <div class="mc-foot">
+  const footHtml = `
+    <div class="mc-foot" data-cslot="bg">
       ${pair.length ? `<div class="mc-btn-row" style="${pair.length === 1 ? 'grid-template-columns:1fr;' : ''}">${pair.join("")}</div>` : ""}
       ${buildSocialHtml()}
-      <button type="button" class="mc-btn-link" onclick="shareToLine()">轉傳這張名片</button>
+      <button type="button" class="mc-btn-link" data-cslot="accent">轉傳這張名片</button>
     </div>
   `;
-  const logoHtml = state.logoUrl ? `<div class="mc-logo"><img src="${esc(state.logoUrl)}" alt="Logo"></div>` : "";
-  const brandRow = `<div class="mc-brand-row">${logoHtml}<span class="mc-co-name">${esc(state.company)}</span></div>`;
-  const nameLine = `<div class="mc-name-line"><span class="mc-name">${esc(state.name)}</span>${state.enName ? `<span class="mc-en-name">${esc(state.enName)}</span>` : ""}</div>`;
 
-  if (state.style === "video") {
-    const ytId = parseYtId(state.videoUrl);
-    const mediaHtml = ytId
-      ? `<img src="https://i.ytimg.com/vi/${ytId}/hqdefault.jpg"><div class="mc-yt-play"><span>▶</span></div>`
-      : (state.videoUrl ? `<video autoplay muted loop playsinline src="${esc(state.videoUrl)}" ${state.photoUrl ? `poster="${esc(state.photoUrl)}"` : ""}></video>` : "");
-    mount.innerHTML = `<article class="mega-card style-dark"><div class="mc-video-box">${mediaHtml}</div><div class="mc-head" style="display:block;">${brandRow}${nameLine}</div><div class="mc-sep"></div><div class="mc-body">${rows.join("")}</div>${foot}</article>`;
-    return;
+  const logoHtml = state.logoUrl ? `<div class="mc-logo" data-cslot="accent"><img src="${esc(state.logoUrl)}" alt="Logo"></div>` : "";
+  const brandRow = `<div class="mc-brand-row">${logoHtml}<span class="mc-co-name" data-cslot="fg">${esc(state.company)}</span></div>`;
+  const nameLine = `<div class="mc-name-line"><span class="mc-name" data-cslot="fg">${esc(state.name)}</span>${state.enName ? `<span class="mc-en-name" data-cslot="accent">${esc(state.enName)}</span>` : ""}</div>`;
+  const ytId = parseYtId(state.videoUrl);
+  const mediaHtml = ytId
+    ? `<img src="https://i.ytimg.com/vi/${ytId}/hqdefault.jpg"><div class="mc-yt-play"><span>▶</span></div>`
+    : (state.videoUrl ? `<video autoplay muted loop playsinline src="${esc(state.videoUrl)}" ${state.photoUrl ? `poster="${esc(state.photoUrl)}"` : ""}></video>` : (state.photoUrl ? `<img src="${esc(state.photoUrl)}">` : ""));
+
+  if (state.style === "video" || state.style === "full") {
+    mount.innerHTML = `
+      <article class="mega-card" data-cslot="bg">
+        <div class="mc-video-box">${mediaHtml}</div>
+        <div style="padding:16px 20px 12px;" data-cslot="bg">
+          ${brandRow}${nameLine}
+          ${state.style === "full" && state.slogan ? `<div class="mc-slogan" data-cslot="fg">${esc(state.slogan)}</div>` : ""}
+        </div>
+        <div class="mc-sep"></div>
+        <div class="mc-body" data-cslot="bg">${rowsHtml}</div>
+        ${footHtml}
+      </article>`;
+  } else if (state.style === "hero") {
+    mount.innerHTML = `
+      <article class="mega-card" data-cslot="bg">
+        <div class="mc-hero-box">
+          ${state.photoUrl ? `<img class="mc-hero-img" src="${esc(state.photoUrl)}">` : ""}
+          <div class="mc-hero-grad">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              ${state.logoUrl ? `<span class="mc-logo-pill"><img src="${esc(state.logoUrl)}"></span>` : "<span></span>"}
+              <span style="font-size:11px;color:#fff;">${esc(state.company)}</span>
+            </div>
+            <div style="color:#fff;">${nameLine}</div>
+          </div>
+        </div>
+        <div class="mc-body" data-cslot="bg">${rowsHtml}</div>
+        ${footHtml}
+      </article>`;
+  } else if (state.style === "side") {
+    mount.innerHTML = `
+      <article class="mega-card" data-cslot="bg">
+        <div class="mc-top-bar" data-cslot="accent"></div>
+        <div class="mc-side-grid">
+          <div class="mc-side-media">${mediaHtml}</div>
+          <div class="mc-side-info" data-cslot="bg">
+            ${logoHtml}
+            <div class="mc-name" style="font-size:18px;" data-cslot="fg">${esc(state.name)}</div>
+            ${state.enName ? `<div class="mc-en-name" style="font-size:13px;" data-cslot="accent">${esc(state.enName)}</div>` : ""}
+            <div class="mc-co-name" style="white-space:normal;" data-cslot="fg">${esc(state.company)}</div>
+          </div>
+        </div>
+        <div class="mc-sep"></div>
+        <div class="mc-body" data-cslot="bg">${rowsHtml}</div>
+        ${footHtml}
+      </article>`;
+  } else if (state.style === "block") {
+    mount.innerHTML = `
+      <article class="mega-card" data-cslot="bg">
+        <div class="mc-block-top" data-cslot="accent">
+          ${brandRow}${nameLine}
+        </div>
+        <div class="mc-body" data-cslot="bg">${rowsHtml}</div>
+        ${footHtml}
+      </article>`;
+  } else {
+    const extraCls = state.style === "frame" ? "style-frame" : "";
+    mount.innerHTML = `
+      <article class="mega-card ${extraCls}" data-cslot="bg">
+        <div class="mc-top-bar" data-cslot="accent"></div>
+        <div style="padding:18px 20px 0;" data-cslot="bg">${brandRow}</div>
+        <div style="padding:2px 20px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;" data-cslot="bg">
+          <div style="flex:1;">${nameLine}</div>
+          ${state.showPhoto && state.photoUrl ? `<div class="mc-photo"><img src="${esc(state.photoUrl)}"></div>` : ""}
+        </div>
+        <div class="mc-sep"></div>
+        <div class="mc-body" data-cslot="bg">${rowsHtml}</div>
+        ${footHtml}
+      </article>`;
   }
-  if (state.style === "hero") {
-    mount.innerHTML = `<article class="mega-card style-hero"><div class="mc-hero-box">${state.photoUrl ? `<img class="mc-hero-img" src="${esc(state.photoUrl)}">` : ""}<div class="mc-hero-grad"><div class="mc-hero-top">${state.logoUrl ? `<span class="mc-logo-pill"><img src="${esc(state.logoUrl)}"></span>` : "<span></span>"}<span style="font-size:11px;color:#fff;">${esc(state.company)}</span></div><div>${nameLine}</div></div></div><div class="mc-body">${rows.join("")}</div>${foot}</article>`;
-    return;
-  }
-  const cls = state.style === "ivory" ? "style-ivory" : "style-dark";
-  mount.innerHTML = `<article class="mega-card ${cls}"><div class="mc-top-bar"></div><div style="padding:18px 22px 0;">${brandRow}</div><div class="mc-head" style="padding-top:2px;"><div style="flex:1;">${nameLine}</div>${state.showPhoto && state.photoUrl ? `<div class="mc-photo"><img src="${esc(state.photoUrl)}"></div>` : ""}</div><div class="mc-sep"></div><div class="mc-body">${rows.join("")}</div>${foot}</article>`;
+
+  // 綁定點擊左側預覽格子直接切換調色部位
+  mount.querySelectorAll("[data-cslot]").forEach(el => {
+    el.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const slot = el.getAttribute("data-cslot");
+      if (slot) {
+        selectColorSlot(slot);
+        toast("已選取：" + (slot === "bg" ? "背景色" : (slot === "fg" ? "文字色" : "主色")));
+      }
+    });
+  });
+}
+
+function renderInputs() {
+  document.querySelectorAll("#styleGrid .style-opt").forEach(el => el.classList.toggle("active", el.dataset.style === state.style));
+  document.getElementById("inFont").value = state.font || "jhenghei";
+  document.getElementById("chkLogoMono").checked = state.logoMono !== false;
+  document.getElementById("chkPhoto").checked = !!state.showPhoto;
+  document.getElementById("inVideoUrl").value = state.videoUrl || "";
+  document.getElementById("inCompany").value = state.company || "";
+  document.getElementById("inSlogan").value = state.slogan || "";
+  document.getElementById("inName").value = state.name || "";
+  document.getElementById("inEnName").value = state.enName || "";
+  document.getElementById("inCallTel").value = state.mobile || "";
+  document.getElementById("inWeb").value = state.website || "";
+  document.getElementById("chkOa").checked = !!state.oaOn; document.getElementById("inOaId").value = state.oaId || "";
+  document.getElementById("chkMailBtn").checked = !!state.mailBtnOn; document.getElementById("inMailBtnAddr").value = state.email || "";
+  document.getElementById("chkIg").checked = !!state.igOn; document.getElementById("inIgId").value = state.igId || "";
+  document.getElementById("chkFb").checked = !!state.fbOn; document.getElementById("inFbId").value = state.fbId || "";
+  document.getElementById("chkTh").checked = !!state.thOn; document.getElementById("inThId").value = state.thId || "";
+  renderInfoRowsEditor();
 }
 
 function toggleChatTheme() {
@@ -737,14 +910,23 @@ function toggleChatTheme() {
   document.getElementById("btnTheme").textContent = d ? "淺色背景" : "深色背景";
 }
 
-let tTimer;
-function showToast(msg) {
-  const el = document.getElementById("toast");
-  el.textContent = msg; el.classList.add("show");
-  clearTimeout(tTimer); tTimer = setTimeout(() => el.classList.remove("show"), 2600);
+function shareToLine() {
+  const slug = (profile && profile.slug) || "bigt";
+  window.open(`https://liff.line.me/${CFG.LIFF_ID}?mode=card&id=${encodeURIComponent(slug)}`, "_blank", "noopener");
 }
 
-bootSession();
+let tTimer;
+function toast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg; el.classList.add("show");
+  clearTimeout(tTimer); tTimer = setTimeout(() => el.classList.remove("show"), 2200);
+}
+
+syncCssVars();
+renderInputs();
+renderPreview();
+updateEditQuotaUI();
+initSession();
 </script>
 </body>
 </html>

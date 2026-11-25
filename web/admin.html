@@ -3,9 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2323201B'/%3E%3Crect x='12' y='18' width='40' height='28' rx='5' fill='none' stroke='%23C5AE6E' stroke-width='4'/%3E%3Cline x1='18' y1='27' x2='36' y2='27' stroke='%23C5AE6E' stroke-width='3.5' stroke-linecap='round'/%3E%3Cline x1='18' y1='35' x2='30' y2='35' stroke='%23E8D9AD' stroke-width='3' stroke-linecap='round'/%3E%3Ccircle cx='43' cy='31' r='4' fill='%23C5AE6E'/%3E%3C/svg%3E">
 <title>LINE 名片王 · 管理後台</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js"></script>
+<script>
+window.CARD_KING_CONFIG = { SUPABASE_URL: "", SUPABASE_ANON_KEY: "", WORKER_API: "", LIFF_ID: "2007666611-fbGOItDt" };
+</script>
 <style>
   :root {
     --bg: #f6f4ef; --surface: #fffdf9; --raised: #eeeae2; --border: rgba(31,27,22,0.11);
@@ -50,7 +53,8 @@
 
 <section id="loginBox" class="login">
   <div style="font-size:16px;font-weight:700;">管理員登入</div>
-  <input type="password" id="inKey" placeholder="管理金鑰" onkeydown="if(event.key==='Enter')login()">
+  <input type="email" id="inEmail" placeholder="管理員 Email">
+  <input type="password" id="inPass" placeholder="密碼" onkeydown="if(event.key==='Enter')login()">
   <button class="btn btn-pri" style="height:40px;" onclick="login()">登入</button>
 </section>
 
@@ -81,31 +85,36 @@
 
 <script>
 const CFG = window.CARD_KING_CONFIG || {};
-let adminKey = sessionStorage.getItem("ck_admin_key") || "";
+const sb = (CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY) ? window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY) : null;
+let accessToken = "";
 
 function esc(s) { return String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 
 async function api(path, opts = {}) {
   const r = await fetch(CFG.WORKER_API.replace(/\/$/, "") + path, {
     ...opts,
-    headers: { "Content-Type": "application/json", "X-Admin-Key": adminKey, ...(opts.headers || {}) }
+    headers: { "Content-Type": "application/json", Authorization: "Bearer " + accessToken, ...(opts.headers || {}) }
   });
   return r.json();
 }
 
 async function login() {
-  adminKey = document.getElementById("inKey").value.trim();
-  if (!adminKey) return;
+  if (!sb || !CFG.WORKER_API) { toast("後端尚未連線"); return; }
+  const email = document.getElementById("inEmail").value.trim();
+  const password = document.getElementById("inPass").value;
+  if (!email || !password) { toast("請輸入 Email 與密碼"); return; }
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  if (error || !data.session) { toast(error ? error.message : "登入失敗"); return; }
+  accessToken = data.session.access_token;
   const ok = await loadList();
   if (ok) {
-    sessionStorage.setItem("ck_admin_key", adminKey);
     document.getElementById("loginBox").style.display = "none";
     document.getElementById("mainBox").style.display = "flex";
     document.getElementById("topAct").style.display = "flex";
   }
 }
 
-function logout() { sessionStorage.removeItem("ck_admin_key"); location.reload(); }
+async function logout() { if (sb) await sb.auth.signOut(); location.reload(); }
 
 async function loadList() {
   if (!CFG.WORKER_API) { toast("尚未設定 WORKER_API"); return false; }
@@ -155,7 +164,19 @@ async function delUser(id, email) {
 let t;
 function toast(m) { const el = document.getElementById("toast"); el.textContent = m; el.classList.add("show"); clearTimeout(t); t = setTimeout(() => el.classList.remove("show"), 2500); }
 
-if (adminKey) { document.getElementById("inKey").value = adminKey; login(); }
+(async () => {
+  if (!sb) return;
+  const { data } = await sb.auth.getSession();
+  if (data && data.session) {
+    accessToken = data.session.access_token;
+    const ok = await loadList();
+    if (ok) {
+      document.getElementById("loginBox").style.display = "none";
+      document.getElementById("mainBox").style.display = "flex";
+      document.getElementById("topAct").style.display = "flex";
+    }
+  }
+})();
 </script>
 </body>
 </html>

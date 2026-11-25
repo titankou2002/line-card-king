@@ -8,6 +8,11 @@ create table if not exists public.card_profiles (
   status text not null default 'active' check (status in ('active', 'suspended')),
   is_admin boolean not null default false,
 
+  -- 免費修改次數控管（預設 3 次，超過請 Donate 解鎖）
+  edit_quota int not null default 3,
+  edit_used int not null default 0,
+  donated boolean not null default false,
+
   -- 影片額度控管（預設每人 1 支，上限 10MB）
   video_quota int not null default 1,
   video_key text not null default '',
@@ -112,5 +117,34 @@ begin
   update public.card_profiles
   set send_count = send_count + 1
   where slug = lower(trim(p_slug)) and status = 'active';
+end;
+$$;
+
+-- 安全儲存名片並扣減免費修改額度（3 次上限，超過回傳 need_donate）
+create or replace function public.save_user_card(p_config jsonb)
+returns jsonb
+language plpgsql
+security definer
+as $$
+declare
+  rec record;
+begin
+  select * into rec from public.card_profiles where id = auth.uid() limit 1;
+  if not found then
+    return jsonb_build_object('ok', false, 'error', '找不到帳號');
+  end if;
+  if rec.status <> 'active' then
+    return jsonb_build_object('ok', false, 'error', '帳號已停用');
+  end if;
+  if not rec.donated and rec.edit_used >= rec.edit_quota then
+    return jsonb_build_object('ok', false, 'need_donate', true, 'edit_used', rec.edit_used, 'edit_quota', rec.edit_quota);
+  end if;
+
+  update public.card_profiles
+  set config = p_config,
+      edit_used = edit_used + 1
+  where id = auth.uid();
+
+  return jsonb_build_object('ok', true, 'edit_used', rec.edit_used + 1, 'edit_quota', rec.edit_quota, 'donated', rec.donated);
 end;
 $$;
