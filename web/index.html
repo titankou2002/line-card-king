@@ -374,143 +374,165 @@ window.CARD_KING_CONFIG = {
     </div>
   </section>
 
-  <!-- 右側：收納式 4 分頁極簡編輯器 -->
+  <!-- 右側 / 下方：極簡 2 步主流程 ＋ 收合式進階設定 -->
   <aside class="editor-panel">
-    <nav class="dock-tabs" id="dockTabs">
-      <button type="button" class="dock-tab active" data-dtab="style" onclick="openEditorTab('style')">版型配色</button>
-      <button type="button" class="dock-tab" data-dtab="media" onclick="openEditorTab('media')">影片照片</button>
-      <button type="button" class="dock-tab" data-dtab="info" onclick="openEditorTab('info')">基本資料</button>
-      <button type="button" class="dock-tab" data-dtab="social" onclick="openEditorTab('social')">延伸按鈕</button>
-    </nav>
+    <!-- 1. 拍名片自動讀取（AI OCR） -->
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+      <input type="file" id="ocrFile" accept="image/*" capture="environment" hidden onchange="onOcrPick(event)">
+      <button type="button" class="btn btn-pri" id="btnOcr" style="flex:1;height:40px;font-size:13.5px;" onclick="document.getElementById('ocrFile').click()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        拍名片自動填入
+      </button>
+    </div>
 
-    <!-- 分頁 1：版型（手機橫滑一條）+ 獨立區塊配色 + 字體 -->
-    <div class="dock-pane active" id="dpane-style">
-      <div>
-        <div class="sec-title"><span>版型（左右滑動選擇）</span></div>
-        <div class="style-grid" id="styleGrid">
-          <button type="button" class="style-opt" data-style="video" onclick="setStyle('video')">動態影片</button>
-          <button type="button" class="style-opt active" data-style="dark" onclick="setStyle('dark')">深岩燙金</button>
-          <button type="button" class="style-opt" data-style="hero" onclick="setStyle('hero')">雜誌封面</button>
-          <button type="button" class="style-opt" data-style="ivory" onclick="setStyle('ivory')">極簡象牙</button>
-          <button type="button" class="style-opt" data-style="full" onclick="setStyle('full')">全資訊旗艦</button>
-          <button type="button" class="style-opt" data-style="side" onclick="setStyle('side')">側邊影像</button>
-          <button type="button" class="style-opt" data-style="block" onclick="setStyle('block')">莫蘭迪撞色</button>
-          <button type="button" class="style-opt" data-style="frame" onclick="setStyle('frame')">建築黑框</button>
-        </div>
-      </div>
-
-      <div class="sep"></div>
-
-      <div>
-        <div class="sec-title">
-          <span>個別區塊配色</span>
-          <div class="slot-tabs" style="flex-wrap:wrap;">
-            <button type="button" class="slot-tab active" data-slot="accent" onclick="selectColorSlot('accent')">主色</button>
-            <button type="button" class="slot-tab" data-slot="headBg" onclick="selectColorSlot('headBg')">上框</button>
-            <button type="button" class="slot-tab" data-slot="bodyBg" onclick="selectColorSlot('bodyBg')">中框</button>
-            <button type="button" class="slot-tab" data-slot="footBg" onclick="selectColorSlot('footBg')">下框</button>
-            <button type="button" class="slot-tab" data-slot="btn2Bg" onclick="selectColorSlot('btn2Bg')">次鈕</button>
-            <button type="button" class="slot-tab" data-slot="fg" onclick="selectColorSlot('fg')">文字</button>
-          </div>
-        </div>
-        <div class="color-row">
-          <div class="color-picker-wrap"><input type="color" id="inColor" value="#c5ae6e" oninput="applySlotColor(this.value)"></div>
-          <div class="field" style="flex:1;"><input type="text" id="inColorHex" value="#C5AE6E" maxlength="7" oninput="onHexInput(this.value)"></div>
-        </div>
-        <div class="swatches" id="swatches">
-          <button type="button" class="swatch active" style="background:#c5ae6e" data-hex="#c5ae6e" onclick="applySlotColor('#c5ae6e')"></button>
-          <button type="button" class="swatch" style="background:#b59e63" data-hex="#b59e63" onclick="applySlotColor('#b59e63')"></button>
-          <button type="button" class="swatch" style="background:#9ca389" data-hex="#9ca389" onclick="applySlotColor('#9ca389')"></button>
-          <button type="button" class="swatch" style="background:#b88d78" data-hex="#b88d78" onclick="applySlotColor('#b88d78')"></button>
-          <button type="button" class="swatch" style="background:#8aa0ae" data-hex="#8aa0ae" onclick="applySlotColor('#8aa0ae')"></button>
-          <button type="button" class="swatch" style="background:#23201b" data-hex="#23201b" onclick="applySlotColor('#23201b')"></button>
-          <button type="button" class="swatch" style="background:#faf7f0" data-hex="#faf7f0" onclick="applySlotColor('#faf7f0')"></button>
-        </div>
-      </div>
-
-      <div class="field">
-        <label>字體</label>
-        <select id="inFont" onchange="setFont(this.value)">
-          <option value="jhenghei">微軟正黑體</option>
-          <option value="notosans">思源黑體</option>
-          <option value="notoserif">思源宋體</option>
-          <option value="rounded">圓體</option>
-        </select>
+    <!-- 2. 8 款設計師配色版型（手機橫滑一條） -->
+    <div>
+      <div class="sec-title"><span>選擇版型</span></div>
+      <div class="style-grid" id="styleGrid">
+        <button type="button" class="style-opt" data-style="video" onclick="setStyle('video')">動態影片</button>
+        <button type="button" class="style-opt active" data-style="dark" onclick="setStyle('dark')">深岩燙金</button>
+        <button type="button" class="style-opt" data-style="hero" onclick="setStyle('hero')">雜誌封面</button>
+        <button type="button" class="style-opt" data-style="ivory" onclick="setStyle('ivory')">極簡象牙</button>
+        <button type="button" class="style-opt" data-style="full" onclick="setStyle('full')">全資訊旗艦</button>
+        <button type="button" class="style-opt" data-style="side" onclick="setStyle('side')">側邊影像</button>
+        <button type="button" class="style-opt" data-style="block" onclick="setStyle('block')">莫蘭迪撞色</button>
+        <button type="button" class="style-opt" data-style="frame" onclick="setStyle('frame')">建築黑框</button>
       </div>
     </div>
 
-    <!-- 分頁 2：Logo / 照片 / 影片（收納） -->
-    <div class="dock-pane" id="dpane-media">
-      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
-        <input type="file" id="logoFile" accept="image/*" hidden onchange="onLogoPick(event)">
-        <button type="button" class="btn btn-sm" onclick="document.getElementById('logoFile').click()">上傳 Logo</button>
-        <button type="button" class="btn btn-sm" onclick="clearLogo()">刪除 Logo</button>
-        <label class="ext-chk"><input type="checkbox" id="chkLogoMono" checked onchange="setField('logoMono', this.checked)">純色</label>
-      </div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
-        <input type="file" id="photoFile" accept="image/*" hidden onchange="onPhotoPick(event)">
-        <button type="button" class="btn btn-sm" onclick="document.getElementById('photoFile').click()">上傳照片</button>
-        <label class="ext-chk"><input type="checkbox" id="chkPhoto" onchange="setField('showPhoto', this.checked)">顯示照片</label>
-      </div>
-      <div class="sep"></div>
-      <div>
-        <div class="quota-bar">
-          <span id="videoQuotaText">影片（貼上網址連結）· ≤10秒 / ≤10MB</span>
-          <div style="display:flex;gap:6px;">
-            <input type="file" id="videoFile" accept="video/mp4" hidden onchange="onVideoPick(event)">
-            <button type="button" class="btn btn-sm btn-pri" onclick="document.getElementById('videoFile').click()">上傳 MP4</button>
-            <button type="button" class="btn btn-sm btn-danger" id="btnDelVideo" style="display:none;" onclick="clearVideo()">刪除影片</button>
-          </div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr auto;gap:6px;margin-top:8px;">
-          <input type="url" id="inVideoUrl" oninput="setField('videoUrl', this.value)" placeholder="貼上 YouTube 或 MP4 網址連結" style="height:36px;padding:0 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:#fff;font-family:inherit;">
-          <button type="button" class="btn btn-sm btn-pri" id="btnYtConv" onclick="convertYoutube()">轉 MP4</button>
-        </div>
-      </div>
-    </div>
+    <div class="sep"></div>
 
-    <!-- 分頁 3：基本資料與顯示欄位（收納） -->
-    <div class="dock-pane" id="dpane-info">
+    <!-- 3. 基本資料（一進來直接填） -->
+    <div>
+      <div class="sec-title" style="margin-bottom:8px;"><span>基本資料</span></div>
       <div class="field-grid">
         <div class="field"><label>公司名稱</label><input type="text" id="inCompany" oninput="setField('company', this.value)"></div>
-        <div class="field"><label>標語</label><input type="text" id="inSlogan" oninput="setField('slogan', this.value)"></div>
         <div class="field"><label>中文姓名</label><input type="text" id="inName" oninput="setField('name', this.value)"></div>
         <div class="field"><label>英文名</label><input type="text" id="inEnName" oninput="setField('enName', this.value)"></div>
-        <div class="field"><label>撥打按鈕電話</label><input type="tel" id="inCallTel" placeholder="0977393811" oninput="setField('mobile', this.value)"></div>
+        <div class="field"><label>手機</label><input type="tel" id="inCallTel" placeholder="0977393811" oninput="syncQuickRow(0,'手機',this.value);setField('mobile',this.value)"></div>
+        <div class="field"><label>Email</label><input type="email" id="inQuickEmail" placeholder="name@example.com" oninput="syncQuickRow(1,'信箱',this.value);setField('email',this.value)"></div>
+        <div class="field"><label>公司電話</label><input type="text" id="inQuickTel" oninput="syncQuickRow(2,'電話',this.value)"></div>
+        <div class="field"><label>地址</label><input type="text" id="inQuickAddr" oninput="syncQuickRow(3,'地址',this.value)"></div>
         <div class="field"><label>官方網站</label><input type="url" id="inWeb" placeholder="https://..." oninput="setField('website', this.value)"></div>
-      </div>
-      <div class="sep"></div>
-      <div>
-        <div class="sec-title">
-          <span>顯示欄位</span>
-          <button type="button" class="btn btn-sm" onclick="addInfoRow()">＋ 新增</button>
-        </div>
-        <div class="ext-stack" id="infoRowsBox"></div>
       </div>
     </div>
 
-    <!-- 分頁 4：延伸社群按鈕（收納） -->
-    <div class="dock-pane" id="dpane-social">
-      <div class="ext-stack">
-        <div class="ext-row">
-          <label class="ext-chk"><input type="checkbox" id="chkOa" onchange="setField('oaOn', this.checked)">LINE 官方帳號</label>
-          <input type="text" id="inOaId" placeholder="@297azzax（有無 @ 皆可）" oninput="setField('oaId', this.value)">
+    <div class="sep"></div>
+
+    <!-- 4. 進階設定（預設完全收合，想客製才點開） -->
+    <button type="button" class="btn" id="btnAdvToggle" style="width:100%;justify-content:space-between;height:38px;background:var(--bg);" onclick="toggleAdvanced()">
+      <span>進階設定（配色 / 字體 / Logo / 影片 / 社群）</span>
+      <span id="advArrow">▾</span>
+    </button>
+
+    <div id="advPanel" style="display:none;flex-direction:column;gap:14px;">
+      <nav class="dock-tabs" id="dockTabs">
+        <button type="button" class="dock-tab active" data-dtab="style" onclick="openEditorTab('style')">配色字體</button>
+        <button type="button" class="dock-tab" data-dtab="media" onclick="openEditorTab('media')">Logo影片</button>
+        <button type="button" class="dock-tab" data-dtab="info" onclick="openEditorTab('info')">欄位標語</button>
+        <button type="button" class="dock-tab" data-dtab="social" onclick="openEditorTab('social')">延伸按鈕</button>
+      </nav>
+
+      <div class="dock-pane active" id="dpane-style">
+        <div>
+          <div class="sec-title">
+            <span>個別區塊配色</span>
+            <div class="slot-tabs" style="flex-wrap:wrap;">
+              <button type="button" class="slot-tab active" data-slot="accent" onclick="selectColorSlot('accent')">主色</button>
+              <button type="button" class="slot-tab" data-slot="headBg" onclick="selectColorSlot('headBg')">上框</button>
+              <button type="button" class="slot-tab" data-slot="bodyBg" onclick="selectColorSlot('bodyBg')">中框</button>
+              <button type="button" class="slot-tab" data-slot="footBg" onclick="selectColorSlot('footBg')">下框</button>
+              <button type="button" class="slot-tab" data-slot="btn2Bg" onclick="selectColorSlot('btn2Bg')">次鈕</button>
+              <button type="button" class="slot-tab" data-slot="fg" onclick="selectColorSlot('fg')">文字</button>
+            </div>
+          </div>
+          <div class="color-row">
+            <div class="color-picker-wrap"><input type="color" id="inColor" value="#c5ae6e" oninput="applySlotColor(this.value)"></div>
+            <div class="field" style="flex:1;"><input type="text" id="inColorHex" value="#C5AE6E" maxlength="7" oninput="onHexInput(this.value)"></div>
+          </div>
+          <div class="swatches" id="swatches">
+            <button type="button" class="swatch active" style="background:#c5ae6e" data-hex="#c5ae6e" onclick="applySlotColor('#c5ae6e')"></button>
+            <button type="button" class="swatch" style="background:#b59e63" data-hex="#b59e63" onclick="applySlotColor('#b59e63')"></button>
+            <button type="button" class="swatch" style="background:#5f7464" data-hex="#5f7464" onclick="applySlotColor('#5f7464')"></button>
+            <button type="button" class="swatch" style="background:#a67c68" data-hex="#a67c68" onclick="applySlotColor('#a67c68')"></button>
+            <button type="button" class="swatch" style="background:#6e818f" data-hex="#6e818f" onclick="applySlotColor('#6e818f')"></button>
+            <button type="button" class="swatch" style="background:#23201b" data-hex="#23201b" onclick="applySlotColor('#23201b')"></button>
+            <button type="button" class="swatch" style="background:#faf7f0" data-hex="#faf7f0" onclick="applySlotColor('#faf7f0')"></button>
+          </div>
         </div>
-        <div class="ext-row">
-          <label class="ext-chk"><input type="checkbox" id="chkMailBtn" onchange="setField('mailBtnOn', this.checked)">一鍵寄信</label>
-          <input type="email" id="inMailBtnAddr" placeholder="name@example.com" oninput="setField('email', this.value)">
+        <div class="field">
+          <label>字體</label>
+          <select id="inFont" onchange="setFont(this.value)">
+            <option value="jhenghei">微軟正黑體</option>
+            <option value="notosans">思源黑體</option>
+            <option value="notoserif">思源宋體</option>
+            <option value="rounded">圓體</option>
+          </select>
         </div>
-        <div class="ext-row">
-          <label class="ext-chk"><input type="checkbox" id="chkIg" onchange="setField('igOn', this.checked)">Instagram</label>
-          <input type="text" id="inIgId" placeholder="elitile_tw（有無 @ 皆可）" oninput="setField('igId', this.value)">
+      </div>
+
+      <div class="dock-pane" id="dpane-media">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+          <input type="file" id="logoFile" accept="image/*" hidden onchange="onLogoPick(event)">
+          <button type="button" class="btn btn-sm" onclick="document.getElementById('logoFile').click()">上傳 Logo</button>
+          <button type="button" class="btn btn-sm" onclick="clearLogo()">刪除 Logo</button>
+          <label class="ext-chk"><input type="checkbox" id="chkLogoMono" checked onchange="setField('logoMono', this.checked)">純色</label>
         </div>
-        <div class="ext-row">
-          <label class="ext-chk"><input type="checkbox" id="chkFb" onchange="setField('fbOn', this.checked)">Facebook</label>
-          <input type="text" id="inFbId" placeholder="粉專或帳號 ID" oninput="setField('fbId', this.value)">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+          <input type="file" id="photoFile" accept="image/*" hidden onchange="onPhotoPick(event)">
+          <button type="button" class="btn btn-sm" onclick="document.getElementById('photoFile').click()">上傳照片</button>
+          <label class="ext-chk"><input type="checkbox" id="chkPhoto" onchange="setField('showPhoto', this.checked)">顯示照片</label>
         </div>
-        <div class="ext-row">
-          <label class="ext-chk"><input type="checkbox" id="chkTh" onchange="setField('thOn', this.checked)">Threads</label>
-          <input type="text" id="inThId" placeholder="@elitile_tw（有無 @ 皆可）" oninput="setField('thId', this.value)">
+        <div class="sep"></div>
+        <div>
+          <div class="quota-bar">
+            <span id="videoQuotaText">影片（貼上網址連結）· ≤10秒 / ≤10MB</span>
+            <div style="display:flex;gap:6px;">
+              <input type="file" id="videoFile" accept="video/mp4" hidden onchange="onVideoPick(event)">
+              <button type="button" class="btn btn-sm btn-pri" onclick="document.getElementById('videoFile').click()">上傳 MP4</button>
+              <button type="button" class="btn btn-sm btn-danger" id="btnDelVideo" style="display:none;" onclick="clearVideo()">刪除影片</button>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr auto;gap:6px;margin-top:8px;">
+            <input type="url" id="inVideoUrl" oninput="setField('videoUrl', this.value)" placeholder="貼上 YouTube 或 MP4 網址連結" style="height:36px;padding:0 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:#fff;font-family:inherit;">
+            <button type="button" class="btn btn-sm btn-pri" id="btnYtConv" onclick="convertYoutube()">轉 MP4</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="dock-pane" id="dpane-info">
+        <div class="field"><label>標語</label><input type="text" id="inSlogan" oninput="setField('slogan', this.value)"></div>
+        <div>
+          <div class="sec-title">
+            <span>自訂顯示欄位</span>
+            <button type="button" class="btn btn-sm" onclick="addInfoRow()">＋ 新增</button>
+          </div>
+          <div class="ext-stack" id="infoRowsBox"></div>
+        </div>
+      </div>
+
+      <div class="dock-pane" id="dpane-social">
+        <div class="ext-stack">
+          <div class="ext-row">
+            <label class="ext-chk"><input type="checkbox" id="chkOa" onchange="setField('oaOn', this.checked)">LINE 官方帳號</label>
+            <input type="text" id="inOaId" placeholder="@297azzax（有無 @ 皆可）" oninput="setField('oaId', this.value)">
+          </div>
+          <div class="ext-row">
+            <label class="ext-chk"><input type="checkbox" id="chkMailBtn" onchange="setField('mailBtnOn', this.checked)">一鍵寄信</label>
+            <input type="email" id="inMailBtnAddr" placeholder="name@example.com" oninput="setField('email', this.value)">
+          </div>
+          <div class="ext-row">
+            <label class="ext-chk"><input type="checkbox" id="chkIg" onchange="setField('igOn', this.checked)">Instagram</label>
+            <input type="text" id="inIgId" placeholder="elitile_tw（有無 @ 皆可）" oninput="setField('igId', this.value)">
+          </div>
+          <div class="ext-row">
+            <label class="ext-chk"><input type="checkbox" id="chkFb" onchange="setField('fbOn', this.checked)">Facebook</label>
+            <input type="text" id="inFbId" placeholder="粉專或帳號 ID" oninput="setField('fbId', this.value)">
+          </div>
+          <div class="ext-row">
+            <label class="ext-chk"><input type="checkbox" id="chkTh" onchange="setField('thOn', this.checked)">Threads</label>
+            <input type="text" id="inThId" placeholder="@elitile_tw（有無 @ 皆可）" oninput="setField('thId', this.value)">
+          </div>
         </div>
       </div>
     </div>
@@ -560,15 +582,16 @@ const FONTS = {
   rounded: '"Hiragino Maru Gothic ProN", "Microsoft JhengHei", sans-serif'
 };
 
+/* 8 款版型各自專屬設計師莫蘭迪配色 */
 const STYLE_DEFAULTS = {
-  video: { headBg: "#23201B", bodyBg: "#23201B", footBg: "#23201B", btn2Bg: "#332E27", fg: "#F1ECE2" },
-  dark:  { headBg: "#23201B", bodyBg: "#23201B", footBg: "#23201B", btn2Bg: "#332E27", fg: "#F1ECE2" },
-  hero:  { headBg: "#FFFDF9", bodyBg: "#FFFDF9", footBg: "#FFFDF9", btn2Bg: "#EBE5D9", fg: "#1F1B16" },
-  ivory: { headBg: "#FAF7F0", bodyBg: "#FAF7F0", footBg: "#FAF7F0", btn2Bg: "#EBE5D9", fg: "#1F1B16" },
-  full:  { headBg: "#23201B", bodyBg: "#23201B", footBg: "#23201B", btn2Bg: "#332E27", fg: "#F1ECE2" },
-  side:  { headBg: "#23201B", bodyBg: "#23201B", footBg: "#23201B", btn2Bg: "#332E27", fg: "#F1ECE2" },
-  block: { headBg: "#C5AE6E", bodyBg: "#FAF7F0", footBg: "#FAF7F0", btn2Bg: "#EBE5D9", fg: "#1F1B16" },
-  frame: { headBg: "#FFFFFF", bodyBg: "#FFFFFF", footBg: "#FFFFFF", btn2Bg: "#EBE5D9", fg: "#1F1B16" }
+  video: { color: "#C5AE6E", headBg: "#1E1D1B", bodyBg: "#1E1D1B", footBg: "#1E1D1B", btn2Bg: "#312E28", fg: "#F3EFE7" },
+  dark:  { color: "#D2B878", headBg: "#23201B", bodyBg: "#23201B", footBg: "#23201B", btn2Bg: "#353028", fg: "#F1ECE2" },
+  hero:  { color: "#A67C68", headBg: "#FFFDF9", bodyBg: "#FFFDF9", footBg: "#FFFDF9", btn2Bg: "#EFE9E1", fg: "#231E1A" },
+  ivory: { color: "#5F7464", headBg: "#FAF7F0", bodyBg: "#FAF7F0", footBg: "#FAF7F0", btn2Bg: "#E9E5DC", fg: "#1F2420" },
+  full:  { color: "#C8B27A", headBg: "#212A34", bodyBg: "#212A34", footBg: "#1B232C", btn2Bg: "#313D4B", fg: "#EEF2F6" },
+  side:  { color: "#C9B582", headBg: "#1F2D27", bodyBg: "#1F2D27", footBg: "#192520", btn2Bg: "#2E4038", fg: "#EDF2EF" },
+  block: { color: "#6E818F", headBg: "#6E818F", bodyBg: "#FAF7F0", footBg: "#F3EFE6", btn2Bg: "#E6E2DA", fg: "#1F1B16" },
+  frame: { color: "#8E8475", headBg: "#FFFFFF", bodyBg: "#FFFFFF", footBg: "#FFFFFF", btn2Bg: "#ECE8E1", fg: "#1A1A1A" }
 };
 
 let authMode = "login";
@@ -635,14 +658,31 @@ function updateEditQuotaUI() {
   pill.textContent = `免費修改：${left} / ${quota}`;
 }
 
+let advOpen = false;
+function toggleAdvanced(forceOpen) {
+  advOpen = typeof forceOpen === "boolean" ? forceOpen : !advOpen;
+  document.getElementById("advPanel").style.display = advOpen ? "flex" : "none";
+  document.getElementById("advArrow").textContent = advOpen ? "▴" : "▾";
+}
+
 function openEditorTab(tab) {
+  if (!advOpen) toggleAdvanced(true);
   document.querySelectorAll("#dockTabs .dock-tab").forEach(b => b.classList.toggle("active", b.dataset.dtab === tab));
   document.querySelectorAll(".dock-pane").forEach(p => p.classList.toggle("active", p.id === "dpane-" + tab));
+}
+
+function syncQuickRow(idx, fallbackLbl, val) {
+  ensureRows();
+  while (state.infoRows.length <= idx) state.infoRows.push({ label: fallbackLbl, value: "" });
+  state.infoRows[idx].value = val;
+  renderInfoRowsEditor();
+  renderPreview();
 }
 
 function setStyle(s) {
   state.style = s;
   const def = STYLE_DEFAULTS[s] || STYLE_DEFAULTS.dark;
+  state.color = def.color;
   state.headBg = def.headBg;
   state.bodyBg = def.bodyBg;
   state.footBg = def.footBg;
@@ -806,25 +846,97 @@ async function convertYoutube() {
   }
 }
 
-/* 儲存（含 3 次免費額度檢查與 Donate 彈窗） */
+/* 拍紙本名片 AI 自動辨識填入 */
+function onOcrPick(e) {
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  const btn = document.getElementById("btnOcr");
+  btn.disabled = true; btn.textContent = "辨識名片中...";
+  const img = new Image();
+  img.onload = async () => {
+    try {
+      const c = document.createElement("canvas");
+      const sc = Math.min(1, 1280 / Math.max(img.naturalWidth, img.naturalHeight));
+      c.width = Math.round(img.naturalWidth * sc); c.height = Math.round(img.naturalHeight * sc);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      const dataUrl = c.toDataURL("image/jpeg", 0.85);
+      const r = await fetch(CFG.GAS_API, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "ecardOcr", dataUrl })
+      }).then(x => x.json());
+      if (!r || !r.success || !r.data) { toast((r && r.error) || "辨識失敗"); return; }
+      const d = r.data;
+      if (d.company) state.company = d.company;
+      if (d.name) state.name = d.name;
+      if (d.enName) state.enName = d.enName;
+      if (d.mobile) state.mobile = d.mobile;
+      if (d.email) state.email = d.email;
+      if (d.website) state.website = d.website;
+      if (d.slogan) state.slogan = d.slogan;
+      state.infoRows = [
+        { label: "手機", value: d.mobile || "" },
+        { label: "信箱", value: d.email || "" },
+        { label: "電話", value: d.tel || "" },
+        { label: "地址", value: d.address || "" }
+      ].filter(x => x.value);
+      if (!state.infoRows.length) state.infoRows = defaultState().infoRows;
+      renderInputs();
+      renderPreview();
+      toast("名片資料已自動填入");
+    } catch (err) {
+      toast("辨識連線失敗");
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>拍名片自動填入';
+      e.target.value = "";
+    }
+  };
+  img.src = URL.createObjectURL(f);
+}
+
+let currentCardId = localStorage.getItem("ck_my_card_id") || "";
+
+/* 儲存（含 3 次免費額度檢查 + 立刻通知管理員 Telegram 查看成果） */
 async function saveCard() {
   if (sb && session) {
     const { data, error } = await sb.rpc("save_user_card", { p_config: state });
     if (error) { toast(error.message); return; }
     if (data && data.need_donate) { openDonateModal(); return; }
-    if (data && data.ok) {
-      if (profile) profile.edit_used = data.edit_used;
+    if (data && data.ok && profile) {
+      profile.edit_used = data.edit_used;
       updateEditQuotaUI();
-      toast("已儲存");
-      return;
     }
+  } else {
+    if (localEditUsed >= 3) { openDonateModal(); return; }
+    localEditUsed++;
+    localStorage.setItem("ck_local_edit_used", String(localEditUsed));
+    localStorage.setItem("ck_state_v7", JSON.stringify(state));
+    updateEditQuotaUI();
   }
-  if (localEditUsed >= 3) { openDonateModal(); return; }
-  localEditUsed++;
-  localStorage.setItem("ck_local_edit_used", String(localEditUsed));
-  localStorage.setItem("ck_state_v7", JSON.stringify(state));
-  updateEditQuotaUI();
-  toast("已儲存");
+
+  const btn = document.getElementById("btnSave");
+  btn.disabled = true; btn.textContent = "儲存中";
+  try {
+    const r = await fetch(CFG.GAS_API, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        action: "ecardNotifyCreate",
+        cardId: (profile && profile.slug) || currentCardId || "",
+        userEmail: (session && session.user && session.user.email) || "",
+        config: state
+      })
+    }).then(x => x.json());
+    if (r && r.success && r.cardId) {
+      currentCardId = r.cardId;
+      localStorage.setItem("ck_my_card_id", currentCardId);
+    }
+    toast("已儲存名片");
+  } catch (e) {
+    toast("已本機儲存");
+  } finally {
+    btn.disabled = false; btn.textContent = "儲存";
+  }
 }
 
 /* 登入 / 註冊 */
@@ -998,6 +1110,7 @@ function renderPreview() {
 }
 
 function renderInputs() {
+  ensureRows();
   document.querySelectorAll("#styleGrid .style-opt").forEach(el => el.classList.toggle("active", el.dataset.style === state.style));
   document.getElementById("inFont").value = state.font || "jhenghei";
   document.getElementById("chkLogoMono").checked = state.logoMono !== false;
@@ -1007,7 +1120,10 @@ function renderInputs() {
   document.getElementById("inSlogan").value = state.slogan || "";
   document.getElementById("inName").value = state.name || "";
   document.getElementById("inEnName").value = state.enName || "";
-  document.getElementById("inCallTel").value = state.mobile || "";
+  document.getElementById("inCallTel").value = state.mobile || (state.infoRows[0] && state.infoRows[0].value) || "";
+  document.getElementById("inQuickEmail").value = state.email || (state.infoRows[1] && state.infoRows[1].value) || "";
+  document.getElementById("inQuickTel").value = (state.infoRows[2] && state.infoRows[2].value) || "";
+  document.getElementById("inQuickAddr").value = (state.infoRows[3] && state.infoRows[3].value) || "";
   document.getElementById("inWeb").value = state.website || "";
   document.getElementById("chkOa").checked = !!state.oaOn; document.getElementById("inOaId").value = state.oaId || "";
   document.getElementById("chkMailBtn").checked = !!state.mailBtnOn; document.getElementById("inMailBtnAddr").value = state.email || "";
@@ -1027,8 +1143,23 @@ function toggleChatTheme() {
 }
 
 function shareToLine() {
-  const slug = (profile && profile.slug) || "bigt";
+  const slug = (profile && profile.slug) || currentCardId || "bigt";
   window.open(`https://liff.line.me/${CFG.LIFF_ID}?mode=card&id=${encodeURIComponent(slug)}`, "_blank", "noopener");
+}
+
+/* 從 Telegram 通知按鈕 ?preview=<id> 點進來時，自動載入該名片成品 */
+async function loadPreviewParamIfAny() {
+  const pid = new URLSearchParams(location.search).get("preview");
+  if (!pid) return;
+  try {
+    const r = await fetch(CFG.GAS_API + "?ac=ecardGet&id=" + encodeURIComponent(pid)).then(x => x.json());
+    if (r && r.success && r.config) {
+      state = Object.assign(defaultState(), r.config);
+      currentCardId = pid;
+      syncCssVars(); renderInputs(); renderPreview();
+      toast("已載入名片：" + pid);
+    }
+  } catch (e) {}
 }
 
 let tTimer;
@@ -1043,6 +1174,7 @@ renderInputs();
 renderPreview();
 updateEditQuotaUI();
 initSession();
+loadPreviewParamIfAny();
 </script>
 </body>
 </html>
