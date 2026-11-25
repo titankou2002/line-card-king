@@ -44,6 +44,12 @@ window.CARD_KING_CONFIG = {
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
+  html, body {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+  }
+
   body {
     font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif;
     background: var(--bg);
@@ -104,7 +110,7 @@ window.CARD_KING_CONFIG = {
     display: grid; grid-template-columns: 430px 1fr; gap: 26px; align-items: start;
   }
   @media (max-width: 920px) { .stage { grid-template-columns: 1fr; padding: 14px 12px 48px; } }
-  .preview-col { position: sticky; top: 70px; }
+  .preview-col { position: sticky; top: 70px; min-width: 0; max-width: 100%; }
   @media (max-width: 920px) { .preview-col { position: static; } }
 
   .phone-shell {
@@ -212,25 +218,27 @@ window.CARD_KING_CONFIG = {
   .editor-panel {
     background: var(--surface); border: 1px solid var(--border);
     border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 15px;
+    min-width: 0; max-width: 100%; overflow: hidden;
   }
-  .sec-title { font-size: 13.5px; font-weight: 700; color: var(--t1); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .sec-title { font-size: 13.5px; font-weight: 700; color: var(--t1); display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
   .sep { height: 1px; background: var(--border); }
 
   /* 收納分頁列（手機與電腦皆俐落不長滾） */
   .dock-tabs {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
-    background: var(--raised); padding: 4px; border-radius: 10px;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;
+    background: var(--raised); padding: 4px; border-radius: 10px; width: 100%;
   }
   .dock-tab {
-    border: none; background: transparent; padding: 8px 4px; border-radius: 7px;
-    font-size: 13px; font-weight: 700; color: var(--t2); cursor: pointer; font-family: inherit;
+    border: none; background: transparent; padding: 8px 2px; border-radius: 7px;
+    font-size: 12.5px; font-weight: 700; color: var(--t2); cursor: pointer; font-family: inherit;
+    white-space: nowrap;
   }
   .dock-tab.active { background: var(--surface); color: var(--t1); box-shadow: 0 1px 4px rgba(31,27,22,0.08); }
-  .dock-pane { display: none; flex-direction: column; gap: 14px; }
+  .dock-pane { display: none; flex-direction: column; gap: 14px; min-width: 0; max-width: 100%; }
   .dock-pane.active { display: flex; }
 
   /* 8 款版型：電腦 4x2，手機改為「單行左右橫滑一條」 */
-  .style-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin-top: 8px; }
+  .style-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin-top: 8px; max-width: 100%; }
   .style-opt {
     border: 1.5px solid var(--border); border-radius: 9px; padding: 9px 10px;
     background: var(--bg); cursor: pointer; font-family: inherit; font-size: 12.5px; font-weight: 700; color: var(--t1);
@@ -239,26 +247,28 @@ window.CARD_KING_CONFIG = {
   .style-opt.active { border-color: #1f1b16; background: #fff; box-shadow: 0 2px 8px rgba(31,27,22,0.08); }
 
   @media (max-width: 920px) {
-    .topbar { padding: 8px 12px; }
-    .topbar h1 { font-size: 14.5px; }
-    .stage { gap: 12px; padding: 10px 10px 32px; }
+    .topbar { padding: 8px 12px; flex-wrap: nowrap; gap: 6px; }
+    .topbar-title { gap: 7px; min-width: 0; }
+    .topbar h1 { font-size: 14px; white-space: nowrap; }
+    .toolbar { gap: 6px; flex-wrap: nowrap; flex-shrink: 0; }
+    .stage { gap: 10px; padding: 10px 10px 32px; grid-template-columns: minmax(0, 1fr); }
     .phone-shell { background: transparent; padding: 0; border-radius: 16px; box-shadow: none; max-width: 100%; }
     .phone-screen { min-height: auto; border-radius: 16px; }
     .line-header { display: none; }
     .chat-body { padding: 10px 10px 12px; }
-    .mega-card { max-width: 310px; }
+    .mega-card { max-width: 310px; width: 100%; }
     .mc-video-box { aspect-ratio: 16 / 8; }
     .mc-hero-box { height: 150px; }
     .mc-body { padding: 10px 16px; gap: 5px; }
     .mc-foot { padding: 6px 16px 12px; gap: 6px; }
     .mc-btn-pri, .mc-btn-sec { height: 34px; font-size: 12.5px; }
-    .editor-panel { padding: 14px; border-radius: 14px; gap: 12px; }
+    .editor-panel { padding: 12px; border-radius: 14px; gap: 12px; }
     .style-grid {
-      display: flex; overflow-x: auto; flex-wrap: nowrap; gap: 7px;
+      display: flex; overflow-x: auto; flex-wrap: nowrap; gap: 7px; width: 100%;
       padding-bottom: 4px; -webkit-overflow-scrolling: touch;
     }
     .style-grid::-webkit-scrollbar { display: none; }
-    .style-opt { flex: 0 0 auto; padding: 8px 13px; }
+    .style-opt { flex: 0 0 auto; padding: 7px 12px; }
   }
 
   /* 調色槽切換 */
