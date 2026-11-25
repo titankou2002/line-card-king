@@ -30,7 +30,10 @@ window.CARD_KING_CONFIG = {
     --t3: #7b7266;
     --accent: #c5ae6e;
     --accent-text: #1f1b16;
-    --card-bg: #23201b;
+    --head-bg: #23201b;
+    --body-bg: #23201b;
+    --foot-bg: #23201b;
+    --btn2-bg: #332e27;
     --card-fg: #f1ece2;
     --card-font: "Microsoft JhengHei", "微軟正黑體", sans-serif;
     --line-green: #06c755;
@@ -118,8 +121,15 @@ window.CARD_KING_CONFIG = {
     width: 100%; max-width: 344px; border-radius: 18px; overflow: hidden;
     box-shadow: 0 10px 30px rgba(0,0,0,0.20);
     font-family: var(--card-font);
-    background: var(--card-bg);
+    background: var(--body-bg);
     color: var(--card-fg);
+  }
+  .mc-head-area { background: var(--head-bg); }
+  .mc-body { padding: 14px 20px; display: flex; flex-direction: column; gap: 8px; background: var(--body-bg); }
+  .mc-foot { padding: 8px 20px 16px; display: flex; flex-direction: column; gap: 8px; background: var(--foot-bg); }
+  .mc-btn-sec {
+    height: 39px; border-radius: 8px; background: var(--btn2-bg); color: var(--card-fg);
+    display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; text-decoration: none;
   }
   .mc-top-bar { height: 5px; background: var(--accent); }
   .mc-brand-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
@@ -131,19 +141,13 @@ window.CARD_KING_CONFIG = {
   .mc-en-name { font-size: 15px; font-weight: 700; color: var(--accent); }
   .mc-slogan { font-size: 12px; opacity: 0.82; margin-top: 6px; line-height: 1.45; }
   .mc-sep { height: 1px; background: currentColor; opacity: 0.14; margin: 0 20px; }
-  .mc-body { padding: 14px 20px; display: flex; flex-direction: column; gap: 8px; }
   .mc-row { display: flex; align-items: baseline; gap: 10px; font-size: 12.5px; line-height: 1.45; }
   .mc-lbl { width: 34px; flex-shrink: 0; color: var(--accent); font-size: 11.5px; font-weight: 700; }
   .mc-val { word-break: break-word; }
-  .mc-foot { padding: 2px 20px 16px; display: flex; flex-direction: column; gap: 8px; }
   .mc-btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .mc-btn-pri {
     height: 39px; border-radius: 8px; background: var(--accent); color: var(--accent-text);
     display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; text-decoration: none;
-  }
-  .mc-btn-sec {
-    height: 39px; border-radius: 8px; background: rgba(128,128,128,0.18); color: var(--card-fg);
-    display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; text-decoration: none;
   }
   .mc-btn-link {
     height: 28px; background: transparent; border: none; color: var(--accent);
@@ -201,14 +205,50 @@ window.CARD_KING_CONFIG = {
   .sec-title { font-size: 13.5px; font-weight: 700; color: var(--t1); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .sep { height: 1px; background: var(--border); }
 
-  /* 8 款版型（4x2） */
+  /* 收納分頁列（手機與電腦皆俐落不長滾） */
+  .dock-tabs {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+    background: var(--raised); padding: 4px; border-radius: 10px;
+  }
+  .dock-tab {
+    border: none; background: transparent; padding: 8px 4px; border-radius: 7px;
+    font-size: 13px; font-weight: 700; color: var(--t2); cursor: pointer; font-family: inherit;
+  }
+  .dock-tab.active { background: var(--surface); color: var(--t1); box-shadow: 0 1px 4px rgba(31,27,22,0.08); }
+  .dock-pane { display: none; flex-direction: column; gap: 14px; }
+  .dock-pane.active { display: flex; }
+
+  /* 8 款版型：電腦 4x2，手機改為「單行左右橫滑一條」 */
   .style-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin-top: 8px; }
-  @media (max-width: 560px) { .style-grid { grid-template-columns: repeat(2, 1fr); } }
   .style-opt {
-    border: 1.5px solid var(--border); border-radius: 9px; padding: 9px 6px;
+    border: 1.5px solid var(--border); border-radius: 9px; padding: 9px 10px;
     background: var(--bg); cursor: pointer; font-family: inherit; font-size: 12.5px; font-weight: 700; color: var(--t1);
+    white-space: nowrap;
   }
   .style-opt.active { border-color: #1f1b16; background: #fff; box-shadow: 0 2px 8px rgba(31,27,22,0.08); }
+
+  @media (max-width: 920px) {
+    .topbar { padding: 8px 12px; }
+    .topbar h1 { font-size: 14.5px; }
+    .stage { gap: 12px; padding: 10px 10px 32px; }
+    .phone-shell { background: transparent; padding: 0; border-radius: 16px; box-shadow: none; max-width: 100%; }
+    .phone-screen { min-height: auto; border-radius: 16px; }
+    .line-header { display: none; }
+    .chat-body { padding: 10px 10px 12px; }
+    .mega-card { max-width: 310px; }
+    .mc-video-box { aspect-ratio: 16 / 8; }
+    .mc-hero-box { height: 150px; }
+    .mc-body { padding: 10px 16px; gap: 5px; }
+    .mc-foot { padding: 6px 16px 12px; gap: 6px; }
+    .mc-btn-pri, .mc-btn-sec { height: 34px; font-size: 12.5px; }
+    .editor-panel { padding: 14px; border-radius: 14px; gap: 12px; }
+    .style-grid {
+      display: flex; overflow-x: auto; flex-wrap: nowrap; gap: 7px;
+      padding-bottom: 4px; -webkit-overflow-scrolling: touch;
+    }
+    .style-grid::-webkit-scrollbar { display: none; }
+    .style-opt { flex: 0 0 auto; padding: 8px 13px; }
+  }
 
   /* 調色槽切換 */
   .slot-tabs { display: inline-flex; gap: 4px; background: var(--raised); padding: 3px; border-radius: 8px; }
@@ -277,7 +317,7 @@ window.CARD_KING_CONFIG = {
   <div class="topbar-title">
     <span class="brand-mark">王</span>
     <h1>LINE 名片王</h1>
-    <span class="quota-pill" id="editQuotaPill">免費修改：3 / 3</span>
+    <span class="quota-pill" id="editQuotaPill" style="cursor:pointer;" onclick="openDonateModal()">免費修改：3 / 3</span>
   </div>
   <div class="toolbar">
     <button type="button" class="btn" id="btnTheme" onclick="toggleChatTheme()">深色背景</button>
@@ -302,33 +342,42 @@ window.CARD_KING_CONFIG = {
     </div>
   </section>
 
-  <!-- 右側：極簡編輯器 -->
+  <!-- 右側：收納式 4 分頁極簡編輯器 -->
   <aside class="editor-panel">
-    <!-- 8 款版型 -->
-    <div>
-      <div class="sec-title"><span>版型（8 款）</span></div>
-      <div class="style-grid" id="styleGrid">
-        <button type="button" class="style-opt" data-style="video" onclick="setStyle('video')">動態影片</button>
-        <button type="button" class="style-opt active" data-style="dark" onclick="setStyle('dark')">深岩燙金</button>
-        <button type="button" class="style-opt" data-style="hero" onclick="setStyle('hero')">雜誌封面</button>
-        <button type="button" class="style-opt" data-style="ivory" onclick="setStyle('ivory')">極簡象牙</button>
-        <button type="button" class="style-opt" data-style="full" onclick="setStyle('full')">全資訊旗艦</button>
-        <button type="button" class="style-opt" data-style="side" onclick="setStyle('side')">側邊影像</button>
-        <button type="button" class="style-opt" data-style="block" onclick="setStyle('block')">莫蘭迪撞色</button>
-        <button type="button" class="style-opt" data-style="frame" onclick="setStyle('frame')">建築黑框</button>
+    <nav class="dock-tabs" id="dockTabs">
+      <button type="button" class="dock-tab active" data-dtab="style" onclick="openEditorTab('style')">版型配色</button>
+      <button type="button" class="dock-tab" data-dtab="media" onclick="openEditorTab('media')">影片照片</button>
+      <button type="button" class="dock-tab" data-dtab="info" onclick="openEditorTab('info')">基本資料</button>
+      <button type="button" class="dock-tab" data-dtab="social" onclick="openEditorTab('social')">延伸按鈕</button>
+    </nav>
+
+    <!-- 分頁 1：版型（手機橫滑一條）+ 獨立區塊配色 + 字體 -->
+    <div class="dock-pane active" id="dpane-style">
+      <div>
+        <div class="sec-title"><span>版型（左右滑動選擇）</span></div>
+        <div class="style-grid" id="styleGrid">
+          <button type="button" class="style-opt" data-style="video" onclick="setStyle('video')">動態影片</button>
+          <button type="button" class="style-opt active" data-style="dark" onclick="setStyle('dark')">深岩燙金</button>
+          <button type="button" class="style-opt" data-style="hero" onclick="setStyle('hero')">雜誌封面</button>
+          <button type="button" class="style-opt" data-style="ivory" onclick="setStyle('ivory')">極簡象牙</button>
+          <button type="button" class="style-opt" data-style="full" onclick="setStyle('full')">全資訊旗艦</button>
+          <button type="button" class="style-opt" data-style="side" onclick="setStyle('side')">側邊影像</button>
+          <button type="button" class="style-opt" data-style="block" onclick="setStyle('block')">莫蘭迪撞色</button>
+          <button type="button" class="style-opt" data-style="frame" onclick="setStyle('frame')">建築黑框</button>
+        </div>
       </div>
-    </div>
 
-    <div class="sep"></div>
+      <div class="sep"></div>
 
-    <!-- 點擊調色盤 + 字體 -->
-    <div class="field-grid">
       <div>
         <div class="sec-title">
-          <span>配色</span>
-          <div class="slot-tabs">
+          <span>個別區塊配色</span>
+          <div class="slot-tabs" style="flex-wrap:wrap;">
             <button type="button" class="slot-tab active" data-slot="accent" onclick="selectColorSlot('accent')">主色</button>
-            <button type="button" class="slot-tab" data-slot="bg" onclick="selectColorSlot('bg')">背景</button>
+            <button type="button" class="slot-tab" data-slot="headBg" onclick="selectColorSlot('headBg')">上框</button>
+            <button type="button" class="slot-tab" data-slot="bodyBg" onclick="selectColorSlot('bodyBg')">中框</button>
+            <button type="button" class="slot-tab" data-slot="footBg" onclick="selectColorSlot('footBg')">下框</button>
+            <button type="button" class="slot-tab" data-slot="btn2Bg" onclick="selectColorSlot('btn2Bg')">次鈕</button>
             <button type="button" class="slot-tab" data-slot="fg" onclick="selectColorSlot('fg')">文字</button>
           </div>
         </div>
@@ -355,68 +404,61 @@ window.CARD_KING_CONFIG = {
           <option value="notoserif">思源宋體</option>
           <option value="rounded">圓體</option>
         </select>
-        <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
-          <input type="file" id="logoFile" accept="image/*" hidden onchange="onLogoPick(event)">
-          <button type="button" class="btn btn-sm" onclick="document.getElementById('logoFile').click()">上傳 Logo</button>
-          <button type="button" class="btn btn-sm" onclick="clearLogo()">刪除</button>
-          <label class="ext-chk"><input type="checkbox" id="chkLogoMono" checked onchange="setField('logoMono', this.checked)">純色</label>
+      </div>
+    </div>
+
+    <!-- 分頁 2：Logo / 照片 / 影片（收納） -->
+    <div class="dock-pane" id="dpane-media">
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+        <input type="file" id="logoFile" accept="image/*" hidden onchange="onLogoPick(event)">
+        <button type="button" class="btn btn-sm" onclick="document.getElementById('logoFile').click()">上傳 Logo</button>
+        <button type="button" class="btn btn-sm" onclick="clearLogo()">刪除 Logo</button>
+        <label class="ext-chk"><input type="checkbox" id="chkLogoMono" checked onchange="setField('logoMono', this.checked)">純色</label>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+        <input type="file" id="photoFile" accept="image/*" hidden onchange="onPhotoPick(event)">
+        <button type="button" class="btn btn-sm" onclick="document.getElementById('photoFile').click()">上傳照片</button>
+        <label class="ext-chk"><input type="checkbox" id="chkPhoto" onchange="setField('showPhoto', this.checked)">顯示照片</label>
+      </div>
+      <div class="sep"></div>
+      <div>
+        <div class="quota-bar">
+          <span id="videoQuotaText">影片（貼上網址連結）· ≤10秒 / ≤10MB</span>
+          <div style="display:flex;gap:6px;">
+            <input type="file" id="videoFile" accept="video/mp4" hidden onchange="onVideoPick(event)">
+            <button type="button" class="btn btn-sm btn-pri" onclick="document.getElementById('videoFile').click()">上傳 MP4</button>
+            <button type="button" class="btn btn-sm btn-danger" id="btnDelVideo" style="display:none;" onclick="clearVideo()">刪除影片</button>
+          </div>
         </div>
-        <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
-          <input type="file" id="photoFile" accept="image/*" hidden onchange="onPhotoPick(event)">
-          <button type="button" class="btn btn-sm" onclick="document.getElementById('photoFile').click()">上傳照片</button>
-          <label class="ext-chk"><input type="checkbox" id="chkPhoto" onchange="setField('showPhoto', this.checked)">顯示照片</label>
+        <div style="display:grid;grid-template-columns:1fr auto;gap:6px;margin-top:8px;">
+          <input type="url" id="inVideoUrl" oninput="setField('videoUrl', this.value)" placeholder="貼上 YouTube 或 MP4 網址連結" style="height:36px;padding:0 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:#fff;font-family:inherit;">
+          <button type="button" class="btn btn-sm btn-pri" id="btnYtConv" onclick="convertYoutube()">轉 MP4</button>
         </div>
       </div>
     </div>
 
-    <div class="sep"></div>
-
-    <!-- 影片上傳 + YouTube 轉 10 秒 MP4 -->
-    <div>
-      <div class="quota-bar">
-        <span id="videoQuotaText">影片：≤10秒 / ≤10MB</span>
-        <div style="display:flex;gap:6px;">
-          <input type="file" id="videoFile" accept="video/mp4" hidden onchange="onVideoPick(event)">
-          <button type="button" class="btn btn-sm btn-pri" onclick="document.getElementById('videoFile').click()">上傳 MP4</button>
-          <button type="button" class="btn btn-sm btn-danger" id="btnDelVideo" style="display:none;" onclick="clearVideo()">刪除影片</button>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr auto;gap:6px;margin-top:8px;">
-        <input type="url" id="inVideoUrl" oninput="setField('videoUrl', this.value)" placeholder="YouTube 網址或 MP4 網址" style="height:36px;padding:0 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:#fff;font-family:inherit;">
-        <button type="button" class="btn btn-sm btn-pri" id="btnYtConv" onclick="convertYoutube()">轉 10 秒 MP4</button>
-      </div>
-    </div>
-
-    <div class="sep"></div>
-
-    <!-- 基本資料 -->
-    <div>
+    <!-- 分頁 3：基本資料與顯示欄位（收納） -->
+    <div class="dock-pane" id="dpane-info">
       <div class="field-grid">
         <div class="field"><label>公司名稱</label><input type="text" id="inCompany" oninput="setField('company', this.value)"></div>
-        <div class="field"><label>標語（全資訊版型用）</label><input type="text" id="inSlogan" oninput="setField('slogan', this.value)"></div>
+        <div class="field"><label>標語</label><input type="text" id="inSlogan" oninput="setField('slogan', this.value)"></div>
         <div class="field"><label>中文姓名</label><input type="text" id="inName" oninput="setField('name', this.value)"></div>
         <div class="field"><label>英文名</label><input type="text" id="inEnName" oninput="setField('enName', this.value)"></div>
         <div class="field"><label>撥打按鈕電話</label><input type="tel" id="inCallTel" placeholder="0977393811" oninput="setField('mobile', this.value)"></div>
         <div class="field"><label>官方網站</label><input type="url" id="inWeb" placeholder="https://..." oninput="setField('website', this.value)"></div>
       </div>
-    </div>
-
-    <div class="sep"></div>
-
-    <!-- 顯示欄位（全部標籤可改） -->
-    <div>
-      <div class="sec-title">
-        <span>顯示欄位</span>
-        <button type="button" class="btn btn-sm" onclick="addInfoRow()">＋ 新增</button>
+      <div class="sep"></div>
+      <div>
+        <div class="sec-title">
+          <span>顯示欄位</span>
+          <button type="button" class="btn btn-sm" onclick="addInfoRow()">＋ 新增</button>
+        </div>
+        <div class="ext-stack" id="infoRowsBox"></div>
       </div>
-      <div class="ext-stack" id="infoRowsBox"></div>
     </div>
 
-    <div class="sep"></div>
-
-    <!-- 延伸社群功能（預設關閉） -->
-    <div>
-      <div class="sec-title"><span>延伸按鈕</span></div>
+    <!-- 分頁 4：延伸社群按鈕（收納） -->
+    <div class="dock-pane" id="dpane-social">
       <div class="ext-stack">
         <div class="ext-row">
           <label class="ext-chk"><input type="checkbox" id="chkOa" onchange="setField('oaOn', this.checked)">LINE 官方帳號</label>
@@ -459,11 +501,16 @@ window.CARD_KING_CONFIG = {
 
 <!-- 3 次免費額度用完：Donate 贊助彈窗 -->
 <div class="modal-bg" id="donateModal" onclick="if(event.target===this)closeDonateModal()">
-  <div class="modal-card">
-    <div style="font-size:18px;font-weight:700;">免費 3 次修改已用完</div>
-    <div style="font-size:13px;color:var(--t2);line-height:1.6;">感謝使用 LINE 名片王！贊助支持即可解鎖無限次修改。</div>
-    <a id="donateLink" href="https://line.me/R/ti/p/@297azzax" target="_blank" rel="noopener" class="btn btn-line" style="height:42px;">前往贊助解鎖</a>
-    <button type="button" class="btn" onclick="closeDonateModal()">稍後再說</button>
+  <div class="modal-card" style="max-width:380px;padding:28px 24px;border:1px solid rgba(197,174,110,0.4);">
+    <div style="width:44px;height:44px;border-radius:12px;background:#23201b;color:#c5ae6e;margin:0 auto;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;">王</div>
+    <div style="font-size:19px;font-weight:700;color:#1f1b16;">贊助解鎖無限修改</div>
+    <div style="background:#f6f4ef;border-radius:12px;padding:14px 16px;text-align:left;font-size:13px;color:#5e554a;display:flex;flex-direction:column;gap:8px;">
+      <div>・ 解鎖無限次名片修改與版型切換</div>
+      <div>・ 專屬雲端空間與 10 秒動態影片</div>
+      <div>・ 永久保留您的專屬 LINE 轉傳連結</div>
+    </div>
+    <a id="donateLink" href="https://line.me/R/ti/p/@297azzax" target="_blank" rel="noopener" class="btn btn-pri" style="height:44px;font-size:14.5px;background:#23201b;color:#c5ae6e;">聯繫贊助並開通</a>
+    <button type="button" class="btn" style="height:38px;" onclick="closeDonateModal()">關閉</button>
   </div>
 </div>
 
@@ -482,20 +529,20 @@ const FONTS = {
 };
 
 const STYLE_DEFAULTS = {
-  video: { bg: "#23201B", fg: "#F1ECE2" },
-  dark:  { bg: "#23201B", fg: "#F1ECE2" },
-  hero:  { bg: "#FFFDF9", fg: "#1F1B16" },
-  ivory: { bg: "#FAF7F0", fg: "#1F1B16" },
-  full:  { bg: "#23201B", fg: "#F1ECE2" },
-  side:  { bg: "#23201B", fg: "#F1ECE2" },
-  block: { bg: "#FAF7F0", fg: "#1F1B16" },
-  frame: { bg: "#FFFFFF", fg: "#1F1B16" }
+  video: { headBg: "#23201B", bodyBg: "#23201B", footBg: "#23201B", btn2Bg: "#332E27", fg: "#F1ECE2" },
+  dark:  { headBg: "#23201B", bodyBg: "#23201B", footBg: "#23201B", btn2Bg: "#332E27", fg: "#F1ECE2" },
+  hero:  { headBg: "#FFFDF9", bodyBg: "#FFFDF9", footBg: "#FFFDF9", btn2Bg: "#EBE5D9", fg: "#1F1B16" },
+  ivory: { headBg: "#FAF7F0", bodyBg: "#FAF7F0", footBg: "#FAF7F0", btn2Bg: "#EBE5D9", fg: "#1F1B16" },
+  full:  { headBg: "#23201B", bodyBg: "#23201B", footBg: "#23201B", btn2Bg: "#332E27", fg: "#F1ECE2" },
+  side:  { headBg: "#23201B", bodyBg: "#23201B", footBg: "#23201B", btn2Bg: "#332E27", fg: "#F1ECE2" },
+  block: { headBg: "#C5AE6E", bodyBg: "#FAF7F0", footBg: "#FAF7F0", btn2Bg: "#EBE5D9", fg: "#1F1B16" },
+  frame: { headBg: "#FFFFFF", bodyBg: "#FFFFFF", footBg: "#FFFFFF", btn2Bg: "#EBE5D9", fg: "#1F1B16" }
 };
 
 let authMode = "login";
 let session = null;
 let profile = null;
-let colorSlot = "accent"; // accent | bg | fg
+let colorSlot = "accent"; // accent | headBg | bodyBg | footBg | btn2Bg | fg
 let localEditUsed = Number(localStorage.getItem("ck_local_edit_used") || 0);
 
 function defaultState() {
@@ -503,7 +550,10 @@ function defaultState() {
     style: "dark",
     font: "jhenghei",
     color: "#C5AE6E",
-    cardBg: "#23201B",
+    headBg: "#23201B",
+    bodyBg: "#23201B",
+    footBg: "#23201B",
+    btn2Bg: "#332E27",
     cardFg: "#F1ECE2",
     logoMono: true,
     showPhoto: false,
@@ -552,10 +602,18 @@ function updateEditQuotaUI() {
   pill.textContent = `免費修改：${left} / ${quota}`;
 }
 
+function openEditorTab(tab) {
+  document.querySelectorAll("#dockTabs .dock-tab").forEach(b => b.classList.toggle("active", b.dataset.dtab === tab));
+  document.querySelectorAll(".dock-pane").forEach(p => p.classList.toggle("active", p.id === "dpane-" + tab));
+}
+
 function setStyle(s) {
   state.style = s;
   const def = STYLE_DEFAULTS[s] || STYLE_DEFAULTS.dark;
-  state.cardBg = def.bg;
+  state.headBg = def.headBg;
+  state.bodyBg = def.bodyBg;
+  state.footBg = def.footBg;
+  state.btn2Bg = def.btn2Bg;
   state.cardFg = def.fg;
   document.querySelectorAll("#styleGrid .style-opt").forEach(el => el.classList.toggle("active", el.dataset.style === s));
   syncCssVars();
@@ -568,10 +626,21 @@ function setFont(f) {
   renderPreview();
 }
 
+const SLOT_NAMES = { accent: "主色", headBg: "上框背景", bodyBg: "中框背景", footBg: "下框背景", btn2Bg: "次按鈕底色", fg: "文字色" };
+
+function getSlotValue(slot) {
+  if (slot === "headBg") return state.headBg || "#23201B";
+  if (slot === "bodyBg") return state.bodyBg || "#23201B";
+  if (slot === "footBg") return state.footBg || "#23201B";
+  if (slot === "btn2Bg") return state.btn2Bg || "#332E27";
+  if (slot === "fg") return state.cardFg || "#F1ECE2";
+  return state.color || "#C5AE6E";
+}
+
 function selectColorSlot(slot) {
   colorSlot = slot;
   document.querySelectorAll(".slot-tab[data-slot]").forEach(b => b.classList.toggle("active", b.dataset.slot === slot));
-  const cur = slot === "bg" ? state.cardBg : (slot === "fg" ? state.cardFg : state.color);
+  const cur = getSlotValue(slot);
   document.getElementById("inColor").value = cur.toLowerCase();
   document.getElementById("inColorHex").value = cur.toUpperCase();
   document.querySelectorAll("#swatches .swatch").forEach(b => b.classList.toggle("active", b.dataset.hex.toUpperCase() === cur.toUpperCase()));
@@ -580,8 +649,11 @@ function selectColorSlot(slot) {
 function syncCssVars() {
   document.documentElement.style.setProperty("--accent", state.color);
   document.documentElement.style.setProperty("--accent-text", getContrast(state.color));
-  document.documentElement.style.setProperty("--card-bg", state.cardBg);
-  document.documentElement.style.setProperty("--card-fg", state.cardFg);
+  document.documentElement.style.setProperty("--head-bg", state.headBg || "#23201B");
+  document.documentElement.style.setProperty("--body-bg", state.bodyBg || "#23201B");
+  document.documentElement.style.setProperty("--foot-bg", state.footBg || "#23201B");
+  document.documentElement.style.setProperty("--btn2-bg", state.btn2Bg || "#332E27");
+  document.documentElement.style.setProperty("--card-fg", state.cardFg || "#F1ECE2");
   document.documentElement.style.setProperty("--card-font", FONTS[state.font] || FONTS.jhenghei);
   selectColorSlot(colorSlot);
 }
@@ -589,7 +661,10 @@ function syncCssVars() {
 function applySlotColor(hex) {
   if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return;
   const u = hex.toUpperCase();
-  if (colorSlot === "bg") state.cardBg = u;
+  if (colorSlot === "headBg") state.headBg = u;
+  else if (colorSlot === "bodyBg") state.bodyBg = u;
+  else if (colorSlot === "footBg") state.footBg = u;
+  else if (colorSlot === "btn2Bg") state.btn2Bg = u;
   else if (colorSlot === "fg") state.cardFg = u;
   else state.color = u;
   syncCssVars();
@@ -783,10 +858,10 @@ function renderPreview() {
 
   const pair = [];
   if (telDigits) pair.push(`<a class="mc-btn-pri" data-cslot="accent" href="tel:${esc(telDigits)}" onclick="event.preventDefault()">撥打手機</a>`);
-  if (state.website) pair.push(`<a class="mc-btn-sec" data-cslot="fg" href="${esc(state.website)}" onclick="event.preventDefault()">官方網站</a>`);
+  if (state.website) pair.push(`<a class="mc-btn-sec" data-cslot="btn2Bg" href="${esc(state.website)}" onclick="event.preventDefault()">官方網站</a>`);
 
   const footHtml = `
-    <div class="mc-foot" data-cslot="bg">
+    <div class="mc-foot" data-cslot="footBg">
       ${pair.length ? `<div class="mc-btn-row" style="${pair.length === 1 ? 'grid-template-columns:1fr;' : ''}">${pair.join("")}</div>` : ""}
       ${buildSocialHtml()}
       <button type="button" class="mc-btn-link" data-cslot="accent">轉傳這張名片</button>
@@ -796,6 +871,7 @@ function renderPreview() {
   const logoHtml = state.logoUrl ? `<div class="mc-logo" data-cslot="accent"><img src="${esc(state.logoUrl)}" alt="Logo"></div>` : "";
   const brandRow = `<div class="mc-brand-row">${logoHtml}<span class="mc-co-name" data-cslot="fg">${esc(state.company)}</span></div>`;
   const nameLine = `<div class="mc-name-line"><span class="mc-name" data-cslot="fg">${esc(state.name)}</span>${state.enName ? `<span class="mc-en-name" data-cslot="accent">${esc(state.enName)}</span>` : ""}</div>`;
+  const sloganHtml = state.slogan ? `<div class="mc-slogan" data-cslot="fg">${esc(state.slogan)}</div>` : "";
   const ytId = parseYtId(state.videoUrl);
   const mediaHtml = ytId
     ? `<img src="https://i.ytimg.com/vi/${ytId}/hqdefault.jpg"><div class="mc-yt-play"><span>▶</span></div>`
@@ -803,19 +879,18 @@ function renderPreview() {
 
   if (state.style === "video" || state.style === "full") {
     mount.innerHTML = `
-      <article class="mega-card" data-cslot="bg">
+      <article class="mega-card">
         <div class="mc-video-box">${mediaHtml}</div>
-        <div style="padding:16px 20px 12px;" data-cslot="bg">
-          ${brandRow}${nameLine}
-          ${state.style === "full" && state.slogan ? `<div class="mc-slogan" data-cslot="fg">${esc(state.slogan)}</div>` : ""}
+        <div class="mc-head-area" style="padding:14px 20px 12px;" data-cslot="headBg">
+          ${brandRow}${nameLine}${sloganHtml}
         </div>
         <div class="mc-sep"></div>
-        <div class="mc-body" data-cslot="bg">${rowsHtml}</div>
+        <div class="mc-body" data-cslot="bodyBg">${rowsHtml}</div>
         ${footHtml}
       </article>`;
   } else if (state.style === "hero") {
     mount.innerHTML = `
-      <article class="mega-card" data-cslot="bg">
+      <article class="mega-card">
         <div class="mc-hero-box">
           ${state.photoUrl ? `<img class="mc-hero-img" src="${esc(state.photoUrl)}">` : ""}
           <div class="mc-hero-grad">
@@ -823,19 +898,19 @@ function renderPreview() {
               ${state.logoUrl ? `<span class="mc-logo-pill"><img src="${esc(state.logoUrl)}"></span>` : "<span></span>"}
               <span style="font-size:11px;color:#fff;">${esc(state.company)}</span>
             </div>
-            <div style="color:#fff;">${nameLine}</div>
+            <div style="color:#fff;">${nameLine}${sloganHtml}</div>
           </div>
         </div>
-        <div class="mc-body" data-cslot="bg">${rowsHtml}</div>
+        <div class="mc-body" data-cslot="bodyBg">${rowsHtml}</div>
         ${footHtml}
       </article>`;
   } else if (state.style === "side") {
     mount.innerHTML = `
-      <article class="mega-card" data-cslot="bg">
+      <article class="mega-card">
         <div class="mc-top-bar" data-cslot="accent"></div>
         <div class="mc-side-grid">
           <div class="mc-side-media">${mediaHtml}</div>
-          <div class="mc-side-info" data-cslot="bg">
+          <div class="mc-side-info mc-head-area" data-cslot="headBg">
             ${logoHtml}
             <div class="mc-name" style="font-size:18px;" data-cslot="fg">${esc(state.name)}</div>
             ${state.enName ? `<div class="mc-en-name" style="font-size:13px;" data-cslot="accent">${esc(state.enName)}</div>` : ""}
@@ -843,42 +918,45 @@ function renderPreview() {
           </div>
         </div>
         <div class="mc-sep"></div>
-        <div class="mc-body" data-cslot="bg">${rowsHtml}</div>
+        <div class="mc-body" data-cslot="bodyBg">${rowsHtml}</div>
         ${footHtml}
       </article>`;
   } else if (state.style === "block") {
     mount.innerHTML = `
-      <article class="mega-card" data-cslot="bg">
-        <div class="mc-block-top" data-cslot="accent">
-          ${brandRow}${nameLine}
+      <article class="mega-card">
+        <div class="mc-block-top" style="background:var(--head-bg);" data-cslot="headBg">
+          ${brandRow}${nameLine}${sloganHtml}
         </div>
-        <div class="mc-body" data-cslot="bg">${rowsHtml}</div>
+        <div class="mc-body" data-cslot="bodyBg">${rowsHtml}</div>
         ${footHtml}
       </article>`;
   } else {
     const extraCls = state.style === "frame" ? "style-frame" : "";
     mount.innerHTML = `
-      <article class="mega-card ${extraCls}" data-cslot="bg">
+      <article class="mega-card ${extraCls}">
         <div class="mc-top-bar" data-cslot="accent"></div>
-        <div style="padding:18px 20px 0;" data-cslot="bg">${brandRow}</div>
-        <div style="padding:2px 20px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;" data-cslot="bg">
-          <div style="flex:1;">${nameLine}</div>
-          ${state.showPhoto && state.photoUrl ? `<div class="mc-photo"><img src="${esc(state.photoUrl)}"></div>` : ""}
+        <div class="mc-head-area" style="padding:16px 20px 12px;" data-cslot="headBg">
+          ${brandRow}
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+            <div style="flex:1;">${nameLine}${sloganHtml}</div>
+            ${state.showPhoto && state.photoUrl ? `<div class="mc-photo"><img src="${esc(state.photoUrl)}"></div>` : ""}
+          </div>
         </div>
         <div class="mc-sep"></div>
-        <div class="mc-body" data-cslot="bg">${rowsHtml}</div>
+        <div class="mc-body" data-cslot="bodyBg">${rowsHtml}</div>
         ${footHtml}
       </article>`;
   }
 
-  // 綁定點擊左側預覽格子直接切換調色部位
+  // 綁定點擊左側預覽「個別區塊」直接調色
   mount.querySelectorAll("[data-cslot]").forEach(el => {
     el.addEventListener("click", (e) => {
       e.stopPropagation();
       const slot = el.getAttribute("data-cslot");
       if (slot) {
         selectColorSlot(slot);
-        toast("已選取：" + (slot === "bg" ? "背景色" : (slot === "fg" ? "文字色" : "主色")));
+        openEditorTab("style");
+        toast("正在調整：" + (SLOT_NAMES[slot] || slot));
       }
     });
   });
