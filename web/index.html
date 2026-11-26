@@ -138,7 +138,8 @@ window.CARD_KING_CONFIG = {
   /* 行內直接點字編輯樣式 */
   .ed-wrap { display: inline-flex; align-items: center; gap: 4px; max-width: 100%; }
   [contenteditable="true"] {
-    outline: none; border-radius: 4px; padding: 1px 3px; min-width: 18px;
+    display: inline-block; outline: none; border-radius: 4px; padding: 1px 3px; min-width: 18px;
+    -webkit-user-select: text; user-select: text; -webkit-touch-callout: default;
     transition: background 0.12s, box-shadow 0.12s; cursor: text;
   }
   [contenteditable="true"]:hover { background: rgba(197, 174, 110, 0.14); }
@@ -163,7 +164,7 @@ window.CARD_KING_CONFIG = {
   .color-pick-mode [data-cslot]:hover { outline: 2px dashed var(--accent); outline-offset: -2px; }
 
   .mc-brand-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
-  .mc-logo { height: var(--logo-h, 32px); color: var(--accent); flex-shrink: 0; display: inline-flex; align-items: center; }
+  .mc-logo { height: var(--logo-h, 32px); color: var(--accent); flex-shrink: 0; display: inline-flex; align-items: center; cursor: pointer; }
   .mc-logo img { height: var(--logo-h, 32px); width: auto; max-width: 180px; object-fit: contain; display: block; }
   .mc-co-name { font-size: 11.5px; font-weight: 600; opacity: 0.8; }
   .mc-name-line { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px; }
@@ -176,30 +177,32 @@ window.CARD_KING_CONFIG = {
   .mc-lbl { min-width: 34px; flex-shrink: 0; color: var(--accent); font-size: 11.5px; font-weight: 700; }
   .mc-val { flex: 1; min-width: 0; word-break: break-word; }
 
-  .mc-btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .mc-btn-row { display: flex; justify-content: center; align-items: center; gap: 10px; }
   .mc-btn-pri {
-    height: 38px; border-radius: 8px; background: var(--accent); color: var(--accent-text);
-    display: flex; align-items: center; justify-content: center; gap: 6px;
-    font-size: 13px; font-weight: 700; border: none; cursor: pointer; font-family: inherit;
+    width: 68px; height: 52px; border-radius: 12px; background: var(--accent); color: var(--accent-text);
+    display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    font-size: 11px; font-weight: 700; line-height: 1; border: none; cursor: pointer; font-family: inherit;
   }
   .mc-btn-sec {
-    height: 38px; border-radius: 8px; background: var(--btn2-bg); color: var(--card-fg);
-    display: flex; align-items: center; justify-content: center; gap: 6px;
-    font-size: 13px; font-weight: 600; border: none; cursor: pointer; font-family: inherit;
+    width: 68px; height: 52px; border-radius: 12px; background: var(--btn2-bg); color: var(--card-fg);
+    display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    font-size: 11px; font-weight: 700; line-height: 1; border: 1px solid rgba(197,174,110,0.28); cursor: pointer; font-family: inherit;
   }
   .mc-btn-link {
     height: 26px; background: transparent; border: none; color: var(--accent);
     font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit;
   }
 
-  /* 全 SVG 圖示社群列 */
-  .mc-icon-row { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; padding: 2px 0; }
+  /* 全 SVG 圖示社群列（圖示 + 兩字小標） */
+  .mc-icon-row { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; padding: 2px 0; }
   .mc-icon-chip {
-    width: 36px; height: 36px; border-radius: 10px;
+    width: 44px; height: 46px; border-radius: 10px;
     background: rgba(128,128,128,0.16); border: 1px solid rgba(197,174,110,0.36);
-    color: var(--accent); display: inline-flex; align-items: center; justify-content: center;
+    color: var(--accent); display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
     text-decoration: none; cursor: pointer;
   }
+  .mc-icon-lbl { font-size: 9.5px; font-weight: 700; line-height: 1; letter-spacing: 0.02em; }
+  .mc-media-click { cursor: pointer; }
 
   .mc-video-box { position: relative; width: 100%; aspect-ratio: 16/9; background: #14120f; overflow: hidden; }
   .mc-video-box video, .mc-video-box img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -316,8 +319,8 @@ window.CARD_KING_CONFIG = {
 
   <!-- 8 款版型橫滑一條 -->
   <div class="style-bar" id="styleGrid">
-    <button type="button" class="style-opt" data-style="video" onclick="setStyle('video')">動態影片</button>
-    <button type="button" class="style-opt active" data-style="dark" onclick="setStyle('dark')">深岩燙金</button>
+    <button type="button" class="style-opt active" data-style="video" onclick="setStyle('video')">動態影片</button>
+    <button type="button" class="style-opt" data-style="dark" onclick="setStyle('dark')">深岩燙金</button>
     <button type="button" class="style-opt" data-style="hero" onclick="setStyle('hero')">雜誌封面</button>
     <button type="button" class="style-opt" data-style="ivory" onclick="setStyle('ivory')">極簡象牙</button>
     <button type="button" class="style-opt" data-style="full" onclick="setStyle('full')">全資訊旗艦</button>
@@ -327,6 +330,7 @@ window.CARD_KING_CONFIG = {
   </div>
 
   <!-- 直接點字修改的名片本體 -->
+  <input type="file" id="quickMediaFile" accept="video/mp4,image/*" hidden onchange="onQuickMediaPick(event)">
   <section class="canvas-stage" id="phoneScreen">
     <div id="cardMount" style="width:100%;display:flex;justify-content:center;"></div>
     <!-- 點擊按鈕浮出的單行編輯條 -->
@@ -338,45 +342,19 @@ window.CARD_KING_CONFIG = {
 
   <!-- 進階設定（預設收合） -->
   <button type="button" class="btn" style="width:100%;justify-content:space-between;height:38px;" onclick="toggleAdvanced()">
-    <span>進階設定（配色 / 字體 / 影片 / 社群圖示）</span>
+    <span>進階設定（社群圖示 / 影片 / 配色）</span>
     <span id="advArrow">▾</span>
   </button>
 
   <section class="adv-card" id="advPanel" style="display:none;">
     <nav class="dock-tabs" id="dockTabs">
-      <button type="button" class="dock-tab active" data-dtab="style" onclick="openEditorTab('style')">配色字體</button>
+      <button type="button" class="dock-tab active" data-dtab="social" onclick="openEditorTab('social')">社群圖示</button>
       <button type="button" class="dock-tab" data-dtab="media" onclick="openEditorTab('media')">Logo影片</button>
-      <button type="button" class="dock-tab" data-dtab="social" onclick="openEditorTab('social')">社群圖示</button>
+      <button type="button" class="dock-tab" data-dtab="style" onclick="openEditorTab('style')">配色字體</button>
     </nav>
 
-    <div class="dock-pane active" id="dpane-style">
-      <div class="slot-tabs">
-        <button type="button" class="slot-tab active" data-slot="accent" onclick="selectColorSlot('accent')">主色</button>
-        <button type="button" class="slot-tab" data-slot="headBg" onclick="selectColorSlot('headBg')">上框</button>
-        <button type="button" class="slot-tab" data-slot="bodyBg" onclick="selectColorSlot('bodyBg')">中框</button>
-        <button type="button" class="slot-tab" data-slot="footBg" onclick="selectColorSlot('footBg')">下框</button>
-        <button type="button" class="slot-tab" data-slot="btn2Bg" onclick="selectColorSlot('btn2Bg')">次鈕</button>
-        <button type="button" class="slot-tab" data-slot="fg" onclick="selectColorSlot('fg')">文字</button>
-      </div>
-      <div class="color-row">
-        <div class="color-picker-wrap"><input type="color" id="inColor" value="#c5ae6e" oninput="applySlotColor(this.value)"></div>
-        <input type="text" id="inColorHex" value="#C5AE6E" maxlength="7" oninput="onHexInput(this.value)" style="flex:1;height:34px;padding:0 10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;">
-      </div>
-      <div class="swatches" id="swatches">
-        <button type="button" class="swatch active" style="background:#c5ae6e" data-hex="#c5ae6e" onclick="applySlotColor('#c5ae6e')"></button>
-        <button type="button" class="swatch" style="background:#b59e63" data-hex="#b59e63" onclick="applySlotColor('#b59e63')"></button>
-        <button type="button" class="swatch" style="background:#5f7464" data-hex="#5f7464" onclick="applySlotColor('#5f7464')"></button>
-        <button type="button" class="swatch" style="background:#a67c68" data-hex="#a67c68" onclick="applySlotColor('#a67c68')"></button>
-        <button type="button" class="swatch" style="background:#6e818f" data-hex="#6e818f" onclick="applySlotColor('#6e818f')"></button>
-        <button type="button" class="swatch" style="background:#23201b" data-hex="#23201b" onclick="applySlotColor('#23201b')"></button>
-        <button type="button" class="swatch" style="background:#faf7f0" data-hex="#faf7f0" onclick="applySlotColor('#faf7f0')"></button>
-      </div>
-      <select id="inFont" onchange="setFont(this.value)" style="height:36px;padding:0 10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;background:#fff;">
-        <option value="jhenghei">微軟正黑體</option>
-        <option value="notosans">思源黑體</option>
-        <option value="notoserif">思源宋體</option>
-        <option value="rounded">圓體</option>
-      </select>
+    <div class="dock-pane active" id="dpane-social">
+      <div class="ext-stack" id="socialPanelStack"></div>
     </div>
 
     <div class="dock-pane" id="dpane-media">
@@ -408,8 +386,34 @@ window.CARD_KING_CONFIG = {
       </div>
     </div>
 
-    <div class="dock-pane" id="dpane-social">
-      <div class="ext-stack" id="socialPanelStack"></div>
+    <div class="dock-pane" id="dpane-style">
+      <div class="slot-tabs">
+        <button type="button" class="slot-tab active" data-slot="accent" onclick="selectColorSlot('accent')">主色</button>
+        <button type="button" class="slot-tab" data-slot="headBg" onclick="selectColorSlot('headBg')">上框</button>
+        <button type="button" class="slot-tab" data-slot="bodyBg" onclick="selectColorSlot('bodyBg')">中框</button>
+        <button type="button" class="slot-tab" data-slot="footBg" onclick="selectColorSlot('footBg')">下框</button>
+        <button type="button" class="slot-tab" data-slot="btn2Bg" onclick="selectColorSlot('btn2Bg')">次鈕</button>
+        <button type="button" class="slot-tab" data-slot="fg" onclick="selectColorSlot('fg')">文字</button>
+      </div>
+      <div class="color-row">
+        <div class="color-picker-wrap"><input type="color" id="inColor" value="#c5ae6e" oninput="applySlotColor(this.value)"></div>
+        <input type="text" id="inColorHex" value="#C5AE6E" maxlength="7" oninput="onHexInput(this.value)" style="flex:1;height:34px;padding:0 10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;">
+      </div>
+      <div class="swatches" id="swatches">
+        <button type="button" class="swatch active" style="background:#c5ae6e" data-hex="#c5ae6e" onclick="applySlotColor('#c5ae6e')"></button>
+        <button type="button" class="swatch" style="background:#b59e63" data-hex="#b59e63" onclick="applySlotColor('#b59e63')"></button>
+        <button type="button" class="swatch" style="background:#5f7464" data-hex="#5f7464" onclick="applySlotColor('#5f7464')"></button>
+        <button type="button" class="swatch" style="background:#a67c68" data-hex="#a67c68" onclick="applySlotColor('#a67c68')"></button>
+        <button type="button" class="swatch" style="background:#6e818f" data-hex="#6e818f" onclick="applySlotColor('#6e818f')"></button>
+        <button type="button" class="swatch" style="background:#23201b" data-hex="#23201b" onclick="applySlotColor('#23201b')"></button>
+        <button type="button" class="swatch" style="background:#faf7f0" data-hex="#faf7f0" onclick="applySlotColor('#faf7f0')"></button>
+      </div>
+      <select id="inFont" onchange="setFont(this.value)" style="height:36px;padding:0 10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;background:#fff;">
+        <option value="jhenghei">微軟正黑體</option>
+        <option value="notosans">思源黑體</option>
+        <option value="notoserif">思源宋體</option>
+        <option value="rounded">圓體</option>
+      </select>
     </div>
   </section>
 </main>
@@ -444,14 +448,14 @@ const CFG = window.CARD_KING_CONFIG || {};
 const sb = (CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY) ? window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY) : null;
 
 const SVG_ICONS = {
-  line: '<svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 5.79 2 10.46c0 4.18 3.71 7.68 8.72 8.35.69.12.61.39.48 1.27-.04.31-.22 1.18 1.05.66 1.27-.52 6.82-4.02 9.31-6.88C23.09 12.16 22 11.35 22 10.46 22 5.79 17.52 2 12 2z"/></svg>',
-  oa: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="4"/><path d="M8 11l3 3 5-5"/><path d="M8 18l-2 4 4-4"/></svg>',
-  web: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><line x1="3" y1="12" x2="21" y2="12"/></svg>',
-  mail: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>',
-  ig: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>',
-  fb: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h-3a4 4 0 0 0-4 4v3H6v4h3v7h4v-7h3l1-4h-4V7a1 1 0 0 1 1-1h2V3z"/></svg>',
-  threads: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 11c0-4-2.5-7-6.5-7C7 4 4 7.5 4 12s3 8 7.5 8c3 0 5.5-1.3 6.5-3.5"/><path d="M9.5 10.5c1-1 2.2-1.5 3.5-1.2 2 .3 3 1.7 3 4 0 2.6-1.5 4-4 4-1.8 0-3-.9-3-2.3s1.3-2.4 3.5-2.4c1.5 0 2.8.4 3.6 1"/></svg>',
-  phone: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>'
+  line: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>',
+  oa: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3z"/><path d="M9 12l2 2 4-4"/></svg>',
+  web: '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><line x1="3" y1="12" x2="21" y2="12"/></svg>',
+  mail: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>',
+  ig: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>',
+  fb: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h-3a4 4 0 0 0-4 4v3H6v4h3v7h4v-7h3l1-4h-4V7a1 1 0 0 1 1-1h2V3z"/></svg>',
+  threads: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 11c0-4-2.5-7-6.5-7C7 4 4 7.5 4 12s3 8 7.5 8c3 0 5.5-1.3 6.5-3.5"/><path d="M9.5 10.5c1-1 2.2-1.5 3.5-1.2 2 .3 3 1.7 3 4 0 2.6-1.5 4-4 4-1.8 0-3-.9-3-2.3s1.3-2.4 3.5-2.4c1.5 0 2.8.4 3.6 1"/></svg>',
+  phone: '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>'
 };
 
 const FONTS = {
@@ -481,8 +485,8 @@ let currentCardId = localStorage.getItem("ck_my_card_id") || "";
 
 function defaultState() {
   return {
-    style: "dark", font: "jhenghei",
-    color: "#D2B878", headBg: "#23201B", bodyBg: "#23201B", footBg: "#23201B", btn2Bg: "#353028", cardFg: "#F1ECE2",
+    style: "video", font: "jhenghei",
+    color: "#C5AE6E", headBg: "#1E1D1B", bodyBg: "#1E1D1B", footBg: "#1E1D1B", btn2Bg: "#312E28", cardFg: "#F3EFE7",
     logoMono: true, logoRemoveBg: true, logoSize: 32, showPhoto: false,
     logoUrl: "https://bigt.cc/line/elitile-logo.png",
     videoUrl: "https://bigt.cc/web/assets/video/refin-moon-1920.mp4",
@@ -497,8 +501,8 @@ function defaultState() {
       { label: "電話", value: "03-486-3978" },
       { label: "地址", value: "台北市內湖區行愛路77巷16號5樓" }
     ],
-    lineOn: false, lineId: "", oaOn: false, oaId: "", mailBtnOn: false,
-    igOn: false, igId: "", fbOn: false, fbId: "", thOn: false, thId: ""
+    lineOn: true, lineId: "bigt_line", oaOn: true, oaId: "@297azzax", mailBtnOn: true,
+    igOn: true, igId: "bigt.cc", fbOn: true, fbId: "bigt.cc", thOn: true, thId: "bigt.cc"
   };
 }
 
@@ -730,24 +734,74 @@ function renderSocialControls() {
     { chk: "mailBtnOn", val: "email", icon: SVG_ICONS.mail, label: "信箱", ph: "name@example.com" },
     { chk: "igOn", val: "igId", icon: SVG_ICONS.ig, label: "IG", ph: "IG 帳號（有無 @ 皆可）" },
     { chk: "fbOn", val: "fbId", icon: SVG_ICONS.fb, label: "FB", ph: "FB 帳號或粉專 ID" },
-    { chk: "thOn", val: "thId", icon: SVG_ICONS.threads, label: "Threads", ph: "Threads 帳號" }
+    { chk: "thOn", val: "thId", icon: SVG_ICONS.threads, label: "串文", ph: "Threads 帳號" }
   ];
   document.getElementById("socialPanelStack").innerHTML = items.map(it => `
     <div class="ext-row">
       <label class="ext-chk"><input type="checkbox" ${state[it.chk] ? "checked" : ""} onchange="setField('${it.chk}', this.checked)">${it.icon}<span>${it.label}</span></label>
-      <input type="text" value="${esc(state[it.val] || '')}" placeholder="${it.ph}" oninput="setField('${it.val}', this.value)">
+      <input type="text" data-skey="${it.val}" value="${esc(state[it.val] || '')}" placeholder="${it.ph}" oninput="setField('${it.val}', this.value)">
     </div>
   `).join("");
 }
 
+function focusSocialField(valKey) {
+  if (cleanView) return;
+  openEditorTab("social");
+  setTimeout(() => {
+    const inp = document.querySelector(`#socialPanelStack input[data-skey="${valKey}"]`);
+    if (inp) { inp.scrollIntoView({ behavior: "smooth", block: "center" }); inp.focus(); inp.select(); }
+  }, 60);
+}
+
+function triggerLogoUpload(e) {
+  if (cleanView) return;
+  if (e) e.stopPropagation();
+  document.getElementById("logoFile").click();
+}
+function triggerMediaUpload(e) {
+  if (cleanView) return;
+  if (e && (e.target.isContentEditable || e.target.closest(".del-x") || e.target.closest(".mc-logo-pill"))) return;
+  if (e) e.stopPropagation();
+  document.getElementById("quickMediaFile").click();
+}
+
+function onQuickMediaPick(e) {
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  if (f.type && f.type.startsWith("video/")) {
+    onVideoPick(e);
+    return;
+  }
+  if (f.type && f.type.startsWith("image/")) {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement("canvas");
+      const sc = Math.min(1, 1080 / Math.max(img.naturalWidth, img.naturalHeight));
+      c.width = Math.round(img.naturalWidth * sc); c.height = Math.round(img.naturalHeight * sc);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      c.toBlob(b => { if (b) idbPut("photo", b); }, "image/jpeg", 0.86);
+      state.photoUrl = c.toDataURL("image/jpeg", 0.86);
+      state.showPhoto = true;
+      localVideoBlob = null; idbDel("video");
+      state.videoUrl = "";
+      document.getElementById("inVideoUrl").value = "";
+      document.getElementById("btnDelVideo").style.display = "none";
+      const chk = document.getElementById("chkPhoto"); if (chk) chk.checked = true;
+      renderPreview();
+      toast("圖片已更新並存於手機");
+    };
+    img.src = URL.createObjectURL(f);
+  }
+  e.target.value = "";
+}
+
 function buildSocialIconsHtml() {
   const chips = [];
-  if (state.lineOn && state.lineId) chips.push(`<span class="mc-icon-chip" title="加我 LINE">${SVG_ICONS.line}</span>`);
-  if (state.oaOn && state.oaId) chips.push(`<span class="mc-icon-chip" title="官方帳號">${SVG_ICONS.oa}</span>`);
-  if (state.mailBtnOn && state.email) chips.push(`<span class="mc-icon-chip" title="Email">${SVG_ICONS.mail}</span>`);
-  if (state.igOn && state.igId) chips.push(`<span class="mc-icon-chip" title="Instagram">${SVG_ICONS.ig}</span>`);
-  if (state.fbOn && state.fbId) chips.push(`<span class="mc-icon-chip" title="Facebook">${SVG_ICONS.fb}</span>`);
-  if (state.thOn && state.thId) chips.push(`<span class="mc-icon-chip" title="Threads">${SVG_ICONS.threads}</span>`);
+  if (state.lineOn && state.lineId) chips.push(`<span class="mc-icon-chip" onclick="focusSocialField('lineId')" title="加我 LINE">${SVG_ICONS.line}<span class="mc-icon-lbl">LINE</span></span>`);
+  if (state.oaOn && state.oaId) chips.push(`<span class="mc-icon-chip" onclick="focusSocialField('oaId')" title="官方帳號">${SVG_ICONS.oa}<span class="mc-icon-lbl">官方</span></span>`);
+  if (state.mailBtnOn && state.email) chips.push(`<span class="mc-icon-chip" onclick="focusSocialField('email')" title="Email">${SVG_ICONS.mail}<span class="mc-icon-lbl">信箱</span></span>`);
+  if (state.igOn && state.igId) chips.push(`<span class="mc-icon-chip" onclick="focusSocialField('igId')" title="Instagram">${SVG_ICONS.ig}<span class="mc-icon-lbl">IG</span></span>`);
+  if (state.fbOn && state.fbId) chips.push(`<span class="mc-icon-chip" onclick="focusSocialField('fbId')" title="Facebook">${SVG_ICONS.fb}<span class="mc-icon-lbl">FB</span></span>`);
+  if (state.thOn && state.thId) chips.push(`<span class="mc-icon-chip" onclick="focusSocialField('thId')" title="Threads">${SVG_ICONS.threads}<span class="mc-icon-lbl">串文</span></span>`);
   return chips.length ? `<div class="mc-icon-row">${chips.join("")}</div>` : "";
 }
 
@@ -759,7 +813,7 @@ function renderPreview() {
   const coHtml = state.company
     ? `<span class="ed-wrap"><span class="mc-co-name" ${ce} oninput="editInlineField('company',this.textContent)" onblur="editInlineField('company',this.textContent)">${esc(state.company)}</span><button type="button" class="del-x" onclick="removeField('company')">×</button></span>` : "";
   const logoHtml = state.logoUrl
-    ? `<span class="ed-wrap"><span class="mc-logo"><img src="${esc(state.logoUrl)}" alt="Logo"></span><button type="button" class="del-x" onclick="clearLogo()">×</button></span>` : "";
+    ? `<span class="ed-wrap"><span class="mc-logo" onclick="triggerLogoUpload(event)" title="點擊更換 Logo"><img src="${esc(state.logoUrl)}" alt="Logo"></span><button type="button" class="del-x" onclick="event.stopPropagation();clearLogo()">×</button></span>` : "";
   const brandRow = (logoHtml || coHtml) ? `<div class="mc-brand-row">${logoHtml || '<span></span>'}${coHtml}</div>` : "";
 
   const nameHtml = state.name
@@ -781,8 +835,8 @@ function renderPreview() {
   const footHtml = `
     <div class="mc-foot" data-cslot="footBg">
       <div class="mc-btn-row">
-        <button type="button" class="mc-btn-pri" data-cslot="accent" onclick="openBtnEditor('mobile')">${SVG_ICONS.phone}<span>撥打手機</span></button>
-        <button type="button" class="mc-btn-sec" data-cslot="btn2Bg" onclick="openBtnEditor('website')">${SVG_ICONS.web}<span>官方網站</span></button>
+        <button type="button" class="mc-btn-pri" data-cslot="accent" onclick="openBtnEditor('mobile')">${SVG_ICONS.phone}<span>手機</span></button>
+        <button type="button" class="mc-btn-sec" data-cslot="btn2Bg" onclick="openBtnEditor('website')">${SVG_ICONS.web}<span>官網</span></button>
       </div>
       ${buildSocialIconsHtml()}
       <button type="button" class="mc-btn-link" data-cslot="accent" onclick="shareToLine()">轉傳這張名片</button>
@@ -795,17 +849,31 @@ function renderPreview() {
     : (state.videoUrl ? `<video autoplay muted loop playsinline src="${esc(state.videoUrl)}" ${state.photoUrl ? `poster="${esc(state.photoUrl)}"` : ""}></video>` : (state.photoUrl ? `<img src="${esc(state.photoUrl)}">` : ""));
 
   if (state.style === "video" || state.style === "full") {
-    mount.innerHTML = `<article class="mega-card"><div class="mc-video-box">${mediaHtml}</div><div class="mc-head-area" style="padding:14px 18px 10px;" data-cslot="headBg">${brandRow}${nameLine}${sloganHtml}</div><div class="mc-sep"></div><div class="mc-body" data-cslot="bodyBg">${rowsHtml}</div>${footHtml}</article>`;
+    mount.innerHTML = `<article class="mega-card"><div class="mc-video-box mc-media-click" onclick="triggerMediaUpload(event)" title="點擊更換影片或圖片">${mediaHtml}</div><div class="mc-head-area" style="padding:14px 18px 10px;" data-cslot="headBg">${brandRow}${nameLine}${sloganHtml}</div><div class="mc-sep"></div><div class="mc-body" data-cslot="bodyBg">${rowsHtml}</div>${footHtml}</article>`;
   } else if (state.style === "hero") {
-    mount.innerHTML = `<article class="mega-card"><div class="mc-hero-box">${state.photoUrl ? `<img class="mc-hero-img" src="${esc(state.photoUrl)}">` : ""}<div class="mc-hero-grad"><div style="display:flex;align-items:center;justify-content:space-between;">${state.logoUrl ? `<span class="mc-logo-pill"><img src="${esc(state.logoUrl)}"></span>` : "<span></span>"}<span style="color:#fff;">${coHtml}</span></div><div style="color:#fff;">${nameLine}${sloganHtml}</div></div></div><div class="mc-body" data-cslot="bodyBg">${rowsHtml}</div>${footHtml}</article>`;
+    mount.innerHTML = `<article class="mega-card"><div class="mc-hero-box mc-media-click" onclick="triggerMediaUpload(event)" title="點擊更換封面圖片">${state.photoUrl ? `<img class="mc-hero-img" src="${esc(state.photoUrl)}">` : ""}<div class="mc-hero-grad"><div style="display:flex;align-items:center;justify-content:space-between;">${state.logoUrl ? `<span class="mc-logo-pill" onclick="triggerLogoUpload(event)" style="cursor:pointer;"><img src="${esc(state.logoUrl)}"></span>` : "<span></span>"}<span style="color:#fff;">${coHtml}</span></div><div style="color:#fff;">${nameLine}${sloganHtml}</div></div></div><div class="mc-body" data-cslot="bodyBg">${rowsHtml}</div>${footHtml}</article>`;
   } else if (state.style === "side") {
-    mount.innerHTML = `<article class="mega-card"><div class="mc-top-bar" data-cslot="accent"></div><div class="mc-side-grid"><div class="mc-side-media">${mediaHtml}</div><div class="mc-side-info mc-head-area" data-cslot="headBg">${logoHtml}${nameLine}${coHtml}</div></div><div class="mc-sep"></div><div class="mc-body" data-cslot="bodyBg">${rowsHtml}</div>${footHtml}</article>`;
+    mount.innerHTML = `<article class="mega-card"><div class="mc-top-bar" data-cslot="accent"></div><div class="mc-side-grid"><div class="mc-side-media mc-media-click" onclick="triggerMediaUpload(event)" title="點擊更換影片或圖片">${mediaHtml}</div><div class="mc-side-info mc-head-area" data-cslot="headBg">${logoHtml}${nameLine}${coHtml}</div></div><div class="mc-sep"></div><div class="mc-body" data-cslot="bodyBg">${rowsHtml}</div>${footHtml}</article>`;
   } else if (state.style === "block") {
     mount.innerHTML = `<article class="mega-card"><div class="mc-block-top" style="background:var(--head-bg);" data-cslot="headBg">${brandRow}${nameLine}${sloganHtml}</div><div class="mc-body" data-cslot="bodyBg">${rowsHtml}</div>${footHtml}</article>`;
   } else {
     const extraCls = state.style === "frame" ? "style-frame" : "";
-    mount.innerHTML = `<article class="mega-card ${extraCls}"><div class="mc-top-bar" data-cslot="accent"></div><div class="mc-head-area" style="padding:14px 18px 10px;" data-cslot="headBg">${brandRow}<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;"><div style="flex:1;min-width:0;">${nameLine}${sloganHtml}</div>${state.showPhoto && state.photoUrl ? `<div class="mc-photo"><img src="${esc(state.photoUrl)}"></div>` : ""}</div></div><div class="mc-sep"></div><div class="mc-body" data-cslot="bodyBg">${rowsHtml}</div>${footHtml}</article>`;
+    mount.innerHTML = `<article class="mega-card ${extraCls}"><div class="mc-top-bar" data-cslot="accent"></div><div class="mc-head-area" style="padding:14px 18px 10px;" data-cslot="headBg">${brandRow}<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;"><div style="flex:1;min-width:0;">${nameLine}${sloganHtml}</div>${state.showPhoto && state.photoUrl ? `<div class="mc-photo mc-media-click" onclick="triggerMediaUpload(event)"><img src="${esc(state.photoUrl)}"></div>` : ""}</div></div><div class="mc-sep"></div><div class="mc-body" data-cslot="bodyBg">${rowsHtml}</div>${footHtml}</article>`;
   }
+
+  // 啟用各欄位的獨立全選（Cmd/Ctrl+A 只全選目前編輯欄位，不選整頁）
+  mount.querySelectorAll('[contenteditable="true"]').forEach(el => {
+    el.addEventListener("keydown", (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "a") {
+        e.preventDefault();
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+    });
+  });
 
   // 只有在展開「進階設定 → 配色」時，點背景區塊才切換調色部位，平常點字完全不打架
   mount.querySelectorAll("[data-cslot]").forEach(el => {
