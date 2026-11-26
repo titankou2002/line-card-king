@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-title" content="LINE 名片王">
-<meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#23201B">
 <link rel="apple-touch-icon" sizes="180x180" href="https://bigt.cc/line/icons/card-king-icon.png">
 <link rel="icon" type="image/png" sizes="180x180" href="https://bigt.cc/line/icons/card-king-icon.png">
@@ -1829,11 +1828,6 @@ async function saveCard(silent, withModal) {
   if (withModal) showBusy("同步最新名片中...", 18, "正在準備 Logo 與素材");
   try {
     const publishCfg = Object.assign({}, state);
-    if (publishCfg.logoUrl && publishCfg.logoUrl.startsWith("data:image/")) {
-      if (withModal) showBusy("上傳 Logo 中...", 30, "請稍候");
-      const u = await uploadLocalAsset("logo", publishCfg.logoUrl);
-      if (u) { publishCfg.logoUrl = u; state.logoUrl = u; }
-    }
     if (VIDEO_STYLES.includes(publishCfg.style) && publishCfg.videoUrl && !String(publishCfg.videoUrl).includes("refin-moon")) {
       const liveVid = document.querySelector("#cardMount video");
       if (liveVid && liveVid.videoWidth > 0 && (!publishCfg.photoUrl || String(publishCfg.photoUrl).includes("refin-moon-poster"))) {
@@ -1841,22 +1835,42 @@ async function saveCard(silent, withModal) {
         if (freshPoster) { publishCfg.photoUrl = freshPoster; state.photoUrl = freshPoster; }
       }
     }
+
+    const tasks = [];
+    if (publishCfg.logoUrl && publishCfg.logoUrl.startsWith("data:image/")) {
+      tasks.push(uploadLocalAsset("logo", publishCfg.logoUrl).then(u => {
+        if (u) { publishCfg.logoUrl = u; state.logoUrl = u; }
+      }));
+    }
     if (publishCfg.photoUrl && (publishCfg.photoUrl.startsWith("data:image/") || publishCfg.photoUrl.startsWith("blob:"))) {
-      if (withModal) showBusy("上傳封面圖中...", 48, "請稍候");
-      const photoData = publishCfg.photoUrl.startsWith("blob:") ? await fetch(publishCfg.photoUrl).then(x => x.blob()).then(blobToDataUrl) : publishCfg.photoUrl;
-      const u = await uploadLocalAsset("photo", photoData);
-      if (u) { publishCfg.photoUrl = u; state.photoUrl = u; }
+      tasks.push((async () => {
+        const photoData = publishCfg.photoUrl.startsWith("blob:") ? await fetch(publishCfg.photoUrl).then(x => x.blob()).then(blobToDataUrl) : publishCfg.photoUrl;
+        const u = await uploadLocalAsset("photo", photoData);
+        if (u) { publishCfg.photoUrl = u; state.photoUrl = u; }
+      })());
     }
     if (publishCfg.videoUrl && publishCfg.videoUrl.startsWith("blob:") && localVideoBlob) {
-      if (withModal) showBusy("上傳影片至雲端...", 68, "檔案較大時需幾秒鐘");
-      setVidProgress(40, "上傳影片至雲端...");
-      const dataUrl = await blobToDataUrl(localVideoBlob);
-      if (withModal) showBusy("同步影片連結...", 85, "即將完成");
-      setVidProgress(75, "同步影片連結...");
-      const u = await uploadLocalAsset("video", dataUrl);
-      if (u) { publishCfg.videoUrl = u; state.videoUrl = u; }
-      setVidProgress(100, "雲端同步完成", 900);
+      tasks.push((async () => {
+        if (withModal) showBusy("上傳影片至雲端...", 55, "檔案較大時需幾秒鐘");
+        setVidProgress(40, "上傳影片至雲端...");
+        const dataUrl = await blobToDataUrl(localVideoBlob);
+        if (withModal) showBusy("同步影片連結...", 80, "即將完成");
+        setVidProgress(75, "同步影片連結...");
+        const u = await uploadLocalAsset("video", dataUrl);
+        if (u) { publishCfg.videoUrl = u; state.videoUrl = u; }
+        setVidProgress(100, "雲端同步完成", 900);
+      })());
     }
+    if (tasks.length) {
+      if (withModal) showBusy("上傳素材中...", 45, "Logo、圖片與影片同步上傳");
+      await Promise.all(tasks);
+    }
+
+    // 防止未上傳成功的 data:/blob: 撐爆 Google Sheets 50,000 字元上限
+    if (publishCfg.logoUrl && !/^https?:\/\//i.test(publishCfg.logoUrl)) publishCfg.logoUrl = "";
+    if (publishCfg.photoUrl && !/^https?:\/\//i.test(publishCfg.photoUrl)) publishCfg.photoUrl = "";
+    if (publishCfg.videoUrl && !/^https?:\/\//i.test(publishCfg.videoUrl)) publishCfg.videoUrl = "";
+
     if (!silent) {
       localEditUsed++;
       localStorage.setItem("ck_local_edit_used", String(localEditUsed));
@@ -1869,14 +1883,16 @@ async function saveCard(silent, withModal) {
     if (r && r.success && r.cardId) {
       currentCardId = r.cardId;
       localStorage.setItem("ck_my_card_id", currentCardId);
+      dirtySinceSave = false;
+      persistLocal();
+      dirtySinceSave = false;
+      if (!silent) toast("已儲存");
+      return true;
     }
-    dirtySinceSave = false;
-    persistLocal();
-    dirtySinceSave = false;
-    if (!silent) toast("已儲存");
-    return true;
+    if (!silent) toast("雲端儲存失敗，請重試");
+    return false;
   } catch (e) {
-    if (!silent) toast("已存於本機");
+    if (!silent) toast("雲端同步失敗，請重試");
     return false;
   } finally {
     btn.disabled = false; btn.textContent = "儲存";
@@ -1911,19 +1927,25 @@ function toggleChatTheme() {
 
 async function shareToLine() {
   const isMobile = /iPhone|iPad|Android|Line|Mobile/i.test(navigator.userAgent);
-  const needSync = dirtySinceSave || !currentCardId || (state.videoUrl && state.videoUrl.startsWith("blob:")) || (state.logoUrl && state.logoUrl.startsWith("data:"));
+  const needSync = dirtySinceSave || !currentCardId || (state.videoUrl && state.videoUrl.startsWith("blob:")) || (state.logoUrl && state.logoUrl.startsWith("data:")) || (state.photoUrl && (state.photoUrl.startsWith("data:") || state.photoUrl.startsWith("blob:")));
   let popup = null;
   if (!isMobile) {
     try { popup = window.open("about:blank", "_blank"); } catch (e) {}
   }
-  showBusy("發送名片中...", 15, needSync ? "同步最新文字與影片" : "正在開啟 LINE 分享名單");
+  showBusy("發送名片中...", 15, needSync ? "同步最新文字與素材" : "正在開啟 LINE 分享名單");
   if (needSync) {
     try {
-      await Promise.race([saveCard(true, true), new Promise(res => setTimeout(res, 15000))]);
+      await Promise.race([saveCard(true, true), new Promise(res => setTimeout(res, 35000))]);
     } catch (e) {}
   }
+  const slug = (profile && profile.slug) || currentCardId;
+  if (!slug) {
+    hideBusy();
+    if (popup && !popup.closed) popup.close();
+    toast("同步失敗或逾時，請再按一次發送名片");
+    return;
+  }
   showBusy("開啟 LINE 分享名單...", 100, "請選擇要傳送的好友");
-  const slug = (profile && profile.slug) || currentCardId || "bigt";
   const url = `https://liff.line.me/${CFG.LIFF_ID}?mode=card&id=${encodeURIComponent(slug)}`;
   setTimeout(hideBusy, 1200);
   if (popup && !popup.closed) {
