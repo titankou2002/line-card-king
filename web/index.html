@@ -184,23 +184,23 @@ window.CARD_KING_CONFIG = {
   .mc-brand-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
   .mc-logo { height: var(--logo-h, 32px); color: var(--accent); flex-shrink: 0; display: inline-flex; align-items: center; cursor: pointer; }
   .mc-logo img { height: var(--logo-h, 32px); width: auto; max-width: 180px; object-fit: contain; display: block; }
-  .mc-co-name { font-size: 11.5px; font-weight: 600; opacity: 0.8; }
+  .mc-co-name { font-size: 11.5px; font-weight: 600; opacity: 0.85; color: var(--co-col, inherit); }
   .mc-name-line { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px; }
-  .mc-name { font-size: 21px; font-weight: 700; line-height: 1.25; }
-  .mc-en-name { font-size: 15px; font-weight: 700; color: var(--accent); }
-  .mc-slogan { font-size: 12px; opacity: 0.82; margin-top: 5px; line-height: 1.4; }
-  .mc-sep { height: 1px; background: currentColor; opacity: 0.14; margin: 0 18px; }
+  .mc-name { font-size: 21px; font-weight: 700; line-height: 1.25; color: var(--name-col, inherit); }
+  .mc-en-name { font-size: 15px; font-weight: 700; color: var(--en-col, var(--accent)); }
+  .mc-slogan { font-size: 12px; opacity: 0.85; margin-top: 5px; line-height: 1.4; color: var(--slogan-col, inherit); }
+  .mc-sep { height: 1px; background: var(--sep-col, currentColor); opacity: var(--sep-op, 0.14); margin: 0 18px; }
 
   .mc-row { display: flex; align-items: center; gap: 8px; font-size: 12.5px; line-height: 1.4; }
-  .mc-lbl { min-width: 34px; flex-shrink: 0; color: var(--accent); font-size: 11.5px; font-weight: 700; }
-  .mc-lbl-ico { width: 18px; height: 18px; flex-shrink: 0; color: var(--accent); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
-  .mc-val { flex: 1; min-width: 0; word-break: break-word; }
+  .mc-lbl { min-width: 34px; flex-shrink: 0; color: var(--row-ico-col, var(--accent)); font-size: 11.5px; font-weight: 700; }
+  .mc-lbl-ico { width: 18px; height: 18px; flex-shrink: 0; color: var(--row-ico-col, var(--accent)); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+  .mc-val { flex: 1; min-width: 0; word-break: break-word; color: var(--row-val-col, inherit); }
   .mc-row-tools { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
   .clean-view .mc-row-tools { display: none !important; }
 
   .mc-btn-link {
-    height: 22px; background: transparent; border: none; color: var(--accent);
-    font-size: 11px; font-weight: 600; opacity: 0.8; letter-spacing: 0.04em; cursor: pointer; font-family: inherit;
+    height: 22px; background: transparent; border: none; color: var(--share-col, var(--accent));
+    font-size: 11px; font-weight: 600; opacity: 0.82; letter-spacing: 0.04em; cursor: pointer; font-family: inherit;
   }
 
   /* 10 顆自適應寬度可拖曳快捷按鈕（依數量自動填滿卡片寬度） */
@@ -208,8 +208,8 @@ window.CARD_KING_CONFIG = {
   .mc-icon-row { display: flex; justify-content: center; gap: 7px; width: 100%; }
   .mc-icon-chip {
     flex: 1 1 0; min-width: 0; max-width: 112px; height: 50px; border-radius: 11px;
-    background: rgba(128,128,128,0.16); border: 1px solid rgba(197,174,110,0.36);
-    color: var(--accent); display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    background: var(--btn2-bg); border: 1px solid var(--btn-bd-col, rgba(197,174,110,0.36));
+    color: var(--btn-ico-col, var(--accent)); display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
     text-decoration: none; cursor: grab; user-select: none; -webkit-user-select: none; touch-action: none;
     transition: transform 0.14s, border-color 0.14s, box-shadow 0.14s, opacity 0.14s;
   }
@@ -489,7 +489,7 @@ window.CARD_KING_CONFIG = {
         <button type="button" class="slot-tab" data-slot="headBg" onclick="selectColorSlot('headBg')">上框</button>
         <button type="button" class="slot-tab" data-slot="bodyBg" onclick="selectColorSlot('bodyBg')">中框</button>
         <button type="button" class="slot-tab" data-slot="footBg" onclick="selectColorSlot('footBg')">下框</button>
-        <button type="button" class="slot-tab" data-slot="btn2Bg" onclick="selectColorSlot('btn2Bg')">次鈕</button>
+        <button type="button" class="slot-tab" data-slot="btn2Bg" onclick="selectColorSlot('btn2Bg')">按鈕底</button>
         <button type="button" class="slot-tab" data-slot="fg" onclick="selectColorSlot('fg')">文字</button>
       </div>
       <div class="color-row">
@@ -503,6 +503,25 @@ window.CARD_KING_CONFIG = {
         <option value="notoserif">思源宋體</option>
         <option value="rounded">圓體</option>
       </select>
+      <button type="button" class="btn btn-sm" style="width:100%;justify-content:space-between;height:34px;" onclick="toggleDetailColors()">
+        <span>細節設定（個別文字 / Icon 顏色）</span>
+        <span id="detailColArrow">▾</span>
+      </button>
+      <div id="detailColorBox" style="display:none;flex-direction:column;gap:8px;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:10px;">
+        <div class="slot-tabs">
+          <button type="button" class="slot-tab" data-slot="coColor" onclick="selectColorSlot('coColor')">公司名</button>
+          <button type="button" class="slot-tab" data-slot="nameColor" onclick="selectColorSlot('nameColor')">中文名</button>
+          <button type="button" class="slot-tab" data-slot="enColor" onclick="selectColorSlot('enColor')">英文名</button>
+          <button type="button" class="slot-tab" data-slot="sloganColor" onclick="selectColorSlot('sloganColor')">標語</button>
+          <button type="button" class="slot-tab" data-slot="rowValColor" onclick="selectColorSlot('rowValColor')">欄位字</button>
+          <button type="button" class="slot-tab" data-slot="rowIconColor" onclick="selectColorSlot('rowIconColor')">欄位圖</button>
+          <button type="button" class="slot-tab" data-slot="btnIconColor" onclick="selectColorSlot('btnIconColor')">按鈕圖</button>
+          <button type="button" class="slot-tab" data-slot="btnBorderColor" onclick="selectColorSlot('btnBorderColor')">按鈕框</button>
+          <button type="button" class="slot-tab" data-slot="sepColor" onclick="selectColorSlot('sepColor')">分隔線</button>
+          <button type="button" class="slot-tab" data-slot="shareColor" onclick="selectColorSlot('shareColor')">分享字</button>
+        </div>
+        <button type="button" class="btn btn-sm" style="align-self:flex-end;" onclick="resetDetailColors()">還原細節配色</button>
+      </div>
     </div>
   </section>
 </main>
@@ -860,8 +879,39 @@ function rememberSwatch(hex) {
   renderSwatches();
 }
 
-const SLOT_NAMES = { accent: "主色", headBg: "上框", bodyBg: "中框", footBg: "下框", btn2Bg: "次鈕", fg: "文字" };
+const DETAIL_SLOTS = [
+  { key: "coColor", css: "--co-col", fallback: () => state.cardFg },
+  { key: "nameColor", css: "--name-col", fallback: () => state.cardFg },
+  { key: "enColor", css: "--en-col", fallback: () => state.color },
+  { key: "sloganColor", css: "--slogan-col", fallback: () => state.cardFg },
+  { key: "rowValColor", css: "--row-val-col", fallback: () => state.cardFg },
+  { key: "rowIconColor", css: "--row-ico-col", fallback: () => state.color },
+  { key: "btnIconColor", css: "--btn-ico-col", fallback: () => state.color },
+  { key: "btnBorderColor", css: "--btn-bd-col", fallback: () => state.color },
+  { key: "sepColor", css: "--sep-col", fallback: () => state.cardFg },
+  { key: "shareColor", css: "--share-col", fallback: () => state.color }
+];
+const SLOT_NAMES = {
+  accent: "主色", headBg: "上框", bodyBg: "中框", footBg: "下框", btn2Bg: "按鈕底", fg: "文字",
+  coColor: "公司名", nameColor: "中文名", enColor: "英文名", sloganColor: "標語",
+  rowValColor: "欄位字", rowIconColor: "欄位圖", btnIconColor: "按鈕圖", btnBorderColor: "按鈕框",
+  sepColor: "分隔線", shareColor: "分享字"
+};
+function toggleDetailColors() {
+  const box = document.getElementById("detailColorBox");
+  const arr = document.getElementById("detailColArrow");
+  const open = box.style.display !== "flex";
+  box.style.display = open ? "flex" : "none";
+  if (arr) arr.textContent = open ? "▴" : "▾";
+}
+function resetDetailColors() {
+  DETAIL_SLOTS.forEach(d => { delete state[d.key]; });
+  syncCssVars(); renderPreview();
+  toast("已還原細節配色");
+}
 function getSlotValue(slot) {
+  const d = DETAIL_SLOTS.find(x => x.key === slot);
+  if (d) return state[d.key] || d.fallback();
   return slot === "headBg" ? state.headBg : (slot === "bodyBg" ? state.bodyBg : (slot === "footBg" ? state.footBg : (slot === "btn2Bg" ? state.btn2Bg : (slot === "fg" ? state.cardFg : state.color))));
 }
 function selectColorSlot(slot) {
@@ -881,6 +931,11 @@ function syncCssVars() {
   document.documentElement.style.setProperty("--btn2-bg", state.btn2Bg);
   document.documentElement.style.setProperty("--card-fg", state.cardFg);
   document.documentElement.style.setProperty("--card-font", FONTS[state.font] || FONTS.jhenghei);
+  DETAIL_SLOTS.forEach(d => {
+    if (state[d.key]) document.documentElement.style.setProperty(d.css, state[d.key]);
+    else document.documentElement.style.removeProperty(d.css);
+  });
+  document.documentElement.style.setProperty("--sep-op", state.sepColor ? "0.7" : "0.14");
   const sz = Math.max(20, Math.min(56, Number(state.logoSize) || 32));
   document.documentElement.style.setProperty("--logo-h", sz + "px");
   const sEl = document.getElementById("inLogoSize"); if (sEl) sEl.value = sz;
@@ -895,7 +950,8 @@ function syncCssVars() {
 function applySlotColor(hex) {
   if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return;
   const u = hex.toUpperCase();
-  if (colorSlot === "headBg") state.headBg = u;
+  if (DETAIL_SLOTS.some(x => x.key === colorSlot)) state[colorSlot] = u;
+  else if (colorSlot === "headBg") state.headBg = u;
   else if (colorSlot === "bodyBg") state.bodyBg = u;
   else if (colorSlot === "footBg") state.footBg = u;
   else if (colorSlot === "btn2Bg") state.btn2Bg = u;
