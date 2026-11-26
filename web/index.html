@@ -96,7 +96,19 @@ window.CARD_KING_CONFIG = {
     gap: 10px;
   }
 
-  /* 頂部快選條：拍名片 + 8 款橫滑版型 */
+  /* 版面大分類：影片版 / 圖片版 */
+  .cat-bar {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+    background: var(--raised); padding: 4px; border-radius: 11px; width: 100%;
+  }
+  .cat-btn {
+    appearance: none; border: none; background: transparent; color: var(--t2);
+    font-family: inherit; font-size: 13px; font-weight: 700; padding: 7px 8px;
+    border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .cat-btn.active { background: #23201b; color: var(--accent); box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+
+  /* 頂部快選條：拍名片 + 橫滑版型 */
   .top-strip {
     display: flex; align-items: center; gap: 8px; width: 100%;
   }
@@ -313,6 +325,8 @@ window.CARD_KING_CONFIG = {
   .vid-prog-track { width: 100%; height: 6px; border-radius: 999px; background: var(--raised); overflow: hidden; }
   .vid-prog-fill { height: 100%; width: 0%; background: var(--accent); border-radius: 999px; transition: width 0.15s ease; }
   .vid-prog-txt { font-size: 11.5px; font-weight: 700; color: var(--t2); display: flex; justify-content: space-between; }
+  @keyframes ckSpin { to { transform: rotate(360deg); } }
+  .ck-spinner { width: 34px; height: 34px; border: 3px solid var(--raised); border-top-color: var(--accent); border-radius: 999px; animation: ckSpin 0.8s linear infinite; margin: 0 auto; }
 </style>
 </head>
 <body>
@@ -354,25 +368,60 @@ window.CARD_KING_CONFIG = {
     <button type="button" class="btn" id="btnCleanToggle" style="height:38px;" onclick="toggleCleanView()">預覽</button>
   </div>
 
-  <!-- 8 款版型橫滑一條 -->
+  <!-- 版面分類：影片版（頂部影片）/ 圖片版（多元排版） -->
+  <div class="cat-bar" id="catBar">
+    <button type="button" class="cat-btn active" data-cat="video" onclick="setLayoutCat('video')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="3"/><polygon points="10 9 15 12 10 15 10 9" fill="currentColor" stroke="none"/></svg>
+      影片版（頂部播放）
+    </button>
+    <button type="button" class="cat-btn" data-cat="image" onclick="setLayoutCat('image')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+      圖片版（多元排版）
+    </button>
+  </div>
+
+  <!-- 依分類顯示對應版型 -->
   <div class="style-bar" id="styleGrid">
-    <button type="button" class="style-opt active" data-style="video" onclick="setStyle('video')">動態影片</button>
-    <button type="button" class="style-opt" data-style="dark" onclick="setStyle('dark')">深岩燙金</button>
-    <button type="button" class="style-opt" data-style="hero" onclick="setStyle('hero')">雜誌封面</button>
-    <button type="button" class="style-opt" data-style="ivory" onclick="setStyle('ivory')">極簡象牙</button>
-    <button type="button" class="style-opt" data-style="full" onclick="setStyle('full')">全資訊旗艦</button>
-    <button type="button" class="style-opt" data-style="side" onclick="setStyle('side')">側邊影像</button>
-    <button type="button" class="style-opt" data-style="block" onclick="setStyle('block')">莫蘭迪撞色</button>
-    <button type="button" class="style-opt" data-style="frame" onclick="setStyle('frame')">建築黑框</button>
+    <button type="button" class="style-opt active" data-cat="video" data-style="video" onclick="setStyle('video')">動態影片</button>
+    <button type="button" class="style-opt" data-cat="video" data-style="full" onclick="setStyle('full')">全資訊旗艦</button>
+    <button type="button" class="style-opt" data-cat="image" data-style="side" onclick="setStyle('side')">側邊滿版</button>
+    <button type="button" class="style-opt" data-cat="image" data-style="hero" onclick="setStyle('hero')">雜誌封面</button>
+    <button type="button" class="style-opt" data-cat="image" data-style="dark" onclick="setStyle('dark')">深岩燙金</button>
+    <button type="button" class="style-opt" data-cat="image" data-style="ivory" onclick="setStyle('ivory')">極簡象牙</button>
+    <button type="button" class="style-opt" data-cat="image" data-style="block" onclick="setStyle('block')">莫蘭迪撞色</button>
+    <button type="button" class="style-opt" data-cat="image" data-style="frame" onclick="setStyle('frame')">建築黑框</button>
   </div>
 
   <!-- 直接點字修改的名片本體 -->
-  <input type="file" id="quickMediaFile" accept="video/*,image/*" hidden onchange="onQuickMediaPick(event)">
+  <input type="file" id="quickMediaFile" accept="video/*,image/*,.mp4,.mov,.m4v" hidden onchange="onQuickMediaPick(event)">
   <section class="canvas-stage" id="phoneScreen">
     <div id="cardMount" style="width:100%;display:flex;justify-content:center;"></div>
     <div class="vid-prog-wrap" id="stageProgWrap" style="max-width:344px;background:rgba(255,253,249,0.92);padding:8px 12px;border-radius:10px;">
       <div class="vid-prog-txt"><span id="stageProgLabel">讀取影片中...</span><span id="stageProgPct">0%</span></div>
       <div class="vid-prog-track"><div class="vid-prog-fill" id="stageProgFill"></div></div>
+    </div>
+    <!-- 影片位置與 10 秒片段拉選列 -->
+    <div id="vidTrimBar" style="display:none;width:100%;max-width:344px;background:rgba(255,253,249,0.96);border:1px solid var(--border);border-radius:12px;padding:10px 12px;flex-direction:column;gap:8px;box-shadow:0 6px 18px rgba(0,0,0,0.12);">
+      <div id="vidTimeRow" style="display:none;flex-direction:column;gap:4px;">
+        <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:var(--t1);">
+          <span>片段起點</span><span id="lblTrimRange">0.0s ～ 10.0s</span>
+        </div>
+        <input type="range" id="inTrimStart" min="0" max="10" step="0.5" value="0" oninput="onTrimStartSlide(this.value)" style="width:100%;accent-color:#23201b;">
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:12px;font-weight:700;color:var(--t2);flex-shrink:0;">畫面上下</span>
+        <input type="range" id="inVidPos" min="0" max="100" value="50" oninput="setVideoPos(this.value)" style="flex:1;accent-color:#23201b;">
+        <span id="lblVidPos" style="font-size:11.5px;font-weight:700;color:var(--t2);width:34px;text-align:right;">50%</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:12px;font-weight:700;color:var(--t2);flex-shrink:0;">畫面縮放</span>
+        <input type="range" id="inVidZoom" min="100" max="220" value="100" oninput="setVideoZoom(this.value)" style="flex:1;accent-color:#23201b;">
+        <span id="lblVidZoom" style="font-size:11.5px;font-weight:700;color:var(--t2);width:34px;text-align:right;">1.0×</span>
+      </div>
+      <div style="display:flex;gap:6px;justify-content:flex-end;">
+        <button type="button" class="btn btn-sm" onclick="closeVidTrimBar()">關閉</button>
+        <button type="button" class="btn btn-sm btn-pri" id="btnApplyTrim" onclick="applyVideoTrim()">套用目前位置</button>
+      </div>
     </div>
     <!-- 點擊按鈕浮出的單行編輯條 -->
     <div class="inline-bar" id="btnEditBar">
@@ -418,8 +467,9 @@ window.CARD_KING_CONFIG = {
         <label class="ext-chk"><input type="checkbox" id="chkPhoto" onchange="setField('showPhoto', this.checked)">顯示照片</label>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
-        <input type="file" id="videoFile" accept="video/*" hidden onchange="onVideoPick(event)">
+        <input type="file" id="videoFile" accept="video/*,.mp4,.mov,.m4v" hidden onchange="onVideoPick(event)">
         <button type="button" class="btn btn-sm btn-pri" id="btnUploadVid" onclick="document.getElementById('videoFile').click()">上傳影片（自動切10秒）</button>
+        <button type="button" class="btn btn-sm" onclick="openVidTrimBar()">調整位置</button>
         <button type="button" class="btn btn-sm" id="btnToggleVidUrl" onclick="toggleVidUrlBox()">貼影片連結 ▾</button>
         <button type="button" class="btn btn-sm btn-danger" id="btnDelVideo" style="display:none;" onclick="clearVideo()">刪除影片</button>
       </div>
@@ -485,6 +535,16 @@ window.CARD_KING_CONFIG = {
     <div style="font-size:18px;font-weight:700;">贊助解鎖無限修改</div>
     <a id="donateLink" href="https://line.me/R/ti/p/@297azzax" target="_blank" rel="noopener" class="btn btn-pri" style="height:42px;color:#c5ae6e;">聯繫贊助並開通</a>
     <button type="button" class="btn" onclick="closeDonateModal()">關閉</button>
+  </div>
+</div>
+
+<!-- 置中讀取進度彈窗（發送名片 / 同步影片時顯示在畫面正中央） -->
+<div class="modal-bg" id="busyModal" style="z-index:260;">
+  <div class="modal-card" style="max-width:272px;padding:24px 20px;gap:12px;">
+    <div class="ck-spinner"></div>
+    <div id="busyTitle" style="font-size:15px;font-weight:700;color:var(--t1);">同步最新名片中...</div>
+    <div class="vid-prog-track"><div class="vid-prog-fill" id="busyFill" style="width:20%;"></div></div>
+    <div id="busySub" style="font-size:12px;color:var(--t2);">準備開啟 LINE 分享</div>
   </div>
 </div>
 
@@ -578,7 +638,7 @@ function defaultState() {
   return {
     style: "video", font: "jhenghei",
     color: "#C5AE6E", headBg: "#1E1D1B", bodyBg: "#1E1D1B", footBg: "#1E1D1B", btn2Bg: "#312E28", cardFg: "#F3EFE7",
-    logoMono: true, logoRemoveBg: true, logoSize: 32, showPhoto: false, labelMode: "icon",
+    logoMono: true, logoRemoveBg: true, logoSize: 32, showPhoto: false, labelMode: "icon", videoPos: 50, videoZoom: 100,
     logoUrl: "https://bigt.cc/line/elitile-logo.png",
     videoUrl: "https://bigt.cc/web/assets/video/refin-moon-1920.mp4",
     photoUrl: "https://bigt.cc/web/assets/video/refin-moon-poster.jpg",
@@ -592,8 +652,8 @@ function defaultState() {
       { label: "電話", value: "03-486-3978" },
       { label: "地址", value: "台北市內湖區行愛路77巷16號5樓" }
     ],
-    phoneOn: true, webOn: true,
-    lineOn: true, lineId: "bigt_line", oaOn: true, oaId: "@297azzax", mailBtnOn: true,
+    phoneOn: false, webOn: true,
+    lineOn: true, lineId: "bigt_line", oaOn: true, oaId: "@297azzax", mailBtnOn: false,
     igOn: true, igId: "bigt.cc", fbOn: true, fbId: "bigt.cc", thOn: true, thId: "bigt.cc",
     ytOn: true, ytId: "bigt", ttOn: true, ttId: "bigt",
     actionOrder: DEFAULT_ACTION_ORDER.slice()
@@ -739,12 +799,31 @@ function updateColorPickMode() {
   document.getElementById("phoneScreen").classList.toggle("color-pick-mode", isColorTab);
 }
 
+const VIDEO_STYLES = ["video", "full"];
+function syncLayoutCatUI() {
+  const cat = VIDEO_STYLES.includes(state.style) ? "video" : "image";
+  document.querySelectorAll("#catBar .cat-btn").forEach(b => b.classList.toggle("active", b.dataset.cat === cat));
+  document.querySelectorAll("#styleGrid .style-opt").forEach(el => {
+    el.style.display = (el.dataset.cat === cat) ? "inline-flex" : "none";
+    el.classList.toggle("active", el.dataset.style === state.style);
+  });
+}
+function setLayoutCat(cat) {
+  if (cat === "video" && !VIDEO_STYLES.includes(state.style)) {
+    setStyle("video");
+  } else if (cat === "image" && VIDEO_STYLES.includes(state.style)) {
+    setStyle("side");
+  } else {
+    syncLayoutCatUI();
+  }
+}
+
 function setStyle(s) {
   state.style = s;
   const def = STYLE_DEFAULTS[s] || STYLE_DEFAULTS.dark;
   state.color = def.color; state.headBg = def.headBg; state.bodyBg = def.bodyBg;
   state.footBg = def.footBg; state.btn2Bg = def.btn2Bg; state.cardFg = def.fg;
-  document.querySelectorAll("#styleGrid .style-opt").forEach(el => el.classList.toggle("active", el.dataset.style === s));
+  syncLayoutCatUI();
   syncCssVars(); reprocessLogoIfLoaded(); renderPreview();
 }
 
@@ -793,7 +872,7 @@ function syncCssVars() {
   const mEl = document.getElementById("chkLogoMono"); if (mEl) mEl.checked = state.logoMono !== false;
   const fEl = document.getElementById("inFont"); if (fEl) fEl.value = state.font || "jhenghei";
   const pEl = document.getElementById("chkPhoto"); if (pEl) pEl.checked = !!state.showPhoto;
-  document.querySelectorAll("#styleGrid .style-opt").forEach(el => el.classList.toggle("active", el.dataset.style === state.style));
+  syncLayoutCatUI();
   selectColorSlot(colorSlot);
 }
 function applySlotColor(hex) {
@@ -871,11 +950,20 @@ function triggerLogoUpload(e) {
   if (e) e.stopPropagation();
   document.getElementById("logoFile").click();
 }
-function triggerMediaUpload(e) {
+function triggerPhotoUpload(e) {
   if (cleanView) return;
   if (e && (e.target.tagName === "INPUT" || e.target.closest(".del-x") || e.target.closest(".mc-logo-pill"))) return;
   if (e) e.stopPropagation();
-  document.getElementById("quickMediaFile").click();
+  document.getElementById("photoFile").click();
+}
+function triggerVideoUpload(e) {
+  if (cleanView) return;
+  if (e) e.stopPropagation();
+  document.getElementById("videoFile").click();
+}
+function triggerMediaUpload(e) {
+  if (VIDEO_STYLES.includes(state.style)) triggerVideoUpload(e);
+  else triggerPhotoUpload(e);
 }
 
 const _measureCanvas = document.createElement("canvas");
@@ -1048,16 +1136,19 @@ function renderPreview() {
   `;
 
   const ytId = parseYtId(state.videoUrl);
+  const vPos = Math.max(0, Math.min(100, Number(state.videoPos ?? 50)));
+  const vZoom = Math.max(1, Math.min(2.2, (Number(state.videoZoom) || 100) / 100));
+  const vStyle = `object-position:50% ${vPos}%;transform:scale(${vZoom});transform-origin:50% ${vPos}%;`;
   const mediaHtml = ytId
-    ? `<img src="https://i.ytimg.com/vi/${ytId}/hqdefault.jpg"><div class="mc-yt-play"><span>▶</span></div>`
-    : (state.videoUrl ? `<video autoplay muted loop playsinline src="${esc(state.videoUrl)}" ${state.photoUrl ? `poster="${esc(state.photoUrl)}"` : ""}></video>` : (state.photoUrl ? `<img src="${esc(state.photoUrl)}">` : ""));
+    ? `<img src="https://i.ytimg.com/vi/${ytId}/hqdefault.jpg" style="${vStyle}"><div class="mc-yt-play"><span>▶</span></div>`
+    : (state.videoUrl ? `<video autoplay muted loop playsinline src="${esc(state.videoUrl)}" style="${vStyle}" ${state.photoUrl ? `poster="${esc(state.photoUrl)}"` : ""}></video>` : (state.photoUrl ? `<img src="${esc(state.photoUrl)}" style="${vStyle}">` : ""));
 
   if (state.style === "video" || state.style === "full") {
-    mount.innerHTML = `<article class="mega-card"><div class="mc-video-box mc-media-click" onclick="triggerMediaUpload(event)" title="點擊更換影片或圖片">${mediaHtml}</div><div class="mc-head-area" style="padding:14px 18px 10px;" data-cslot="headBg">${brandRow}${nameLine}${sloganHtml}</div><div class="mc-sep"></div><div class="mc-body" data-cslot="bodyBg">${rowsHtml}</div>${footHtml}</article>`;
+    mount.innerHTML = `<article class="mega-card"><div class="mc-video-box mc-media-click" onclick="triggerVideoUpload(event)" title="點擊更換影片">${mediaHtml}</div><div class="mc-head-area" style="padding:14px 18px 10px;" data-cslot="headBg">${brandRow}${nameLine}${sloganHtml}</div><div class="mc-sep"></div><div class="mc-body" data-cslot="bodyBg">${rowsHtml}</div>${footHtml}</article>`;
   } else if (state.style === "hero") {
-    mount.innerHTML = `<article class="mega-card"><div class="mc-hero-box mc-media-click" onclick="triggerMediaUpload(event)" title="點擊更換封面圖片">${state.photoUrl ? `<img class="mc-hero-img" src="${esc(state.photoUrl)}">` : ""}<div class="mc-hero-grad"><div style="display:flex;align-items:center;justify-content:space-between;">${state.logoUrl ? `<span class="mc-logo-pill" onclick="triggerLogoUpload(event)" style="cursor:pointer;"><img src="${esc(state.logoUrl)}"></span>` : "<span></span>"}<span style="color:#fff;">${coHtml}</span></div><div style="color:#fff;">${nameLine}${sloganHtml}</div></div></div><div class="mc-body" data-cslot="bodyBg">${rowsHtml}</div>${footHtml}</article>`;
+    mount.innerHTML = `<article class="mega-card"><div class="mc-hero-box mc-media-click" onclick="triggerPhotoUpload(event)" title="點擊更換封面圖片">${state.photoUrl ? `<img class="mc-hero-img" src="${esc(state.photoUrl)}">` : ""}<div class="mc-hero-grad"><div style="display:flex;align-items:center;justify-content:space-between;">${state.logoUrl ? `<span class="mc-logo-pill" onclick="triggerLogoUpload(event)" style="cursor:pointer;"><img src="${esc(state.logoUrl)}"></span>` : "<span></span>"}<span style="color:#fff;">${coHtml}</span></div><div style="color:#fff;">${nameLine}${sloganHtml}</div></div></div><div class="mc-body" data-cslot="bodyBg">${rowsHtml}</div>${footHtml}</article>`;
   } else if (state.style === "side") {
-    mount.innerHTML = `<article class="mega-card"><div class="mc-side-full"><div class="mc-side-media mc-media-click" onclick="triggerMediaUpload(event)" title="點擊更換影片或圖片">${mediaHtml}</div><div class="mc-side-col"><div class="mc-side-head" data-cslot="headBg">${logoHtml}${nameLine}${coHtml}${sloganHtml}</div><div class="mc-sep"></div><div class="mc-body" data-cslot="bodyBg">${rowsHtml}</div>${footHtml}</div></div></article>`;
+    mount.innerHTML = `<article class="mega-card"><div class="mc-side-full"><div class="mc-side-media mc-media-click" onclick="triggerPhotoUpload(event)" title="點擊更換側邊圖片">${state.photoUrl ? `<img src="${esc(state.photoUrl)}">` : ""}</div><div class="mc-side-col"><div class="mc-side-head" data-cslot="headBg">${logoHtml}${nameLine}${coHtml}${sloganHtml}</div><div class="mc-sep"></div><div class="mc-body" data-cslot="bodyBg">${rowsHtml}</div>${footHtml}</div></div></article>`;
   } else if (state.style === "block") {
     mount.innerHTML = `<article class="mega-card"><div class="mc-block-top" style="background:var(--head-bg);" data-cslot="headBg">${brandRow}${nameLine}${sloganHtml}</div><div class="mc-body" data-cslot="bodyBg">${rowsHtml}</div>${footHtml}</article>`;
   } else {
@@ -1293,7 +1384,21 @@ function setVidProgress(pct, label, hideAfterMs) {
   if (hideAfterMs) setTimeout(() => setVidProgress(null), hideAfterMs);
 }
 
-/* 從影片自動擷取封面縮圖（取代舊預設月亮封面，讓 LINE 預覽圖同步更新） */
+function compute16x9Crop(vw, vh, vPosPct, vZoomPct) {
+  const dstAspect = 16 / 9;
+  const zoom = Math.max(1, Math.min(2.2, (Number(vZoomPct) || 100) / 100));
+  const pos = Math.max(0, Math.min(100, Number(vPosPct ?? 50))) / 100;
+  let baseW = vw, baseH = vh;
+  if (vw / vh < dstAspect) { baseH = vw / dstAspect; }
+  else { baseW = vh * dstAspect; }
+  const sw = Math.max(2, Math.round(baseW / zoom));
+  const sh = Math.max(2, Math.round(baseH / zoom));
+  const sx = Math.max(0, Math.min(vw - sw, Math.round((vw - sw) / 2)));
+  const sy = Math.max(0, Math.min(vh - sh, Math.round(pos * (vh - sh))));
+  return { sx, sy, sw, sh };
+}
+
+/* 從影片自動擷取 16:9 橫式封面縮圖（符合使用者拉選的上下與縮放） */
 async function captureVideoPoster(videoEl) {
   try {
     const vw = videoEl.videoWidth || 720, vh = videoEl.videoHeight || 405;
@@ -1306,27 +1411,106 @@ async function captureVideoPoster(videoEl) {
         try { videoEl.currentTime = 0.2; } catch (e) { done(); }
       });
     }
-    const sc = Math.min(1, 720 / Math.max(vw, vh));
+    const { sx, sy, sw, sh } = compute16x9Crop(vw, vh, state.videoPos ?? 50, state.videoZoom || 100);
     const c = document.createElement("canvas");
-    c.width = Math.max(1, Math.round(vw * sc));
-    c.height = Math.max(1, Math.round(vh * sc));
-    c.getContext("2d").drawImage(videoEl, 0, 0, c.width, c.height);
-    const dataUrl = c.toDataURL("image/jpeg", 0.84);
-    c.toBlob(b => { if (b) idbPut("photo", b); }, "image/jpeg", 0.84);
+    c.width = 720; c.height = 405;
+    c.getContext("2d").drawImage(videoEl, sx, sy, sw, sh, 0, 0, 720, 405);
+    const dataUrl = c.toDataURL("image/jpeg", 0.85);
+    c.toBlob(b => { if (b) idbPut("photo", b); }, "image/jpeg", 0.85);
     return dataUrl;
   } catch (e) { return ""; }
 }
 
-/* 影片超過 10 秒自動裁切成前 10 秒（並壓在 10MB 內） */
-function trimVideoTo10s(videoEl, fallbackBlob) {
+/* 影片裁切成指定起點 10 秒 + 套用畫面上下裁切位置 */
+let rawPickedVideoBlob = null;
+let rawPickedVideoName = "video.mp4";
+let rawVideoDuration = 0;
+let trimStartSec = 0;
+
+function showBusy(title, pct, sub) {
+  const m = document.getElementById("busyModal");
+  if (!m) return;
+  document.getElementById("busyTitle").textContent = title || "同步名片中...";
+  document.getElementById("busyFill").style.width = Math.max(5, Math.min(100, Math.round(pct || 20))) + "%";
+  document.getElementById("busySub").textContent = sub || "";
+  m.style.display = "flex";
+}
+function hideBusy() {
+  const m = document.getElementById("busyModal");
+  if (m) m.style.display = "none";
+}
+
+function openVidTrimBar() {
+  const bar = document.getElementById("vidTrimBar");
+  if (!bar) return;
+  bar.style.display = "flex";
+  const posEl = document.getElementById("inVidPos");
+  const posLbl = document.getElementById("lblVidPos");
+  const curPos = Math.max(0, Math.min(100, Number(state.videoPos ?? 50)));
+  if (posEl) posEl.value = curPos;
+  if (posLbl) posLbl.textContent = curPos + "%";
+  const zEl = document.getElementById("inVidZoom");
+  const zLbl = document.getElementById("lblVidZoom");
+  const curZ = Math.max(100, Math.min(220, Number(state.videoZoom) || 100));
+  if (zEl) zEl.value = curZ;
+  if (zLbl) zLbl.textContent = (curZ / 100).toFixed(1) + "×";
+  const timeRow = document.getElementById("vidTimeRow");
+  if (rawVideoDuration > 10.5) {
+    const maxStart = Math.max(0.5, Math.floor((rawVideoDuration - 10) * 2) / 2);
+    const rng = document.getElementById("inTrimStart");
+    if (rng) { rng.max = String(maxStart); rng.value = String(Math.min(trimStartSec, maxStart)); }
+    onTrimStartSlide(rng ? rng.value : 0);
+    if (timeRow) timeRow.style.display = "flex";
+  } else if (timeRow) {
+    timeRow.style.display = "none";
+  }
+}
+function closeVidTrimBar() {
+  const bar = document.getElementById("vidTrimBar");
+  if (bar) bar.style.display = "none";
+}
+function onTrimStartSlide(val) {
+  trimStartSec = Math.max(0, Number(val) || 0);
+  const end = Math.min(rawVideoDuration || (trimStartSec + 10), trimStartSec + 10);
+  const lbl = document.getElementById("lblTrimRange");
+  if (lbl) lbl.textContent = trimStartSec.toFixed(1) + "s ～ " + end.toFixed(1) + "s";
+  const vid = document.querySelector("#cardMount video");
+  if (vid) { try { vid.currentTime = trimStartSec; } catch (e) {} }
+}
+function applyVideoFramingLive() {
+  const p = Math.max(0, Math.min(100, Number(state.videoPos ?? 50)));
+  const z = Math.max(1, Math.min(2.2, (Number(state.videoZoom) || 100) / 100));
+  document.querySelectorAll("#cardMount video, #cardMount .mc-video-box img").forEach(el => {
+    el.style.objectPosition = `50% ${p}%`;
+    el.style.transform = `scale(${z})`;
+    el.style.transformOrigin = `50% ${p}%`;
+  });
+}
+function setVideoPos(v) {
+  const p = Math.max(0, Math.min(100, Number(v) || 50));
+  state.videoPos = p;
+  const lbl = document.getElementById("lblVidPos"); if (lbl) lbl.textContent = p + "%";
+  applyVideoFramingLive();
+  persistLocal();
+}
+function setVideoZoom(v) {
+  const z = Math.max(100, Math.min(220, Number(v) || 100));
+  state.videoZoom = z;
+  const lbl = document.getElementById("lblVidZoom"); if (lbl) lbl.textContent = (z / 100).toFixed(1) + "×";
+  applyVideoFramingLive();
+  persistLocal();
+}
+
+function trimVideoTo10s(videoEl, fallbackBlob, startSec, vPosPct, vZoomPct) {
   return new Promise(async (resolve) => {
     try {
       const vw = videoEl.videoWidth || 720, vh = videoEl.videoHeight || 405;
-      const sc = Math.min(1, 720 / Math.max(vw, vh));
+      // 強制輸出 16:9 橫式滿版畫面（720x405），直式影片也不會有左右灰邊
+      const targetW = 720, targetH = 406;
       const c = document.createElement("canvas");
-      c.width = Math.max(2, Math.round(vw * sc) & ~1);
-      c.height = Math.max(2, Math.round(vh * sc) & ~1);
+      c.width = targetW; c.height = targetH;
       const ctx = c.getContext("2d");
+      const { sx, sy, sw, sh } = compute16x9Crop(vw, vh, vPosPct ?? 50, vZoomPct || 100);
       if (typeof c.captureStream !== "function" || typeof MediaRecorder === "undefined") {
         resolve(fallbackBlob);
         return;
@@ -1342,17 +1526,23 @@ function trimVideoTo10s(videoEl, fallbackBlob) {
         const out = chunks.length ? new Blob(chunks, { type: mimeType.split(";")[0] || "video/mp4" }) : fallbackBlob;
         resolve(out.size > 0 ? out : fallbackBlob);
       };
-      videoEl.currentTime = 0;
       videoEl.muted = true;
+      await new Promise(res => {
+        const done = () => { videoEl.removeEventListener("seeked", done); res(); };
+        videoEl.addEventListener("seeked", done);
+        setTimeout(done, 500);
+        try { videoEl.currentTime = startSec || 0; } catch (e) { done(); }
+      });
       await videoEl.play();
       rec.start(250);
       const startAt = performance.now();
-      const targetMs = Math.min(10000, Math.max(1000, (videoEl.duration || 10) * 1000));
+      const remain = Math.max(1, (videoEl.duration || 10) - (startSec || 0));
+      const targetMs = Math.min(10000, remain * 1000);
       let rafId = 0;
       const tick = () => {
         const elapsed = performance.now() - startAt;
-        try { ctx.drawImage(videoEl, 0, 0, c.width, c.height); } catch (e) {}
-        setVidProgress(25 + Math.min(68, (elapsed / targetMs) * 68), "自動裁切前 10 秒...");
+        try { ctx.drawImage(videoEl, sx, sy, sw, sh, 0, 0, targetW, targetH); } catch (e) {}
+        setVidProgress(15 + Math.min(78, (elapsed / targetMs) * 78), "轉成橫式 16:9 影片中...");
         if (elapsed >= targetMs || videoEl.ended) {
           cancelAnimationFrame(rafId);
           videoEl.pause();
@@ -1368,72 +1558,97 @@ function trimVideoTo10s(videoEl, fallbackBlob) {
   });
 }
 
+async function applyVideoTrim() {
+  const srcBlob = rawPickedVideoBlob || localVideoBlob;
+  if (!srcBlob) { closeVidTrimBar(); return; }
+  const btn = document.getElementById("btnApplyTrim");
+  if (btn) { btn.disabled = true; btn.textContent = "轉檔中..."; }
+  setVidProgress(10, "套用橫式 16:9 裁切...");
+  try {
+    const tmpUrl = URL.createObjectURL(srcBlob);
+    const v = document.createElement("video");
+    v.preload = "auto"; v.muted = true; v.playsInline = true; v.src = tmpUrl;
+    await new Promise(res => {
+      v.onloadeddata = res; v.onerror = res; setTimeout(res, 2000);
+      try { v.load(); } catch (e) {}
+    });
+    try { v.currentTime = trimStartSec || 0.2; } catch (e) {}
+    const poster = await captureVideoPoster(v);
+    const vw = v.videoWidth || 720, vh = v.videoHeight || 405;
+    const isPortrait = (vw / vh) < 1.5;
+    let finalBlob = srcBlob;
+    if (isPortrait || rawVideoDuration > 10.5 || srcBlob.size > 9.5 * 1024 * 1024 || Number(state.videoPos ?? 50) !== 50 || Number(state.videoZoom || 100) !== 100) {
+      finalBlob = await trimVideoTo10s(v, srcBlob, trimStartSec, state.videoPos ?? 50, state.videoZoom || 100);
+      state.videoPos = 50;
+      state.videoZoom = 100;
+    }
+    URL.revokeObjectURL(tmpUrl);
+    localVideoBlob = finalBlob;
+    await idbPut("video", { blob: finalBlob, name: rawPickedVideoName });
+    state.videoUrl = URL.createObjectURL(finalBlob);
+    if (poster) state.photoUrl = poster;
+    renderPreview();
+    setVidProgress(100, "已轉成橫式影片", 1000);
+    closeVidTrimBar();
+    toast("已套用橫式 16:9 影片");
+  } catch (e) {
+    setVidProgress(null);
+    toast("已套用目前畫面位置");
+    closeVidTrimBar();
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "套用目前位置"; }
+  }
+}
+
+/* 立即載入 MP4/MOV，不卡 FileReader，不提早清空 input */
 function onVideoPick(e) {
-  const f = e.target.files && e.target.files[0]; if (!f) return;
+  const input = e.target;
+  const f = input.files && input.files[0]; if (!f) return;
   if (f.size > 60 * 1024 * 1024) {
     toast("原始影片超過 60MB，請先剪短再選");
-    e.target.value = "";
+    input.value = "";
     return;
   }
-  setVidProgress(5, "讀取影片檔案...");
-  const fr = new FileReader();
-  fr.onprogress = (ev) => {
-    if (ev.lengthComputable && ev.total > 0) {
-      setVidProgress(5 + (ev.loaded / ev.total) * 18, "讀取影片中...");
-    }
+  setVidProgress(25, "載入影片中...");
+  const rawUrl = URL.createObjectURL(f);
+  rawPickedVideoBlob = f;
+  rawPickedVideoName = f.name || "video.mp4";
+  localVideoBlob = f;
+  trimStartSec = 0;
+  state.videoUrl = rawUrl;
+  const inp = document.getElementById("inVideoUrl"); if (inp) inp.value = rawPickedVideoName;
+  const del = document.getElementById("btnDelVideo"); if (del) del.style.display = "inline-flex";
+  if (!VIDEO_STYLES.includes(state.style)) {
+    state.style = "video";
+    syncCssVars();
+  }
+  renderPreview();
+  idbPut("video", { blob: f, name: rawPickedVideoName });
+
+  // 等畫面上真正的 <video> 載入後立刻擷取封面並開啟位置拉選條
+  const cardVid = document.querySelector("#cardMount video");
+  const probe = cardVid || document.createElement("video");
+  let handled = false;
+  const onReady = async () => {
+    if (handled) return;
+    handled = true;
+    rawVideoDuration = isFinite(probe.duration) ? probe.duration : 0;
+    const poster = await captureVideoPoster(probe);
+    if (poster) { state.photoUrl = poster; persistLocal(); }
+    setVidProgress(100, "影片已更新", 900);
+    openVidTrimBar();
+    toast(rawVideoDuration > 10.5 ? "影片已載入，可拉選要切的 10 秒與畫面位置" : "影片已更新，可拉選上下位置");
+    setTimeout(() => { input.value = ""; }, 300);
   };
-  fr.onerror = () => {
-    setVidProgress(null);
-    toast("無法讀取影片，請改用 Safari 開啟");
-  };
-  fr.onload = () => {
-    setVidProgress(24, "檢查影片長度...");
-    const mime = f.type || (/\.mov$/i.test(f.name) ? "video/quicktime" : "video/mp4");
-    const safeBlob = new Blob([fr.result], { type: mime });
-    const rawUrl = URL.createObjectURL(safeBlob);
-    let settled = false;
-    const finishApply = async (finalBlob, posterUrl) => {
-      if (settled) return;
-      settled = true;
-      setVidProgress(95, "儲存至手機本機...");
-      const finalUrl = URL.createObjectURL(finalBlob);
-      localVideoBlob = finalBlob;
-      await idbPut("video", { blob: finalBlob, name: f.name || "video.mp4" });
-      state.videoUrl = finalUrl;
-      if (posterUrl) state.photoUrl = posterUrl;
-      const inp = document.getElementById("inVideoUrl"); if (inp) inp.value = f.name || "本機影片";
-      const del = document.getElementById("btnDelVideo"); if (del) del.style.display = "inline-flex";
-      if (!["video", "full", "side"].includes(state.style)) {
-        state.style = "video";
-        syncCssVars();
-      }
-      renderPreview();
-      setVidProgress(100, "影片已更新完成", 1200);
-      toast("影片已更新並存於手機");
-    };
-    const v = document.createElement("video");
-    v.preload = "auto"; v.muted = true; v.playsInline = true;
-    const fallback = setTimeout(() => finishApply(safeBlob, ""), 2000);
-    v.onloadeddata = async () => {
-      clearTimeout(fallback);
-      if (settled) return;
-      const poster = await captureVideoPoster(v);
-      const needTrim = (isFinite(v.duration) && v.duration > 10.5) || safeBlob.size > 9.5 * 1024 * 1024;
-      if (needTrim) {
-        const trimmed = await trimVideoTo10s(v, safeBlob);
-        URL.revokeObjectURL(rawUrl);
-        await finishApply(trimmed, poster);
-      } else {
-        URL.revokeObjectURL(rawUrl);
-        await finishApply(safeBlob, poster);
-      }
-    };
-    v.onerror = () => { clearTimeout(fallback); finishApply(safeBlob, ""); };
-    v.src = rawUrl;
-    try { v.load(); } catch (err) {}
-  };
-  fr.readAsArrayBuffer(f);
-  e.target.value = "";
+  if (probe.readyState >= 2) {
+    onReady();
+  } else {
+    probe.addEventListener("loadeddata", onReady, { once: true });
+    probe.addEventListener("loadedmetadata", () => {
+      rawVideoDuration = isFinite(probe.duration) ? probe.duration : 0;
+    }, { once: true });
+    setTimeout(onReady, 1800);
+  }
 }
 function clearVideo() {
   localVideoBlob = null; idbDel("video");
@@ -1460,25 +1675,30 @@ async function uploadLocalAsset(kind, dataUrl) {
 }
 
 /* 儲存 + Telegram 通知 */
-async function saveCard(silent) {
+async function saveCard(silent, withModal) {
   if (!silent && localEditUsed >= 3 && !(profile && profile.donated)) { openDonateModal(); return false; }
   persistLocal();
   const btn = document.getElementById("btnSave");
   btn.disabled = true; btn.textContent = "儲存中";
+  if (withModal) showBusy("同步最新名片中...", 18, "正在準備 Logo 與素材");
   try {
     const publishCfg = Object.assign({}, state);
     if (publishCfg.logoUrl && publishCfg.logoUrl.startsWith("data:image/")) {
+      if (withModal) showBusy("上傳 Logo 中...", 30, "請稍候");
       const u = await uploadLocalAsset("logo", publishCfg.logoUrl);
       if (u) { publishCfg.logoUrl = u; state.logoUrl = u; }
     }
     if (publishCfg.photoUrl && (publishCfg.photoUrl.startsWith("data:image/") || publishCfg.photoUrl.startsWith("blob:"))) {
+      if (withModal) showBusy("上傳封面圖中...", 48, "請稍候");
       const photoData = publishCfg.photoUrl.startsWith("blob:") ? await fetch(publishCfg.photoUrl).then(x => x.blob()).then(blobToDataUrl) : publishCfg.photoUrl;
       const u = await uploadLocalAsset("photo", photoData);
       if (u) { publishCfg.photoUrl = u; state.photoUrl = u; }
     }
     if (publishCfg.videoUrl && publishCfg.videoUrl.startsWith("blob:") && localVideoBlob) {
+      if (withModal) showBusy("上傳影片至雲端...", 68, "檔案較大時需幾秒鐘");
       setVidProgress(40, "上傳影片至雲端...");
       const dataUrl = await blobToDataUrl(localVideoBlob);
+      if (withModal) showBusy("同步影片連結...", 85, "即將完成");
       setVidProgress(75, "同步影片連結...");
       const u = await uploadLocalAsset("video", dataUrl);
       if (u) { publishCfg.videoUrl = u; state.videoUrl = u; }
@@ -1488,6 +1708,7 @@ async function saveCard(silent) {
       localEditUsed++;
       localStorage.setItem("ck_local_edit_used", String(localEditUsed));
     }
+    if (withModal) showBusy("建立名片連結...", 92, "即將開啟 LINE 分享名單");
     const r = await fetch(CFG.GAS_API, {
       method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({ action: "ecardNotifyCreate", cardId: (profile && profile.slug) || currentCardId || "", userEmail: (session && session.user && session.user.email) || "", config: publishCfg })
@@ -1542,14 +1763,16 @@ async function shareToLine() {
   if (!isMobile) {
     try { popup = window.open("about:blank", "_blank"); } catch (e) {}
   }
+  showBusy("發送名片中...", 15, needSync ? "同步最新文字與影片" : "正在開啟 LINE 分享名單");
   if (needSync) {
-    toast("同步最新名片中...");
     try {
-      await Promise.race([saveCard(true), new Promise(res => setTimeout(res, 12000))]);
+      await Promise.race([saveCard(true, true), new Promise(res => setTimeout(res, 15000))]);
     } catch (e) {}
   }
+  showBusy("開啟 LINE 分享名單...", 100, "請選擇要傳送的好友");
   const slug = (profile && profile.slug) || currentCardId || "bigt";
   const url = `https://liff.line.me/${CFG.LIFF_ID}?mode=card&id=${encodeURIComponent(slug)}`;
+  setTimeout(hideBusy, 1200);
   if (popup && !popup.closed) {
     popup.location.href = url;
   } else {
