@@ -302,6 +302,11 @@ window.CARD_KING_CONFIG = {
   .modal-card { background: #fffdf9; border-radius: 18px; padding: 24px; max-width: 360px; width: 100%; text-align: center; display: flex; flex-direction: column; gap: 12px; }
   .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px); background: #1f1b16; color: #fff; padding: 9px 16px; border-radius: 10px; font-size: 12.5px; opacity: 0; pointer-events: none; transition: 0.2s; z-index: 250; }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .vid-prog-wrap { display: none; flex-direction: column; gap: 4px; width: 100%; }
+  .vid-prog-track { width: 100%; height: 6px; border-radius: 999px; background: var(--raised); overflow: hidden; }
+  .vid-prog-fill { height: 100%; width: 0%; background: var(--accent); border-radius: 999px; transition: width 0.15s ease; }
+  .vid-prog-txt { font-size: 11.5px; font-weight: 700; color: var(--t2); display: flex; justify-content: space-between; }
 </style>
 </head>
 <body>
@@ -359,6 +364,10 @@ window.CARD_KING_CONFIG = {
   <input type="file" id="quickMediaFile" accept="video/*,image/*" hidden onchange="onQuickMediaPick(event)">
   <section class="canvas-stage" id="phoneScreen">
     <div id="cardMount" style="width:100%;display:flex;justify-content:center;"></div>
+    <div class="vid-prog-wrap" id="stageProgWrap" style="max-width:344px;background:rgba(255,253,249,0.92);padding:8px 12px;border-radius:10px;">
+      <div class="vid-prog-txt"><span id="stageProgLabel">讀取影片中...</span><span id="stageProgPct">0%</span></div>
+      <div class="vid-prog-track"><div class="vid-prog-fill" id="stageProgFill"></div></div>
+    </div>
     <!-- 點擊按鈕浮出的單行編輯條 -->
     <div class="inline-bar" id="btnEditBar">
       <input type="text" id="inlineBtnVal" placeholder="">
@@ -404,11 +413,16 @@ window.CARD_KING_CONFIG = {
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
         <input type="file" id="videoFile" accept="video/*" hidden onchange="onVideoPick(event)">
-        <button type="button" class="btn btn-sm btn-pri" onclick="document.getElementById('videoFile').click()">上傳影片（≤10秒/10MB）</button>
+        <button type="button" class="btn btn-sm btn-pri" id="btnUploadVid" onclick="document.getElementById('videoFile').click()">上傳影片（≤10秒/10MB）</button>
+        <button type="button" class="btn btn-sm" id="btnToggleVidUrl" onclick="toggleVidUrlBox()">貼影片連結 ▾</button>
         <button type="button" class="btn btn-sm btn-danger" id="btnDelVideo" style="display:none;" onclick="clearVideo()">刪除影片</button>
       </div>
-      <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;">
-        <input type="url" id="inVideoUrl" oninput="setField('videoUrl', this.value)" placeholder="影片（貼上網址連結）" style="height:34px;padding:0 9px;border:1px solid var(--border);border-radius:8px;font-size:12.5px;font-family:inherit;min-width:0;width:100%;">
+      <div class="vid-prog-wrap" id="vidProgWrap">
+        <div class="vid-prog-txt"><span id="vidProgLabel">讀取影片中...</span><span id="vidProgPct">0%</span></div>
+        <div class="vid-prog-track"><div class="vid-prog-fill" id="vidProgFill"></div></div>
+      </div>
+      <div id="vidUrlBox" style="display:none;grid-template-columns:minmax(0,1fr) auto;gap:6px;">
+        <input type="url" id="inVideoUrl" oninput="setField('videoUrl', this.value)" placeholder="貼上 YouTube / 影片連結" style="height:34px;padding:0 9px;border:1px solid var(--border);border-radius:8px;font-size:12.5px;font-family:inherit;min-width:0;width:100%;">
         <button type="button" class="btn btn-sm btn-pri" id="btnYtConv" onclick="convertYoutube()">轉 MP4</button>
       </div>
     </div>
@@ -1197,43 +1211,100 @@ function onPhotoPick(e) {
   img.src = URL.createObjectURL(f);
   e.target.value = "";
 }
+function toggleVidUrlBox() {
+  const box = document.getElementById("vidUrlBox");
+  const btn = document.getElementById("btnToggleVidUrl");
+  const open = box.style.display !== "grid";
+  box.style.display = open ? "grid" : "none";
+  if (btn) btn.textContent = open ? "貼影片連結 ▴" : "貼影片連結 ▾";
+}
+
+function setVidProgress(pct, label, hideAfterMs) {
+  const btn = document.getElementById("btnUploadVid");
+  const wraps = [
+    { w: document.getElementById("vidProgWrap"), f: document.getElementById("vidProgFill"), l: document.getElementById("vidProgLabel"), p: document.getElementById("vidProgPct") },
+    { w: document.getElementById("stageProgWrap"), f: document.getElementById("stageProgFill"), l: document.getElementById("stageProgLabel"), p: document.getElementById("stageProgPct") }
+  ];
+  if (pct === null) {
+    wraps.forEach(x => { if (x.w) x.w.style.display = "none"; });
+    if (btn) { btn.disabled = false; btn.textContent = "上傳影片（≤10秒/10MB）"; }
+    return;
+  }
+  const p = Math.max(0, Math.min(100, Math.round(pct)));
+  wraps.forEach(x => {
+    if (x.w) x.w.style.display = "flex";
+    if (x.f) x.f.style.width = p + "%";
+    if (x.l) x.l.textContent = label || "處理影片中...";
+    if (x.p) x.p.textContent = p + "%";
+  });
+  if (btn) {
+    btn.disabled = p < 100;
+    btn.textContent = p < 100 ? ("上傳中 " + p + "%") : "上傳完成 100%";
+  }
+  if (hideAfterMs) setTimeout(() => setVidProgress(null), hideAfterMs);
+}
+
 function onVideoPick(e) {
   const f = e.target.files && e.target.files[0]; if (!f) return;
-  if (f.size > 10 * 1024 * 1024) { toast("影片超過 10MB（目前 " + (f.size / 1048576).toFixed(1) + "MB）"); e.target.value = ""; return; }
-  const objUrl = URL.createObjectURL(f);
-  let settled = false;
-  const applyNow = () => {
-    if (settled) return;
-    settled = true;
-    localVideoBlob = f;
-    idbPut("video", { blob: f, name: f.name || "video.mp4" });
-    state.videoUrl = objUrl;
-    const inp = document.getElementById("inVideoUrl"); if (inp) inp.value = f.name || "本機影片";
-    const del = document.getElementById("btnDelVideo"); if (del) del.style.display = "inline-flex";
-    if (!["video", "full", "side"].includes(state.style)) {
-      state.style = "video";
-      syncCssVars();
+  if (f.size > 10 * 1024 * 1024) {
+    toast("影片超過 10MB（目前 " + (f.size / 1048576).toFixed(1) + "MB）");
+    e.target.value = "";
+    return;
+  }
+  setVidProgress(5, "讀取影片檔案...");
+  const fr = new FileReader();
+  fr.onprogress = (ev) => {
+    if (ev.lengthComputable && ev.total > 0) {
+      setVidProgress(5 + (ev.loaded / ev.total) * 70, "讀取影片中...");
     }
-    renderPreview();
-    toast("影片已更新並存於手機");
   };
-  const v = document.createElement("video");
-  v.preload = "metadata"; v.muted = true; v.playsInline = true;
-  const fallback = setTimeout(applyNow, 1200);
-  v.onloadedmetadata = () => {
-    clearTimeout(fallback);
-    if (settled) return;
-    if (isFinite(v.duration) && v.duration > 10.5) {
+  fr.onerror = () => {
+    setVidProgress(null);
+    toast("無法讀取影片，請改用 Safari 開啟");
+  };
+  fr.onload = () => {
+    setVidProgress(80, "檢查影片長度...");
+    const mime = f.type || (/\.mov$/i.test(f.name) ? "video/quicktime" : "video/mp4");
+    const safeBlob = new Blob([fr.result], { type: mime });
+    const objUrl = URL.createObjectURL(safeBlob);
+    let settled = false;
+    const applyNow = async () => {
+      if (settled) return;
       settled = true;
-      URL.revokeObjectURL(objUrl);
-      toast("影片超過 10 秒（目前 " + Math.round(v.duration) + " 秒）");
-      return;
-    }
-    applyNow();
+      setVidProgress(92, "儲存至手機本機...");
+      localVideoBlob = safeBlob;
+      await idbPut("video", { blob: safeBlob, name: f.name || "video.mp4" });
+      state.videoUrl = objUrl;
+      const inp = document.getElementById("inVideoUrl"); if (inp) inp.value = f.name || "本機影片";
+      const del = document.getElementById("btnDelVideo"); if (del) del.style.display = "inline-flex";
+      if (!["video", "full", "side"].includes(state.style)) {
+        state.style = "video";
+        syncCssVars();
+      }
+      renderPreview();
+      setVidProgress(100, "影片已更新完成", 1200);
+      toast("影片已更新並存於手機");
+    };
+    const v = document.createElement("video");
+    v.preload = "metadata"; v.muted = true; v.playsInline = true;
+    const fallback = setTimeout(applyNow, 1200);
+    v.onloadedmetadata = () => {
+      clearTimeout(fallback);
+      if (settled) return;
+      if (isFinite(v.duration) && v.duration > 10.5) {
+        settled = true;
+        URL.revokeObjectURL(objUrl);
+        setVidProgress(null);
+        toast("影片超過 10 秒（目前 " + Math.round(v.duration) + " 秒）");
+        return;
+      }
+      applyNow();
+    };
+    v.onerror = () => { clearTimeout(fallback); applyNow(); };
+    v.src = objUrl;
+    try { v.load(); } catch (err) {}
   };
-  v.onerror = () => { clearTimeout(fallback); applyNow(); };
-  v.src = objUrl;
-  try { v.load(); } catch (err) {}
+  fr.readAsArrayBuffer(f);
   e.target.value = "";
 }
 function clearVideo() {
@@ -1254,7 +1325,7 @@ async function uploadLocalAsset(kind, dataUrl) {
   try {
     const r = await fetch(CFG.GAS_API, {
       method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ action: "ecardUploadAsset", cardId: currentCardId || "card", kind, dataUrl })
+      body: JSON.stringify({ action: "ecardUploadAsset", publicUpload: true, cardId: currentCardId || "card", kind, dataUrl })
     }).then(x => x.json());
     return (r && r.success && r.url) ? r.url : "";
   } catch (e) { return ""; }
@@ -1272,14 +1343,18 @@ async function saveCard() {
       const u = await uploadLocalAsset("logo", publishCfg.logoUrl);
       if (u) publishCfg.logoUrl = u;
     }
-    if (publishCfg.photoUrl && publishCfg.photoUrl.startsWith("data:image/")) {
-      const u = await uploadLocalAsset("photo", publishCfg.photoUrl);
+    if (publishCfg.photoUrl && (publishCfg.photoUrl.startsWith("data:image/") || publishCfg.photoUrl.startsWith("blob:"))) {
+      const photoData = publishCfg.photoUrl.startsWith("blob:") ? await fetch(publishCfg.photoUrl).then(x => x.blob()).then(blobToDataUrl) : publishCfg.photoUrl;
+      const u = await uploadLocalAsset("photo", photoData);
       if (u) publishCfg.photoUrl = u;
     }
     if (publishCfg.videoUrl && publishCfg.videoUrl.startsWith("blob:") && localVideoBlob) {
+      setVidProgress(40, "上傳影片至雲端...");
       const dataUrl = await blobToDataUrl(localVideoBlob);
+      setVidProgress(75, "同步影片連結...");
       const u = await uploadLocalAsset("video", dataUrl);
       if (u) publishCfg.videoUrl = u;
+      setVidProgress(100, "雲端同步完成", 900);
     }
     localEditUsed++;
     localStorage.setItem("ck_local_edit_used", String(localEditUsed));
