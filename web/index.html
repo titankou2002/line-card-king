@@ -135,15 +135,20 @@ window.CARD_KING_CONFIG = {
   .mc-body { padding: 12px 18px; display: flex; flex-direction: column; gap: 7px; background: var(--body-bg); }
   .mc-foot { padding: 6px 18px 14px; display: flex; flex-direction: column; gap: 8px; background: var(--foot-bg); }
 
-  /* 行內直接點字編輯樣式 */
+  /* 行內直接點字編輯樣式（使用原生 input，手機/電腦 100% 支援原生全選） */
   .ed-wrap { display: inline-flex; align-items: center; gap: 4px; max-width: 100%; }
-  [contenteditable="true"] {
-    display: inline-block; outline: none; border-radius: 4px; padding: 1px 3px; min-width: 18px;
-    -webkit-user-select: text; user-select: text; -webkit-touch-callout: default;
+  .ed-wrap-full { display: flex; align-items: center; gap: 4px; width: 100%; }
+  .mc-inp {
+    appearance: none; -webkit-appearance: none; border: none; outline: none; background: transparent;
+    color: inherit; font-family: inherit; font-size: inherit; font-weight: inherit; line-height: inherit;
+    padding: 1px 3px; margin: 0; border-radius: 4px; min-width: 24px; max-width: 100%;
+    field-sizing: content; -webkit-user-select: text; user-select: text;
     transition: background 0.12s, box-shadow 0.12s; cursor: text;
   }
-  [contenteditable="true"]:hover { background: rgba(197, 174, 110, 0.14); }
-  [contenteditable="true"]:focus { background: rgba(197, 174, 110, 0.22); box-shadow: 0 0 0 1.5px var(--accent); }
+  .mc-inp:not([readonly]):hover { background: rgba(197, 174, 110, 0.14); }
+  .mc-inp:not([readonly]):focus { background: rgba(197, 174, 110, 0.22); box-shadow: 0 0 0 1.5px var(--accent); }
+  .mc-inp[readonly] { cursor: default; }
+  .mc-inp-full { width: 100%; flex: 1; min-width: 0; }
 
   .del-x {
     appearance: none; border: none; background: rgba(128,128,128,0.28); color: inherit;
@@ -760,9 +765,19 @@ function triggerLogoUpload(e) {
 }
 function triggerMediaUpload(e) {
   if (cleanView) return;
-  if (e && (e.target.isContentEditable || e.target.closest(".del-x") || e.target.closest(".mc-logo-pill"))) return;
+  if (e && (e.target.tagName === "INPUT" || e.target.closest(".del-x") || e.target.closest(".mc-logo-pill"))) return;
   if (e) e.stopPropagation();
   document.getElementById("quickMediaFile").click();
+}
+
+const _measureCanvas = document.createElement("canvas");
+function autoSizeInput(el) {
+  if (!el || el.classList.contains("mc-inp-full")) return;
+  const ctx = _measureCanvas.getContext("2d");
+  const cs = getComputedStyle(el);
+  ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+  const w = Math.ceil(ctx.measureText(el.value || " ").width) + 12;
+  el.style.width = Math.max(26, w) + "px";
 }
 
 function onQuickMediaPick(e) {
@@ -808,26 +823,26 @@ function buildSocialIconsHtml() {
 function renderPreview() {
   if (!Array.isArray(state.infoRows)) state.infoRows = [];
   const mount = document.getElementById("cardMount");
-  const ce = cleanView ? "" : 'contenteditable="true" spellcheck="false"';
+  const ro = cleanView ? "readonly" : "";
 
   const coHtml = state.company
-    ? `<span class="ed-wrap"><span class="mc-co-name" ${ce} oninput="editInlineField('company',this.textContent)" onblur="editInlineField('company',this.textContent)">${esc(state.company)}</span><button type="button" class="del-x" onclick="removeField('company')">×</button></span>` : "";
+    ? `<span class="ed-wrap"><input type="text" class="mc-inp mc-co-name" ${ro} value="${esc(state.company)}" oninput="editInlineField('company',this.value);autoSizeInput(this)"><button type="button" class="del-x" onclick="removeField('company')">×</button></span>` : "";
   const logoHtml = state.logoUrl
     ? `<span class="ed-wrap"><span class="mc-logo" onclick="triggerLogoUpload(event)" title="點擊更換 Logo"><img src="${esc(state.logoUrl)}" alt="Logo"></span><button type="button" class="del-x" onclick="event.stopPropagation();clearLogo()">×</button></span>` : "";
   const brandRow = (logoHtml || coHtml) ? `<div class="mc-brand-row">${logoHtml || '<span></span>'}${coHtml}</div>` : "";
 
   const nameHtml = state.name
-    ? `<span class="ed-wrap"><span class="mc-name" ${ce} oninput="editInlineField('name',this.textContent)" onblur="editInlineField('name',this.textContent)">${esc(state.name)}</span><button type="button" class="del-x" onclick="removeField('name')">×</button></span>` : "";
+    ? `<span class="ed-wrap"><input type="text" class="mc-inp mc-name" ${ro} value="${esc(state.name)}" oninput="editInlineField('name',this.value);autoSizeInput(this)"><button type="button" class="del-x" onclick="removeField('name')">×</button></span>` : "";
   const enHtml = state.enName
-    ? `<span class="ed-wrap"><span class="mc-en-name" ${ce} oninput="editInlineField('enName',this.textContent)" onblur="editInlineField('enName',this.textContent)">${esc(state.enName)}</span><button type="button" class="del-x" onclick="removeField('enName')">×</button></span>` : "";
+    ? `<span class="ed-wrap"><input type="text" class="mc-inp mc-en-name" ${ro} value="${esc(state.enName)}" oninput="editInlineField('enName',this.value);autoSizeInput(this)"><button type="button" class="del-x" onclick="removeField('enName')">×</button></span>` : "";
   const nameLine = (nameHtml || enHtml) ? `<div class="mc-name-line">${nameHtml}${enHtml}</div>` : "";
   const sloganHtml = state.slogan
-    ? `<div class="mc-slogan"><span class="ed-wrap"><span ${ce} oninput="editInlineField('slogan',this.textContent)" onblur="editInlineField('slogan',this.textContent)">${esc(state.slogan)}</span><button type="button" class="del-x" onclick="removeField('slogan')">×</button></span></div>` : "";
+    ? `<div class="mc-slogan"><div class="ed-wrap-full"><input type="text" class="mc-inp mc-inp-full" ${ro} value="${esc(state.slogan)}" oninput="editInlineField('slogan',this.value)"><button type="button" class="del-x" onclick="removeField('slogan')">×</button></div></div>` : "";
 
   const rowsHtml = state.infoRows.map((r, i) => `
     <div class="mc-row">
-      <span class="mc-lbl" ${ce} oninput="editInfoCell(${i},'label',this.textContent)" onblur="editInfoCell(${i},'label',this.textContent)">${esc(r.label)}</span>
-      <span class="mc-val" ${ce} oninput="editInfoCell(${i},'value',this.textContent)" onblur="editInfoCell(${i},'value',this.textContent)">${esc(r.value)}</span>
+      <input type="text" class="mc-inp mc-lbl" ${ro} value="${esc(r.label)}" oninput="editInfoCell(${i},'label',this.value);autoSizeInput(this)">
+      <input type="text" class="mc-inp mc-inp-full mc-val" ${ro} value="${esc(r.value)}" oninput="editInfoCell(${i},'value',this.value)">
       <button type="button" class="del-x" onclick="delInfoRow(${i})">×</button>
     </div>
   `).join("") + `<button type="button" class="add-row-inline" onclick="addInfoRow()">＋ 新增欄位</button>`;
@@ -861,25 +876,13 @@ function renderPreview() {
     mount.innerHTML = `<article class="mega-card ${extraCls}"><div class="mc-top-bar" data-cslot="accent"></div><div class="mc-head-area" style="padding:14px 18px 10px;" data-cslot="headBg">${brandRow}<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;"><div style="flex:1;min-width:0;">${nameLine}${sloganHtml}</div>${state.showPhoto && state.photoUrl ? `<div class="mc-photo mc-media-click" onclick="triggerMediaUpload(event)"><img src="${esc(state.photoUrl)}"></div>` : ""}</div></div><div class="mc-sep"></div><div class="mc-body" data-cslot="bodyBg">${rowsHtml}</div>${footHtml}</article>`;
   }
 
-  // 啟用各欄位的獨立全選（Cmd/Ctrl+A 只全選目前編輯欄位，不選整頁）
-  mount.querySelectorAll('[contenteditable="true"]').forEach(el => {
-    el.addEventListener("keydown", (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "a") {
-        e.preventDefault();
-        const range = document.createRange();
-        range.selectNodeContents(el);
-        const sel = window.getSelection();
-        sel.removeAllRanges();
-        sel.addRange(range);
-      }
-    });
-  });
+  mount.querySelectorAll(".mc-inp").forEach(el => autoSizeInput(el));
 
   // 只有在展開「進階設定 → 配色」時，點背景區塊才切換調色部位，平常點字完全不打架
   mount.querySelectorAll("[data-cslot]").forEach(el => {
     el.addEventListener("click", (e) => {
       if (!document.getElementById("phoneScreen").classList.contains("color-pick-mode")) return;
-      if (e.target.isContentEditable) return;
+      if (e.target.tagName === "INPUT") return;
       e.stopPropagation();
       const slot = el.getAttribute("data-cslot");
       if (slot) { selectColorSlot(slot); toast("調色：" + (SLOT_NAMES[slot] || slot)); }
