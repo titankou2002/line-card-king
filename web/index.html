@@ -1964,6 +1964,7 @@ async function saveCard(silent, withModal) {
     if (r && r.success && r.cardId) {
       currentCardId = r.cardId;
       localStorage.setItem("ck_my_card_id", currentCardId);
+      rememberAdminCard(currentCardId, publishCfg);
       dirtySinceSave = false;
       persistLocal();
       dirtySinceSave = false;
@@ -2062,31 +2063,64 @@ async function loadPreviewParamIfAny() {
 
 /* 管理員多張名片切換（開啟 ?admin=1 即記住在此裝置，一般用戶完全看不到） */
 let isAdminMode = (function () {
-  const qp = new URLSearchParams(location.search).get("admin");
+  const qs = new URLSearchParams(location.search);
+  const qp = qs.get("admin");
+  const qk = qs.get("key");
+  if (qk) { try { localStorage.setItem("ck_admin_key", qk); } catch (e) {} }
   if (qp === "1") { try { localStorage.setItem("ck_is_admin", "1"); } catch (e) {} return true; }
   if (qp === "0") { try { localStorage.removeItem("ck_is_admin"); } catch (e) {} return false; }
   try { return localStorage.getItem("ck_is_admin") === "1"; } catch (e) { return false; }
 })();
 
+function getLocalAdminCards() {
+  try {
+    const arr = JSON.parse(localStorage.getItem("ck_admin_cards") || "[]");
+    return Array.isArray(arr) ? arr : [];
+  } catch (e) { return []; }
+}
+function rememberAdminCard(cardId, cfg) {
+  if (!cardId) return;
+  const list = getLocalAdminCards().filter(x => x && x.cardId !== cardId);
+  list.unshift({
+    cardId,
+    cardName: (cfg && cfg.name) || "",
+    enName: (cfg && cfg.enName) || "",
+    company: (cfg && cfg.company) || "",
+    style: (cfg && cfg.style) || ""
+  });
+  try { localStorage.setItem("ck_admin_cards", JSON.stringify(list.slice(0, 60))); } catch (e) {}
+}
+
 async function loadAdminCardList() {
   if (!isAdminMode) return;
   const sel = document.getElementById("adminCardSelect");
   if (!sel) return;
-  try {
-    const r = await fetch(CFG.GAS_API + "?ac=ecardAdminList").then(x => x.json());
-    if (!r || !r.success || !Array.isArray(r.items)) return;
-    const styleNames = { video: "動態影片", full: "全資訊", side: "側邊滿版", hero: "雜誌封面", dark: "深岩燙金", ivory: "極簡象牙", block: "莫蘭迪", frame: "建築黑框" };
-    const opts = ['<option value="">＋ 新建一張名片</option>'].concat(
-      r.items.map(it => {
-        const who = [it.cardName || it.clientName, it.enName].filter(Boolean).join(" ") || it.cardId;
-        const co = it.company ? ("｜" + it.company) : "";
-        const st = styleNames[it.style] ? ("｜" + styleNames[it.style]) : "";
-        const title = `${who}${co}${st} (${it.cardId})`;
-        return `<option value="${esc(it.cardId)}" ${it.cardId === currentCardId ? "selected" : ""}>${esc(title)}</option>`;
-      })
-    );
-    sel.innerHTML = opts.join("");
-  } catch (e) {}
+  if (currentCardId) rememberAdminCard(currentCardId, state);
+  const map = new Map();
+  getLocalAdminCards().forEach(it => { if (it && it.cardId) map.set(it.cardId, it); });
+  if (!map.has("bigt")) map.set("bigt", { cardId: "bigt", cardName: "高弘治", enName: "Big-T", company: "高雅瓷", style: "video" });
+
+  const adminKey = localStorage.getItem("ck_admin_key") || "";
+  if (adminKey) {
+    try {
+      const r = await fetch(CFG.GAS_API + "?ac=ecardAdminList&key=" + encodeURIComponent(adminKey)).then(x => x.json());
+      if (r && r.success && Array.isArray(r.items)) {
+        r.items.forEach(it => { if (it && it.cardId) map.set(it.cardId, it); });
+      }
+    } catch (e) {}
+  }
+
+  const styleNames = { video: "動態影片", full: "全資訊", side: "側邊滿版", hero: "雜誌封面", dark: "深岩燙金", ivory: "極簡象牙", block: "莫蘭迪", frame: "建築黑框" };
+  const opts = ['<option value="">＋ 新建一張名片</option>'].concat(
+    Array.from(map.values()).map(it => {
+      const who = [it.cardName || it.clientName, it.enName].filter(Boolean).join(" ") || it.cardId;
+      const co = it.company ? ("｜" + it.company) : "";
+      const st = styleNames[it.style] ? ("｜" + styleNames[it.style]) : "";
+      const title = `${who}${co}${st} (${it.cardId})`;
+      return `<option value="${esc(it.cardId)}" ${it.cardId === currentCardId ? "selected" : ""}>${esc(title)}</option>`;
+    })
+  );
+  sel.innerHTML = opts.join("");
 }
 
 async function onAdminPickCard(cardId) {
