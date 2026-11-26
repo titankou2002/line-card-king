@@ -413,7 +413,7 @@ window.CARD_KING_CONFIG = {
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
         <input type="file" id="videoFile" accept="video/*" hidden onchange="onVideoPick(event)">
-        <button type="button" class="btn btn-sm btn-pri" id="btnUploadVid" onclick="document.getElementById('videoFile').click()">上傳影片（≤10秒/10MB）</button>
+        <button type="button" class="btn btn-sm btn-pri" id="btnUploadVid" onclick="document.getElementById('videoFile').click()">上傳影片（自動切10秒）</button>
         <button type="button" class="btn btn-sm" id="btnToggleVidUrl" onclick="toggleVidUrlBox()">貼影片連結 ▾</button>
         <button type="button" class="btn btn-sm btn-danger" id="btnDelVideo" style="display:none;" onclick="clearVideo()">刪除影片</button>
       </div>
@@ -628,7 +628,9 @@ async function idbDel(key) {
 }
 
 let _saveTimer = null;
+let dirtySinceSave = false;
 function persistLocal() {
+  dirtySinceSave = true;
   clearTimeout(_saveTimer);
   _saveTimer = setTimeout(() => {
     try {
@@ -1227,7 +1229,7 @@ function setVidProgress(pct, label, hideAfterMs) {
   ];
   if (pct === null) {
     wraps.forEach(x => { if (x.w) x.w.style.display = "none"; });
-    if (btn) { btn.disabled = false; btn.textContent = "上傳影片（≤10秒/10MB）"; }
+    if (btn) { btn.disabled = false; btn.textContent = "上傳影片（自動切10秒）"; }
     return;
   }
   const p = Math.max(0, Math.min(100, Math.round(pct)));
@@ -1239,15 +1241,90 @@ function setVidProgress(pct, label, hideAfterMs) {
   });
   if (btn) {
     btn.disabled = p < 100;
-    btn.textContent = p < 100 ? ("上傳中 " + p + "%") : "上傳完成 100%";
+    btn.textContent = p < 100 ? ("處理中 " + p + "%") : "完成 100%";
   }
   if (hideAfterMs) setTimeout(() => setVidProgress(null), hideAfterMs);
 }
 
+/* 從影片自動擷取封面縮圖（取代舊預設月亮封面，讓 LINE 預覽圖同步更新） */
+async function captureVideoPoster(videoEl) {
+  try {
+    const vw = videoEl.videoWidth || 720, vh = videoEl.videoHeight || 405;
+    if (!vw || !vh) return "";
+    if (videoEl.currentTime < 0.15 && (!isFinite(videoEl.duration) || videoEl.duration > 0.3)) {
+      await new Promise(res => {
+        const done = () => { videoEl.removeEventListener("seeked", done); res(); };
+        videoEl.addEventListener("seeked", done);
+        setTimeout(done, 500);
+        try { videoEl.currentTime = 0.2; } catch (e) { done(); }
+      });
+    }
+    const sc = Math.min(1, 720 / Math.max(vw, vh));
+    const c = document.createElement("canvas");
+    c.width = Math.max(1, Math.round(vw * sc));
+    c.height = Math.max(1, Math.round(vh * sc));
+    c.getContext("2d").drawImage(videoEl, 0, 0, c.width, c.height);
+    const dataUrl = c.toDataURL("image/jpeg", 0.84);
+    c.toBlob(b => { if (b) idbPut("photo", b); }, "image/jpeg", 0.84);
+    return dataUrl;
+  } catch (e) { return ""; }
+}
+
+/* 影片超過 10 秒自動裁切成前 10 秒（並壓在 10MB 內） */
+function trimVideoTo10s(videoEl, fallbackBlob) {
+  return new Promise(async (resolve) => {
+    try {
+      const vw = videoEl.videoWidth || 720, vh = videoEl.videoHeight || 405;
+      const sc = Math.min(1, 720 / Math.max(vw, vh));
+      const c = document.createElement("canvas");
+      c.width = Math.max(2, Math.round(vw * sc) & ~1);
+      c.height = Math.max(2, Math.round(vh * sc) & ~1);
+      const ctx = c.getContext("2d");
+      if (typeof c.captureStream !== "function" || typeof MediaRecorder === "undefined") {
+        resolve(fallbackBlob);
+        return;
+      }
+      const stream = c.captureStream(24);
+      const mimeType = ["video/mp4;codecs=avc1", "video/mp4", "video/webm;codecs=vp8", "video/webm"].find(t => {
+        try { return MediaRecorder.isTypeSupported(t); } catch (e) { return false; }
+      }) || "";
+      const rec = mimeType ? new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 1800000 }) : new MediaRecorder(stream, { videoBitsPerSecond: 1800000 });
+      const chunks = [];
+      rec.ondataavailable = (ev) => { if (ev.data && ev.data.size > 0) chunks.push(ev.data); };
+      rec.onstop = () => {
+        const out = chunks.length ? new Blob(chunks, { type: mimeType.split(";")[0] || "video/mp4" }) : fallbackBlob;
+        resolve(out.size > 0 ? out : fallbackBlob);
+      };
+      videoEl.currentTime = 0;
+      videoEl.muted = true;
+      await videoEl.play();
+      rec.start(250);
+      const startAt = performance.now();
+      const targetMs = Math.min(10000, Math.max(1000, (videoEl.duration || 10) * 1000));
+      let rafId = 0;
+      const tick = () => {
+        const elapsed = performance.now() - startAt;
+        try { ctx.drawImage(videoEl, 0, 0, c.width, c.height); } catch (e) {}
+        setVidProgress(25 + Math.min(68, (elapsed / targetMs) * 68), "自動裁切前 10 秒...");
+        if (elapsed >= targetMs || videoEl.ended) {
+          cancelAnimationFrame(rafId);
+          videoEl.pause();
+          if (rec.state !== "inactive") rec.stop();
+          return;
+        }
+        rafId = requestAnimationFrame(tick);
+      };
+      rafId = requestAnimationFrame(tick);
+    } catch (e) {
+      resolve(fallbackBlob);
+    }
+  });
+}
+
 function onVideoPick(e) {
   const f = e.target.files && e.target.files[0]; if (!f) return;
-  if (f.size > 10 * 1024 * 1024) {
-    toast("影片超過 10MB（目前 " + (f.size / 1048576).toFixed(1) + "MB）");
+  if (f.size > 60 * 1024 * 1024) {
+    toast("原始影片超過 60MB，請先剪短再選");
     e.target.value = "";
     return;
   }
@@ -1255,7 +1332,7 @@ function onVideoPick(e) {
   const fr = new FileReader();
   fr.onprogress = (ev) => {
     if (ev.lengthComputable && ev.total > 0) {
-      setVidProgress(5 + (ev.loaded / ev.total) * 70, "讀取影片中...");
+      setVidProgress(5 + (ev.loaded / ev.total) * 18, "讀取影片中...");
     }
   };
   fr.onerror = () => {
@@ -1263,18 +1340,20 @@ function onVideoPick(e) {
     toast("無法讀取影片，請改用 Safari 開啟");
   };
   fr.onload = () => {
-    setVidProgress(80, "檢查影片長度...");
+    setVidProgress(24, "檢查影片長度...");
     const mime = f.type || (/\.mov$/i.test(f.name) ? "video/quicktime" : "video/mp4");
     const safeBlob = new Blob([fr.result], { type: mime });
-    const objUrl = URL.createObjectURL(safeBlob);
+    const rawUrl = URL.createObjectURL(safeBlob);
     let settled = false;
-    const applyNow = async () => {
+    const finishApply = async (finalBlob, posterUrl) => {
       if (settled) return;
       settled = true;
-      setVidProgress(92, "儲存至手機本機...");
-      localVideoBlob = safeBlob;
-      await idbPut("video", { blob: safeBlob, name: f.name || "video.mp4" });
-      state.videoUrl = objUrl;
+      setVidProgress(95, "儲存至手機本機...");
+      const finalUrl = URL.createObjectURL(finalBlob);
+      localVideoBlob = finalBlob;
+      await idbPut("video", { blob: finalBlob, name: f.name || "video.mp4" });
+      state.videoUrl = finalUrl;
+      if (posterUrl) state.photoUrl = posterUrl;
       const inp = document.getElementById("inVideoUrl"); if (inp) inp.value = f.name || "本機影片";
       const del = document.getElementById("btnDelVideo"); if (del) del.style.display = "inline-flex";
       if (!["video", "full", "side"].includes(state.style)) {
@@ -1286,22 +1365,24 @@ function onVideoPick(e) {
       toast("影片已更新並存於手機");
     };
     const v = document.createElement("video");
-    v.preload = "metadata"; v.muted = true; v.playsInline = true;
-    const fallback = setTimeout(applyNow, 1200);
-    v.onloadedmetadata = () => {
+    v.preload = "auto"; v.muted = true; v.playsInline = true;
+    const fallback = setTimeout(() => finishApply(safeBlob, ""), 2000);
+    v.onloadeddata = async () => {
       clearTimeout(fallback);
       if (settled) return;
-      if (isFinite(v.duration) && v.duration > 10.5) {
-        settled = true;
-        URL.revokeObjectURL(objUrl);
-        setVidProgress(null);
-        toast("影片超過 10 秒（目前 " + Math.round(v.duration) + " 秒）");
-        return;
+      const poster = await captureVideoPoster(v);
+      const needTrim = (isFinite(v.duration) && v.duration > 10.5) || safeBlob.size > 9.5 * 1024 * 1024;
+      if (needTrim) {
+        const trimmed = await trimVideoTo10s(v, safeBlob);
+        URL.revokeObjectURL(rawUrl);
+        await finishApply(trimmed, poster);
+      } else {
+        URL.revokeObjectURL(rawUrl);
+        await finishApply(safeBlob, poster);
       }
-      applyNow();
     };
-    v.onerror = () => { clearTimeout(fallback); applyNow(); };
-    v.src = objUrl;
+    v.onerror = () => { clearTimeout(fallback); finishApply(safeBlob, ""); };
+    v.src = rawUrl;
     try { v.load(); } catch (err) {}
   };
   fr.readAsArrayBuffer(f);
@@ -1332,8 +1413,8 @@ async function uploadLocalAsset(kind, dataUrl) {
 }
 
 /* 儲存 + Telegram 通知 */
-async function saveCard() {
-  if (localEditUsed >= 3 && !(profile && profile.donated)) { openDonateModal(); return; }
+async function saveCard(silent) {
+  if (!silent && localEditUsed >= 3 && !(profile && profile.donated)) { openDonateModal(); return false; }
   persistLocal();
   const btn = document.getElementById("btnSave");
   btn.disabled = true; btn.textContent = "儲存中";
@@ -1341,31 +1422,44 @@ async function saveCard() {
     const publishCfg = Object.assign({}, state);
     if (publishCfg.logoUrl && publishCfg.logoUrl.startsWith("data:image/")) {
       const u = await uploadLocalAsset("logo", publishCfg.logoUrl);
-      if (u) publishCfg.logoUrl = u;
+      if (u) { publishCfg.logoUrl = u; state.logoUrl = u; }
     }
     if (publishCfg.photoUrl && (publishCfg.photoUrl.startsWith("data:image/") || publishCfg.photoUrl.startsWith("blob:"))) {
       const photoData = publishCfg.photoUrl.startsWith("blob:") ? await fetch(publishCfg.photoUrl).then(x => x.blob()).then(blobToDataUrl) : publishCfg.photoUrl;
       const u = await uploadLocalAsset("photo", photoData);
-      if (u) publishCfg.photoUrl = u;
+      if (u) { publishCfg.photoUrl = u; state.photoUrl = u; }
     }
     if (publishCfg.videoUrl && publishCfg.videoUrl.startsWith("blob:") && localVideoBlob) {
       setVidProgress(40, "上傳影片至雲端...");
       const dataUrl = await blobToDataUrl(localVideoBlob);
       setVidProgress(75, "同步影片連結...");
       const u = await uploadLocalAsset("video", dataUrl);
-      if (u) publishCfg.videoUrl = u;
+      if (u) { publishCfg.videoUrl = u; state.videoUrl = u; }
       setVidProgress(100, "雲端同步完成", 900);
     }
-    localEditUsed++;
-    localStorage.setItem("ck_local_edit_used", String(localEditUsed));
+    if (!silent) {
+      localEditUsed++;
+      localStorage.setItem("ck_local_edit_used", String(localEditUsed));
+    }
     const r = await fetch(CFG.GAS_API, {
       method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({ action: "ecardNotifyCreate", cardId: (profile && profile.slug) || currentCardId || "", userEmail: (session && session.user && session.user.email) || "", config: publishCfg })
     }).then(x => x.json());
-    if (r && r.success && r.cardId) { currentCardId = r.cardId; localStorage.setItem("ck_my_card_id", currentCardId); }
-    toast("已儲存");
-  } catch (e) { toast("已存於本機"); }
-  finally { btn.disabled = false; btn.textContent = "儲存"; }
+    if (r && r.success && r.cardId) {
+      currentCardId = r.cardId;
+      localStorage.setItem("ck_my_card_id", currentCardId);
+    }
+    dirtySinceSave = false;
+    persistLocal();
+    dirtySinceSave = false;
+    if (!silent) toast("已儲存");
+    return true;
+  } catch (e) {
+    if (!silent) toast("已存於本機");
+    return false;
+  } finally {
+    btn.disabled = false; btn.textContent = "儲存";
+  }
 }
 
 function openAuthModal() { document.getElementById("authModal").style.display = "flex"; }
@@ -1394,9 +1488,18 @@ function toggleChatTheme() {
     : '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>';
 }
 
-function shareToLine() {
+async function shareToLine() {
+  if (dirtySinceSave || !currentCardId || (state.videoUrl && state.videoUrl.startsWith("blob:")) || (state.logoUrl && state.logoUrl.startsWith("data:"))) {
+    toast("同步最新名片中...");
+    await saveCard(true);
+  }
   const slug = (profile && profile.slug) || currentCardId || "bigt";
-  window.open(`https://liff.line.me/${CFG.LIFF_ID}?mode=card&id=${encodeURIComponent(slug)}`, "_blank", "noopener");
+  const url = `https://liff.line.me/${CFG.LIFF_ID}?mode=card&id=${encodeURIComponent(slug)}`;
+  if (/iPhone|iPad|Android|Line/i.test(navigator.userAgent)) {
+    location.href = url;
+  } else {
+    window.open(url, "_blank", "noopener");
+  }
 }
 
 async function loadPreviewParamIfAny() {
