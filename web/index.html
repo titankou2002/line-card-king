@@ -3,6 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-title" content="LINE 名片王">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#23201B">
+<link rel="apple-touch-icon" sizes="180x180" href="https://bigt.cc/line/icons/card-king-icon.png">
+<link rel="icon" type="image/png" sizes="180x180" href="https://bigt.cc/line/icons/card-king-icon.png">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2323201B'/%3E%3Crect x='12' y='18' width='40' height='28' rx='5' fill='none' stroke='%23C5AE6E' stroke-width='4'/%3E%3Cline x1='18' y1='27' x2='36' y2='27' stroke='%23C5AE6E' stroke-width='3.5' stroke-linecap='round'/%3E%3Cline x1='18' y1='35' x2='30' y2='35' stroke='%23E8D9AD' stroke-width='3' stroke-linecap='round'/%3E%3Ccircle cx='43' cy='31' r='4' fill='%23C5AE6E'/%3E%3C/svg%3E">
 <title>LINE 名片王</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -134,9 +139,9 @@ window.CARD_KING_CONFIG = {
   }
   .canvas-stage.dark-chat { background: var(--chat-bg-dark); }
 
-  /* 所見即所得單張名片 */
+  /* 所見即所得單張名片（鎖定 LINE mega 真實 300px 寬度） */
   .mega-card {
-    width: 100%; max-width: 344px; border-radius: 18px; overflow: hidden;
+    width: 100%; max-width: 300px; border-radius: 18px; overflow: hidden;
     box-shadow: 0 12px 32px rgba(0,0,0,0.22);
     font-family: var(--card-font);
     background: var(--body-bg);
@@ -231,8 +236,8 @@ window.CARD_KING_CONFIG = {
   .mc-hero-grad { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(20,18,15,0.12) 0%, rgba(20,18,15,0.2) 40%, rgba(20,18,15,0.88) 100%); display: flex; flex-direction: column; justify-content: space-between; padding: 12px 16px; }
   .mc-logo-pill { background: rgba(255,253,249,0.92); padding: 4px 8px; border-radius: 6px; display: inline-flex; }
   .mc-logo-pill img { height: 16px; width: auto; max-width: 100px; display: block; }
-  /* 側邊滿版長向影像版型（左圖/影直拉到底，右側整合完整資訊與按鈕） */
-  .mc-side-full { display: grid; grid-template-columns: 102px minmax(0, 1fr); align-items: stretch; min-height: 390px; }
+  /* 側邊滿版長向影像版型（左 36%：右 64%，與 LINE 實際比例 1:1 對齊） */
+  .mc-side-full { display: grid; grid-template-columns: 36% minmax(0, 1fr); align-items: stretch; min-height: 330px; }
   .mc-side-media { position: relative; background: #14120f; overflow: hidden; height: 100%; }
   .mc-side-media img, .mc-side-media video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
   .mc-side-col { display: flex; flex-direction: column; min-width: 0; background: var(--body-bg); }
@@ -1085,9 +1090,15 @@ function onQuickMediaPick(e) {
   e.target.value = "";
 }
 
-function splitBalancedRows(list) {
+function splitBalancedRows(list, isSide) {
   const n = list.length;
-  if (n <= 5) return n ? [list] : [];
+  if (!n) return [];
+  if (isSide) {
+    const out = [];
+    for (let i = 0; i < n; i += 3) out.push(list.slice(i, i + 3));
+    return out;
+  }
+  if (n <= 5) return [list];
   const first = n <= 6 ? 3 : (n <= 8 ? 4 : 5);
   return [list.slice(0, first), list.slice(first)];
 }
@@ -1099,7 +1110,7 @@ function buildSocialIconsHtml() {
     return m && state[m.chk] && String(state[m.val] || "").trim();
   });
   if (!active.length) return "";
-  const rows = splitBalancedRows(active);
+  const rows = splitBalancedRows(active, state.style === "side");
   return `<div class="mc-action-grid">${rows.map(row =>
     `<div class="mc-icon-row">${row.map(k => {
       const m = ACTION_META[k];
