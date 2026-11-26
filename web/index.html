@@ -338,7 +338,7 @@ window.CARD_KING_CONFIG = {
 
   .modal-bg { display: none; position: fixed; inset: 0; z-index: 200; background: rgba(31,27,22,0.58); align-items: center; justify-content: center; padding: 20px; }
   .modal-card { background: #fffdf9; border-radius: 18px; padding: 24px; max-width: 360px; width: 100%; text-align: center; display: flex; flex-direction: column; gap: 12px; }
-  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px); background: #1f1b16; color: #fff; padding: 9px 16px; border-radius: 10px; font-size: 12.5px; opacity: 0; pointer-events: none; transition: 0.2s; z-index: 250; }
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px); background: #1f1b16; color: #fff; padding: 9px 16px; border-radius: 10px; font-size: 12.5px; opacity: 0; pointer-events: none; transition: 0.2s; z-index: 400; }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
   .vid-prog-wrap { display: none; flex-direction: column; gap: 4px; width: 100%; }
@@ -589,7 +589,8 @@ window.CARD_KING_CONFIG = {
     <div class="ck-spinner"></div>
     <div id="busyTitle" style="font-size:15px;font-weight:700;color:var(--t1);">同步最新名片中...</div>
     <div class="vid-prog-track"><div class="vid-prog-fill" id="busyFill" style="width:20%;"></div></div>
-    <div id="busySub" style="font-size:12px;color:var(--t2);">準備開啟 LINE 分享</div>
+    <div id="busySub" style="font-size:12px;color:var(--t2);line-height:1.5;word-break:break-word;">準備開啟 LINE 分享</div>
+    <button type="button" class="btn btn-pri" id="busyOkBtn" style="display:none;height:38px;color:#e2ca88;" onclick="hideBusy()">知道了</button>
   </div>
 </div>
 
@@ -1549,6 +1550,9 @@ let trimStartSec = 0;
 function showBusy(title, pct, sub) {
   const m = document.getElementById("busyModal");
   if (!m) return;
+  const sp = m.querySelector(".ck-spinner"); if (sp) sp.style.display = "block";
+  const tr = m.querySelector(".vid-prog-track"); if (tr) tr.style.display = "block";
+  const bt = document.getElementById("busyOkBtn"); if (bt) bt.style.display = "none";
   document.getElementById("busyTitle").textContent = title || "同步名片中...";
   document.getElementById("busyFill").style.width = Math.max(5, Math.min(100, Math.round(pct || 20))) + "%";
   document.getElementById("busySub").textContent = sub || "";
@@ -1557,6 +1561,9 @@ function showBusy(title, pct, sub) {
 function hideBusy() {
   const m = document.getElementById("busyModal");
   if (m) m.style.display = "none";
+  const sp = m && m.querySelector(".ck-spinner"); if (sp) sp.style.display = "block";
+  const tr = m && m.querySelector(".vid-prog-track"); if (tr) tr.style.display = "block";
+  const bt = document.getElementById("busyOkBtn"); if (bt) bt.style.display = "none";
 }
 
 function openVidTrimBar() {
@@ -1834,19 +1841,46 @@ function convertYoutube() {
 function blobToDataUrl(blob) {
   return new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(blob); });
 }
+let lastUploadError = "";
 async function uploadLocalAsset(kind, dataUrl) {
+  lastUploadError = "";
   try {
     const r = await fetch(CFG.GAS_API, {
       method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({ action: "ecardUploadAsset", publicUpload: true, cardId: currentCardId || "card", kind, dataUrl })
     }).then(x => x.json());
     if (r && r.success && r.url) return r.url;
-    if (kind === "video" && r && r.error) toast("影片上傳失敗：" + r.error);
+    lastUploadError = (r && r.error) ? String(r.error) : "伺服器沒有回傳網址";
     return "";
   } catch (e) {
-    if (kind === "video") toast("影片上傳連線失敗，請重試");
+    lastUploadError = "網路連線失敗或檔案太大，請重試";
     return "";
   }
+}
+
+/* 置中錯誤視窗：不會被任何東西蓋住，必須按「知道了」才關閉 */
+function showBusyError(title, detail) {
+  const m = document.getElementById("busyModal");
+  if (!m) { alert(title + "\n" + detail); return; }
+  document.getElementById("busyTitle").textContent = title;
+  document.getElementById("busySub").textContent = detail || "";
+  const sp = document.querySelector("#busyModal .ck-spinner"); if (sp) sp.style.display = "none";
+  const tr = document.querySelector("#busyModal .vid-prog-track"); if (tr) tr.style.display = "none";
+  const bt = document.getElementById("busyOkBtn"); if (bt) bt.style.display = "inline-flex";
+  m.style.display = "flex";
+}
+
+/* 送出前確保影片 ≤10MB / ≤10 秒：太大就自動壓縮裁切，不需要使用者手動按「套用」 */
+async function ensureVideoUploadable() {
+  if (!VIDEO_STYLES.includes(state.style)) return true;
+  if (!localVideoBlob || !String(state.videoUrl || "").startsWith("blob:")) return true;
+  const tooBig = localVideoBlob.size > 9.5 * 1024 * 1024;
+  const tooLong = rawVideoDuration > 10.5;
+  if (!tooBig && !tooLong) return true;
+  showBusy("影片過大，自動壓縮至 10 秒內...", 25, "約需 10～15 秒，請勿離開畫面");
+  rawPickedVideoBlob = rawPickedVideoBlob || localVideoBlob;
+  await applyVideoTrim();
+  return !!(localVideoBlob && localVideoBlob.size <= 10 * 1024 * 1024);
 }
 
 /* 儲存 + Telegram 通知 */
@@ -1857,6 +1891,11 @@ async function saveCard(silent, withModal) {
   btn.disabled = true; btn.textContent = "儲存中";
   if (withModal) showBusy("同步最新名片中...", 18, "正在準備 Logo 與素材");
   try {
+    const okSize = await ensureVideoUploadable();
+    if (!okSize) {
+      showBusyError("影片太大，無法上傳", "請改選 10 秒內的影片，或按「調整位置 → 套用目前位置」先壓縮後再發送。");
+      return false;
+    }
     const publishCfg = Object.assign({}, state);
     if (VIDEO_STYLES.includes(publishCfg.style) && publishCfg.videoUrl && !String(publishCfg.videoUrl).includes("refin-moon")) {
       const liveVid = document.querySelector("#cardMount video");
@@ -1866,6 +1905,7 @@ async function saveCard(silent, withModal) {
       }
     }
 
+    let videoFailMsg = "";
     const tasks = [];
     if (publishCfg.logoUrl && publishCfg.logoUrl.startsWith("data:image/")) {
       tasks.push(uploadLocalAsset("logo", publishCfg.logoUrl).then(u => {
@@ -1888,6 +1928,7 @@ async function saveCard(silent, withModal) {
         setVidProgress(75, "同步影片連結...");
         const u = await uploadLocalAsset("video", dataUrl);
         if (u) { publishCfg.videoUrl = u; state.videoUrl = u; }
+        else videoFailMsg = lastUploadError || "未知原因";
         setVidProgress(100, "雲端同步完成", 900);
       })());
     }
@@ -1896,10 +1937,20 @@ async function saveCard(silent, withModal) {
       await Promise.all(tasks);
     }
 
+    // 影片版上傳失敗：明確擋下，不可以偷偷送出沒有影片的名片
+    if (VIDEO_STYLES.includes(publishCfg.style) && videoFailMsg) {
+      showBusyError("影片上傳失敗，名片未送出", videoFailMsg);
+      return false;
+    }
+
     // 防止未上傳成功的 data:/blob: 撐爆 Google Sheets 50,000 字元上限
     if (publishCfg.logoUrl && !/^https?:\/\//i.test(publishCfg.logoUrl)) publishCfg.logoUrl = "";
     if (publishCfg.photoUrl && !/^https?:\/\//i.test(publishCfg.photoUrl)) publishCfg.photoUrl = "";
     if (publishCfg.videoUrl && !/^https?:\/\//i.test(publishCfg.videoUrl)) publishCfg.videoUrl = "";
+    if (VIDEO_STYLES.includes(publishCfg.style) && !publishCfg.videoUrl) {
+      showBusyError("沒有可用的影片", "影片版需要先選一支影片（或貼 YouTube 連結），或改用圖片版。");
+      return false;
+    }
 
     if (!silent) {
       localEditUsed++;
@@ -1920,10 +1971,10 @@ async function saveCard(silent, withModal) {
       if (!silent) toast("已儲存");
       return true;
     }
-    if (!silent) toast("雲端儲存失敗，請重試");
+    showBusyError("雲端儲存失敗", (r && r.error) ? String(r.error) : "請檢查網路後重試");
     return false;
   } catch (e) {
-    if (!silent) toast("雲端同步失敗，請重試");
+    showBusyError("雲端同步失敗", String(e && e.message || e));
     return false;
   } finally {
     btn.disabled = false; btn.textContent = "儲存";
@@ -1965,15 +2016,24 @@ async function shareToLine() {
   }
   showBusy("發送名片中...", 15, needSync ? "同步最新文字與素材" : "正在開啟 LINE 分享名單");
   if (needSync) {
+    let ok = false;
     try {
-      await Promise.race([saveCard(true, true), new Promise(res => setTimeout(res, 35000))]);
-    } catch (e) {}
+      ok = await Promise.race([saveCard(true, true), new Promise(res => setTimeout(() => res(false), 90000))]);
+    } catch (e) { ok = false; }
+    if (!ok) {
+      // 同步失敗：絕不開啟 LINE，避免把舊版/不完整名片傳出去（錯誤視窗已由 saveCard 顯示）
+      if (popup && !popup.closed) popup.close();
+      const m = document.getElementById("busyModal");
+      if (!m || m.style.display === "none" || document.getElementById("busyOkBtn").style.display === "none") {
+        showBusyError("同步逾時，名片未送出", "網路較慢或影片太大，請稍後再按一次「發送名片」。");
+      }
+      return;
+    }
   }
   const slug = (profile && profile.slug) || currentCardId;
   if (!slug) {
-    hideBusy();
     if (popup && !popup.closed) popup.close();
-    toast("同步失敗或逾時，請再按一次發送名片");
+    showBusyError("尚未建立名片", "請先按右上角「儲存」，再發送名片。");
     return;
   }
   const url = `https://liff.line.me/${CFG.LIFF_ID}?mode=card&id=${encodeURIComponent(slug)}`;
