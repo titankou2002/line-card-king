@@ -356,7 +356,7 @@ window.CARD_KING_CONFIG = {
   </div>
 
   <!-- 直接點字修改的名片本體 -->
-  <input type="file" id="quickMediaFile" accept="video/mp4,image/*" hidden onchange="onQuickMediaPick(event)">
+  <input type="file" id="quickMediaFile" accept="video/*,image/*" hidden onchange="onQuickMediaPick(event)">
   <section class="canvas-stage" id="phoneScreen">
     <div id="cardMount" style="width:100%;display:flex;justify-content:center;"></div>
     <!-- 點擊按鈕浮出的單行編輯條 -->
@@ -403,8 +403,8 @@ window.CARD_KING_CONFIG = {
         <label class="ext-chk"><input type="checkbox" id="chkPhoto" onchange="setField('showPhoto', this.checked)">顯示照片</label>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
-        <input type="file" id="videoFile" accept="video/mp4" hidden onchange="onVideoPick(event)">
-        <button type="button" class="btn btn-sm btn-pri" onclick="document.getElementById('videoFile').click()">上傳 MP4（≤10秒/10MB）</button>
+        <input type="file" id="videoFile" accept="video/*" hidden onchange="onVideoPick(event)">
+        <button type="button" class="btn btn-sm btn-pri" onclick="document.getElementById('videoFile').click()">上傳影片（≤10秒/10MB）</button>
         <button type="button" class="btn btn-sm btn-danger" id="btnDelVideo" style="display:none;" onclick="clearVideo()">刪除影片</button>
       </div>
       <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;">
@@ -840,11 +840,13 @@ function autoSizeInput(el) {
 
 function onQuickMediaPick(e) {
   const f = e.target.files && e.target.files[0]; if (!f) return;
-  if (f.type && f.type.startsWith("video/")) {
+  const isVid = (f.type && f.type.startsWith("video/")) || /\.(mp4|mov|m4v|webm|3gp)$/i.test(f.name || "");
+  if (isVid) {
     onVideoPick(e);
     return;
   }
-  if (f.type && f.type.startsWith("image/")) {
+  const isImg = (f.type && f.type.startsWith("image/")) || /\.(jpg|jpeg|png|webp|heic|gif)$/i.test(f.name || "");
+  if (isImg) {
     const img = new Image();
     img.onload = () => {
       const c = document.createElement("canvas");
@@ -1015,6 +1017,7 @@ function renderPreview() {
       else lastTap = now;
     }, { passive: true });
   });
+  mount.querySelectorAll("video").forEach(v => { v.muted = true; v.play().catch(() => {}); });
   bindActionDrag(mount);
 
   // 只有在展開「進階設定 → 配色」時，點背景區塊才切換調色部位，平常點字完全不打架
@@ -1196,18 +1199,41 @@ function onPhotoPick(e) {
 }
 function onVideoPick(e) {
   const f = e.target.files && e.target.files[0]; if (!f) return;
-  if (f.size > 10 * 1024 * 1024) { toast("超過 10MB"); e.target.value = ""; return; }
+  if (f.size > 10 * 1024 * 1024) { toast("影片超過 10MB（目前 " + (f.size / 1048576).toFixed(1) + "MB）"); e.target.value = ""; return; }
   const objUrl = URL.createObjectURL(f);
-  const v = document.createElement("video"); v.preload = "metadata";
-  v.onloadedmetadata = () => {
-    if (v.duration > 10.5) { toast("超過 10 秒"); URL.revokeObjectURL(objUrl); e.target.value = ""; return; }
+  let settled = false;
+  const applyNow = () => {
+    if (settled) return;
+    settled = true;
     localVideoBlob = f;
-    idbPut("video", { blob: f, name: f.name });
-    state.videoUrl = objUrl; document.getElementById("inVideoUrl").value = f.name;
-    document.getElementById("btnDelVideo").style.display = "inline-flex"; setStyle("video");
-    toast("影片已存於手機");
+    idbPut("video", { blob: f, name: f.name || "video.mp4" });
+    state.videoUrl = objUrl;
+    const inp = document.getElementById("inVideoUrl"); if (inp) inp.value = f.name || "本機影片";
+    const del = document.getElementById("btnDelVideo"); if (del) del.style.display = "inline-flex";
+    if (!["video", "full", "side"].includes(state.style)) {
+      state.style = "video";
+      syncCssVars();
+    }
+    renderPreview();
+    toast("影片已更新並存於手機");
   };
+  const v = document.createElement("video");
+  v.preload = "metadata"; v.muted = true; v.playsInline = true;
+  const fallback = setTimeout(applyNow, 1200);
+  v.onloadedmetadata = () => {
+    clearTimeout(fallback);
+    if (settled) return;
+    if (isFinite(v.duration) && v.duration > 10.5) {
+      settled = true;
+      URL.revokeObjectURL(objUrl);
+      toast("影片超過 10 秒（目前 " + Math.round(v.duration) + " 秒）");
+      return;
+    }
+    applyNow();
+  };
+  v.onerror = () => { clearTimeout(fallback); applyNow(); };
   v.src = objUrl;
+  try { v.load(); } catch (err) {}
   e.target.value = "";
 }
 function clearVideo() {
