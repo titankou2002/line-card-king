@@ -1616,6 +1616,7 @@ function onVideoPick(e) {
   localVideoBlob = f;
   trimStartSec = 0;
   state.videoUrl = rawUrl;
+  if (String(state.photoUrl || "").includes("refin-moon-poster")) state.photoUrl = "";
   const inp = document.getElementById("inVideoUrl"); if (inp) inp.value = rawPickedVideoName;
   const del = document.getElementById("btnDelVideo"); if (del) del.style.display = "inline-flex";
   if (!VIDEO_STYLES.includes(state.style)) {
@@ -1625,21 +1626,27 @@ function onVideoPick(e) {
   renderPreview();
   idbPut("video", { blob: f, name: rawPickedVideoName });
 
-  // 等畫面上真正的 <video> 載入後立刻擷取封面並開啟位置拉選條
+  // 等畫面上真正的 <video> 載入或播放後立刻擷取新封面並開啟位置拉選條
   const cardVid = document.querySelector("#cardMount video");
   const probe = cardVid || document.createElement("video");
   let handled = false;
+  const grabPosterSafe = async () => {
+    if (probe.videoWidth > 0) {
+      const poster = await captureVideoPoster(probe);
+      if (poster) { state.photoUrl = poster; persistLocal(); }
+    }
+  };
   const onReady = async () => {
     if (handled) return;
     handled = true;
     rawVideoDuration = isFinite(probe.duration) ? probe.duration : 0;
-    const poster = await captureVideoPoster(probe);
-    if (poster) { state.photoUrl = poster; persistLocal(); }
+    await grabPosterSafe();
     setVidProgress(100, "影片已更新", 900);
     openVidTrimBar();
     toast(rawVideoDuration > 10.5 ? "影片已載入，可拉選要切的 10 秒與畫面位置" : "影片已更新，可拉選上下位置");
     setTimeout(() => { input.value = ""; }, 300);
   };
+  probe.addEventListener("playing", grabPosterSafe, { once: true });
   if (probe.readyState >= 2) {
     onReady();
   } else {
@@ -1687,6 +1694,13 @@ async function saveCard(silent, withModal) {
       if (withModal) showBusy("上傳 Logo 中...", 30, "請稍候");
       const u = await uploadLocalAsset("logo", publishCfg.logoUrl);
       if (u) { publishCfg.logoUrl = u; state.logoUrl = u; }
+    }
+    if (VIDEO_STYLES.includes(publishCfg.style) && publishCfg.videoUrl && !String(publishCfg.videoUrl).includes("refin-moon")) {
+      const liveVid = document.querySelector("#cardMount video");
+      if (liveVid && liveVid.videoWidth > 0 && (!publishCfg.photoUrl || String(publishCfg.photoUrl).includes("refin-moon-poster"))) {
+        const freshPoster = await captureVideoPoster(liveVid);
+        if (freshPoster) { publishCfg.photoUrl = freshPoster; state.photoUrl = freshPoster; }
+      }
     }
     if (publishCfg.photoUrl && (publishCfg.photoUrl.startsWith("data:image/") || publishCfg.photoUrl.startsWith("blob:"))) {
       if (withModal) showBusy("上傳封面圖中...", 48, "請稍候");
