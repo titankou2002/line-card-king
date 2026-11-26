@@ -204,24 +204,35 @@ window.CARD_KING_CONFIG = {
   .mc-brand-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
   .mc-logo { height: var(--logo-h, 32px); color: var(--accent); flex-shrink: 0; display: inline-flex; align-items: center; cursor: pointer; }
   .mc-logo img { height: var(--logo-h, 32px); width: auto; max-width: 180px; object-fit: contain; display: block; }
-  .mc-co-name { font-size: 11.5px; font-weight: 600; opacity: 0.85; color: var(--co-col, inherit); }
-  .mc-name-line { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px; }
-  .mc-name { font-size: 21px; font-weight: 700; line-height: 1.25; color: var(--name-col, inherit); }
-  .mc-en-name { font-size: 15px; font-weight: 700; color: var(--en-col, var(--accent)); }
-  .mc-slogan { font-size: 12px; opacity: 0.85; margin-top: 5px; line-height: 1.4; color: var(--slogan-col, inherit); }
+  .mc-co-name { font-size: var(--co-sz, 11.5px); font-weight: var(--co-fw, 600); font-style: var(--co-fs, normal); text-decoration: var(--co-td, none); text-align: var(--co-ta, left); opacity: 0.85; color: var(--co-col, inherit); }
+  .mc-name-line { display: flex; align-items: baseline; justify-content: var(--name-jc, flex-start); flex-wrap: wrap; gap: 6px; width: 100%; }
+  .mc-name { font-size: var(--name-sz, 21px); font-weight: var(--name-fw, 700); font-style: var(--name-fs, normal); text-decoration: var(--name-td, none); line-height: 1.25; color: var(--name-col, inherit); }
+  .mc-en-name { font-size: var(--en-sz, 15px); font-weight: var(--en-fw, 700); font-style: var(--en-fs, normal); text-decoration: var(--en-td, none); color: var(--en-col, var(--accent)); }
+  .mc-slogan { font-size: var(--slogan-sz, 12px); font-weight: var(--slogan-fw, 400); font-style: var(--slogan-fs, normal); text-decoration: var(--slogan-td, none); text-align: var(--slogan-ta, left); opacity: 0.85; margin-top: 5px; line-height: 1.4; color: var(--slogan-col, inherit); }
+  .mc-slogan .mc-inp { font-size: inherit; font-weight: inherit; font-style: inherit; text-decoration: inherit; text-align: var(--slogan-ta, left); }
   .mc-sep { height: 1px; background: var(--sep-col, currentColor); opacity: var(--sep-op, 0.14); margin: 0 18px; }
 
   .mc-row { display: flex; align-items: center; gap: 8px; font-size: 12.5px; line-height: 1.4; }
   .mc-lbl { min-width: 34px; flex-shrink: 0; color: var(--row-ico-col, var(--accent)); font-size: 11.5px; font-weight: 700; }
   .mc-lbl-ico { width: 18px; height: 18px; flex-shrink: 0; color: var(--row-ico-col, var(--accent)); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
-  .mc-val { flex: 1; min-width: 0; word-break: break-word; color: var(--row-val-col, inherit); }
+  .mc-val { flex: 1; min-width: 0; word-break: break-word; font-size: var(--row-sz, 12.5px); font-weight: var(--row-fw, 400); font-style: var(--row-fs, normal); text-decoration: var(--row-td, none); text-align: var(--row-ta, left); color: var(--row-val-col, inherit); }
   .mc-row-tools { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
   .clean-view .mc-row-tools { display: none !important; }
 
   .mc-btn-link {
-    height: 22px; background: transparent; border: none; color: var(--share-col, var(--accent));
-    font-size: 11px; font-weight: 600; opacity: 0.82; letter-spacing: 0.04em; cursor: pointer; font-family: inherit;
+    width: 100%; height: 22px; background: transparent; border: none; color: var(--share-col, var(--accent));
+    font-size: var(--share-sz, 11px); font-weight: var(--share-fw, 600); font-style: var(--share-fs, normal);
+    text-decoration: var(--share-td, none); text-align: var(--share-ta, center);
+    opacity: 0.82; letter-spacing: 0.04em; cursor: pointer; font-family: inherit;
   }
+  .typo-bar { display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap; }
+  .typo-grp { display: inline-flex; background: var(--raised); border-radius: 8px; padding: 2px; gap: 2px; }
+  .typo-btn {
+    min-width: 32px; height: 28px; padding: 0 8px; border: none; border-radius: 6px;
+    background: transparent; color: var(--t2); font-family: inherit; font-size: 12.5px; font-weight: 700;
+    cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+  }
+  .typo-btn.active { background: #23201b; color: #e2ca88; }
 
   /* 10 顆自適應寬度可拖曳快捷按鈕（依數量自動填滿卡片寬度） */
   .mc-action-grid { display: flex; flex-direction: column; gap: 7px; padding: 4px 0 2px; width: 100%; }
@@ -551,7 +562,7 @@ window.CARD_KING_CONFIG = {
         <option value="rounded">圓體</option>
       </select>
       <button type="button" class="btn btn-sm" style="width:100%;justify-content:space-between;height:34px;" onclick="toggleDetailColors()">
-        <span>細節設定（個別文字 / Icon 顏色）</span>
+        <span>細節設定（字體大小 / 對齊 / 樣式 / 顏色）</span>
         <span id="detailColArrow">▾</span>
       </button>
       <div id="detailColorBox" style="display:none;flex-direction:column;gap:8px;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:10px;">
@@ -567,7 +578,33 @@ window.CARD_KING_CONFIG = {
           <button type="button" class="slot-tab" data-slot="sepColor" onclick="selectColorSlot('sepColor')">分隔線</button>
           <button type="button" class="slot-tab" data-slot="shareColor" onclick="selectColorSlot('shareColor')">分享字</button>
         </div>
-        <button type="button" class="btn btn-sm" style="align-self:flex-end;" onclick="resetDetailColors()">還原細節配色</button>
+        <div id="detailTypoBox" style="display:none;flex-direction:column;gap:8px;padding-top:6px;border-top:1px solid var(--border);">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:12px;font-weight:700;color:var(--t2);flex-shrink:0;">字體大小</span>
+            <input type="range" id="inTextSize" min="9" max="32" step="1" value="14" oninput="setSlotTextStyle('size', Number(this.value))" style="flex:1;accent-color:#23201b;">
+            <span id="lblTextSize" style="font-size:12px;font-weight:700;color:var(--t2);width:36px;text-align:right;">14px</span>
+          </div>
+          <div class="typo-bar">
+            <div class="typo-grp" role="group" aria-label="對齊">
+              <button type="button" class="typo-btn" id="btnAlStart" title="靠左" onclick="setSlotTextStyle('align','start')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="18" y2="18"/></svg>
+              </button>
+              <button type="button" class="typo-btn" id="btnAlCenter" title="置中" onclick="setSlotTextStyle('align','center')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+              </button>
+              <button type="button" class="typo-btn" id="btnAlEnd" title="靠右" onclick="setSlotTextStyle('align','end')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="9" y1="12" x2="21" y2="12"/><line x1="6" y1="18" x2="21" y2="18"/></svg>
+              </button>
+            </div>
+            <div class="typo-grp" role="group" aria-label="字體樣式">
+              <button type="button" class="typo-btn" id="btnStBold" title="粗體" onclick="toggleSlotTextStyle('bold')">B</button>
+              <button type="button" class="typo-btn" id="btnStItalic" title="斜體" style="font-style:italic;" onclick="toggleSlotTextStyle('italic')">I</button>
+              <button type="button" class="typo-btn" id="btnStUnder" title="底線" style="text-decoration:underline;" onclick="toggleSlotTextStyle('underline')">U</button>
+              <button type="button" class="typo-btn" id="btnStStrike" title="刪除線" style="text-decoration:line-through;" onclick="toggleSlotTextStyle('strike')">S</button>
+            </div>
+          </div>
+        </div>
+        <button type="button" class="btn btn-sm" style="align-self:flex-end;" onclick="resetDetailColors()">還原細節設定</button>
       </div>
     </div>
   </section>
@@ -971,11 +1008,69 @@ function toggleDetailColors() {
   const open = box.style.display !== "flex";
   box.style.display = open ? "flex" : "none";
   if (arr) arr.textContent = open ? "▴" : "▾";
+  if (open && !DETAIL_SLOTS.some(x => x.key === colorSlot)) selectColorSlot("coColor");
+  else syncDetailTypoUI();
+}
+const TEXT_STYLE_META = {
+  coColor:     { prefix: "co",     size: 11, align: "end",    bold: true },
+  nameColor:   { prefix: "name",   size: 21, align: "start",  bold: true },
+  enColor:     { prefix: "en",     size: 15, align: "start",  bold: true },
+  sloganColor: { prefix: "slogan", size: 12, align: "start",  bold: false },
+  rowValColor: { prefix: "row",    size: 12, align: "start",  bold: false },
+  shareColor:  { prefix: "share",  size: 11, align: "center", bold: true }
+};
+function getSlotTextStyle(slot) {
+  const m = TEXT_STYLE_META[slot];
+  if (!m) return null;
+  const o = (state.textStyles && state.textStyles[slot]) || {};
+  return {
+    size: (Number(o.size) >= 9 && Number(o.size) <= 32) ? Number(o.size) : m.size,
+    align: (o.align === "start" || o.align === "center" || o.align === "end") ? o.align : m.align,
+    bold: typeof o.bold === "boolean" ? o.bold : m.bold,
+    italic: !!o.italic,
+    underline: !!o.underline,
+    strike: !!o.strike
+  };
+}
+function syncDetailTypoUI() {
+  const box = document.getElementById("detailTypoBox");
+  if (!box) return;
+  const st = getSlotTextStyle(colorSlot);
+  if (!st) { box.style.display = "none"; return; }
+  box.style.display = "flex";
+  const rng = document.getElementById("inTextSize"); if (rng) rng.value = st.size;
+  const lbl = document.getElementById("lblTextSize"); if (lbl) lbl.textContent = st.size + "px";
+  document.getElementById("btnAlStart")?.classList.toggle("active", st.align === "start");
+  document.getElementById("btnAlCenter")?.classList.toggle("active", st.align === "center");
+  document.getElementById("btnAlEnd")?.classList.toggle("active", st.align === "end");
+  document.getElementById("btnStBold")?.classList.toggle("active", st.bold);
+  document.getElementById("btnStItalic")?.classList.toggle("active", st.italic);
+  document.getElementById("btnStUnder")?.classList.toggle("active", st.underline);
+  document.getElementById("btnStStrike")?.classList.toggle("active", st.strike);
+}
+function setSlotTextStyle(prop, val) {
+  if (!TEXT_STYLE_META[colorSlot]) return;
+  if (!state.textStyles || typeof state.textStyles !== "object") state.textStyles = {};
+  const cur = Object.assign({}, state.textStyles[colorSlot] || {});
+  cur[prop] = val;
+  if (prop === "underline" && val) cur.strike = false;
+  if (prop === "strike" && val) cur.underline = false;
+  state.textStyles[colorSlot] = cur;
+  dirtySinceSave = true;
+  syncCssVars();
+  document.querySelectorAll("#cardMount .mc-inp").forEach(autoSizeInput);
+  persistLocal();
+}
+function toggleSlotTextStyle(prop) {
+  const st = getSlotTextStyle(colorSlot);
+  if (!st) return;
+  setSlotTextStyle(prop, !st[prop]);
 }
 function resetDetailColors() {
   DETAIL_SLOTS.forEach(d => { delete state[d.key]; });
+  delete state.textStyles;
   syncCssVars(); renderPreview();
-  toast("已還原細節配色");
+  toast("已還原細節設定");
 }
 function getSlotValue(slot) {
   const d = DETAIL_SLOTS.find(x => x.key === slot);
@@ -989,6 +1084,7 @@ function selectColorSlot(slot) {
   document.getElementById("inColor").value = cur.toLowerCase();
   document.getElementById("inColorHex").value = cur;
   renderSwatches();
+  syncDetailTypoUI();
 }
 function syncCssVars() {
   document.documentElement.style.setProperty("--accent", state.color);
@@ -1002,6 +1098,26 @@ function syncCssVars() {
   DETAIL_SLOTS.forEach(d => {
     if (state[d.key]) document.documentElement.style.setProperty(d.css, state[d.key]);
     else document.documentElement.style.removeProperty(d.css);
+  });
+  Object.keys(TEXT_STYLE_META).forEach(slot => {
+    const m = TEXT_STYLE_META[slot];
+    const o = (state.textStyles && state.textStyles[slot]) || null;
+    const p = "--" + m.prefix;
+    if (!o) {
+      ["-sz", "-fw", "-fs", "-td", "-ta", "-jc"].forEach(s => document.documentElement.style.removeProperty(p + s));
+      return;
+    }
+    const st = getSlotTextStyle(slot);
+    if (o.size != null) document.documentElement.style.setProperty(p + "-sz", st.size + "px");
+    else document.documentElement.style.removeProperty(p + "-sz");
+    if (typeof o.bold === "boolean") document.documentElement.style.setProperty(p + "-fw", st.bold ? "700" : "400");
+    else document.documentElement.style.removeProperty(p + "-fw");
+    document.documentElement.style.setProperty(p + "-fs", st.italic ? "italic" : "normal");
+    document.documentElement.style.setProperty(p + "-td", st.underline ? "underline" : (st.strike ? "line-through" : "none"));
+    const ta = st.align === "center" ? "center" : (st.align === "end" ? "right" : "left");
+    const jc = st.align === "center" ? "center" : (st.align === "end" ? "flex-end" : "flex-start");
+    document.documentElement.style.setProperty(p + "-ta", ta);
+    document.documentElement.style.setProperty(p + "-jc", jc);
   });
   document.documentElement.style.setProperty("--sep-op", state.sepColor ? "0.7" : "0.14");
   const sz = Math.max(20, Math.min(56, Number(state.logoSize) || 32));
