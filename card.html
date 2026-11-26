@@ -425,7 +425,7 @@ window.CARD_KING_CONFIG = {
   </div>
 
   <!-- 直接點字修改的名片本體 -->
-  <input type="file" id="quickMediaFile" accept="video/*,image/*,.mp4,.mov,.m4v" multiple hidden onchange="onQuickMediaPick(event)">
+  <input type="file" id="quickMediaFile" accept="image/*,video/*" multiple hidden onchange="onQuickMediaPick(event)">
   <section class="canvas-stage" id="phoneScreen">
     <div id="cardMount" style="width:100%;display:flex;justify-content:center;"></div>
     <div class="vid-prog-wrap" id="stageProgWrap" style="max-width:344px;background:rgba(255,253,249,0.92);padding:8px 12px;border-radius:10px;">
@@ -511,9 +511,9 @@ window.CARD_KING_CONFIG = {
         <label class="ext-chk"><input type="checkbox" id="chkPhoto" onchange="setField('showPhoto', this.checked)">顯示照片</label>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
-        <input type="file" id="videoFile" accept="video/*,.mp4,.mov,.m4v" hidden onchange="onVideoPick(event)">
+        <input type="file" id="videoFile" accept="image/*,video/*" multiple hidden onchange="onQuickMediaPick(event)">
         <input type="file" id="photoMotionFile" accept="image/*" multiple hidden onchange="onPhotoMotionPick(event)">
-        <button type="button" class="btn btn-sm btn-pri" id="btnUploadVid" onclick="document.getElementById('videoFile').click()">上傳影片</button>
+        <button type="button" class="btn btn-sm btn-pri" id="btnUploadVid" onclick="document.getElementById('videoFile').click()">上傳影片 / 照片</button>
         <button type="button" class="btn btn-sm btn-pri" id="btnPhotoMotion" onclick="document.getElementById('photoMotionFile').click()">照片變動動圖</button>
         <button type="button" class="btn btn-sm" id="btnVidLoopDock" onclick="setVideoLoop(!state.videoLoop)">動動圖：關</button>
         <button type="button" class="btn btn-sm" onclick="openVidTrimBar()">調整位置</button>
@@ -1100,7 +1100,7 @@ function triggerPhotoUpload(e) {
 function triggerVideoUpload(e) {
   if (cleanView) return;
   if (e) e.stopPropagation();
-  document.getElementById("videoFile").click();
+  document.getElementById("quickMediaFile").click();
 }
 function triggerMediaUpload(e) {
   if (VIDEO_STYLES.includes(state.style)) triggerVideoUpload(e);
