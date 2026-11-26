@@ -1536,16 +1536,24 @@ function toggleChatTheme() {
 }
 
 async function shareToLine() {
-  if (dirtySinceSave || !currentCardId || (state.videoUrl && state.videoUrl.startsWith("blob:")) || (state.logoUrl && state.logoUrl.startsWith("data:"))) {
+  const isMobile = /iPhone|iPad|Android|Line|Mobile/i.test(navigator.userAgent);
+  const needSync = dirtySinceSave || !currentCardId || (state.videoUrl && state.videoUrl.startsWith("blob:")) || (state.logoUrl && state.logoUrl.startsWith("data:"));
+  let popup = null;
+  if (!isMobile) {
+    try { popup = window.open("about:blank", "_blank"); } catch (e) {}
+  }
+  if (needSync) {
     toast("同步最新名片中...");
-    await saveCard(true);
+    try {
+      await Promise.race([saveCard(true), new Promise(res => setTimeout(res, 12000))]);
+    } catch (e) {}
   }
   const slug = (profile && profile.slug) || currentCardId || "bigt";
   const url = `https://liff.line.me/${CFG.LIFF_ID}?mode=card&id=${encodeURIComponent(slug)}`;
-  if (/iPhone|iPad|Android|Line/i.test(navigator.userAgent)) {
-    location.href = url;
+  if (popup && !popup.closed) {
+    popup.location.href = url;
   } else {
-    window.open(url, "_blank", "noopener");
+    location.href = url;
   }
 }
 
