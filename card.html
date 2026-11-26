@@ -425,7 +425,7 @@ window.CARD_KING_CONFIG = {
   </div>
 
   <!-- 直接點字修改的名片本體 -->
-  <input type="file" id="quickMediaFile" accept="video/*,image/*,.mp4,.mov,.m4v" hidden onchange="onQuickMediaPick(event)">
+  <input type="file" id="quickMediaFile" accept="video/*,image/*,.mp4,.mov,.m4v" multiple hidden onchange="onQuickMediaPick(event)">
   <section class="canvas-stage" id="phoneScreen">
     <div id="cardMount" style="width:100%;display:flex;justify-content:center;"></div>
     <div class="vid-prog-wrap" id="stageProgWrap" style="max-width:344px;background:rgba(255,253,249,0.92);padding:8px 12px;border-radius:10px;">
@@ -512,7 +512,9 @@ window.CARD_KING_CONFIG = {
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
         <input type="file" id="videoFile" accept="video/*,.mp4,.mov,.m4v" hidden onchange="onVideoPick(event)">
-        <button type="button" class="btn btn-sm btn-pri" id="btnUploadVid" onclick="document.getElementById('videoFile').click()">上傳影片 / 動動圖</button>
+        <input type="file" id="photoMotionFile" accept="image/*" multiple hidden onchange="onPhotoMotionPick(event)">
+        <button type="button" class="btn btn-sm btn-pri" id="btnUploadVid" onclick="document.getElementById('videoFile').click()">上傳影片</button>
+        <button type="button" class="btn btn-sm btn-pri" id="btnPhotoMotion" onclick="document.getElementById('photoMotionFile').click()">照片變動動圖</button>
         <button type="button" class="btn btn-sm" id="btnVidLoopDock" onclick="setVideoLoop(!state.videoLoop)">動動圖：關</button>
         <button type="button" class="btn btn-sm" onclick="openVidTrimBar()">調整位置</button>
         <button type="button" class="btn btn-sm" id="btnToggleVidUrl" onclick="toggleVidUrlBox()">貼影片連結 ▾</button>
@@ -1124,6 +1126,11 @@ function onQuickMediaPick(e) {
   }
   const isImg = (f.type && f.type.startsWith("image/")) || /\.(jpg|jpeg|png|webp|heic|gif)$/i.test(f.name || "");
   if (isImg) {
+    if (VIDEO_STYLES.includes(state.style)) {
+      const imgFiles = Array.from(e.target.files || []).filter(x => (x.type && x.type.startsWith("image/")) || /\.(jpg|jpeg|png|webp|heic|gif)$/i.test(x.name || "")).slice(0, 4);
+      makeMotionVideoFromImages(imgFiles, e.target);
+      return;
+    }
     const img = new Image();
     img.onload = () => {
       const c = document.createElement("canvas");
@@ -1930,6 +1937,163 @@ function clearVideo() {
   localVideoBlob = null; idbDel("video");
   state.videoUrl = ""; document.getElementById("inVideoUrl").value = "";
   document.getElementById("btnDelVideo").style.display = "none"; renderPreview();
+}
+
+function onPhotoMotionPick(e) {
+  const input = e.target;
+  const files = Array.from(input.files || []).filter(x => (x.type && x.type.startsWith("image/")) || /\.(jpg|jpeg|png|webp|heic|gif)$/i.test(x.name || "")).slice(0, 4);
+  if (!files.length) return;
+  makeMotionVideoFromImages(files, input);
+}
+
+async function makeMotionVideoFromImages(files, inputEl) {
+  if (!files || !files.length) return;
+  const targetW = 720, targetH = 406;
+  const c = document.createElement("canvas");
+  c.width = targetW; c.height = targetH;
+  if (typeof c.captureStream !== "function" || typeof MediaRecorder === "undefined") {
+    toast("目前瀏覽器不支援自動轉動動圖，請改上傳 MP4 影片");
+    if (inputEl) inputEl.value = "";
+    return;
+  }
+  const btn = document.getElementById("btnPhotoMotion");
+  if (btn) { btn.disabled = true; btn.textContent = "製作中..."; }
+  setVidProgress(8, "讀取照片中...");
+  try {
+    const imgs = [];
+    for (const f of files) {
+      const url = URL.createObjectURL(f);
+      try {
+        const im = await new Promise((res, rej) => {
+          const el = new Image();
+          el.onload = () => res(el);
+          el.onerror = rej;
+          el.src = url;
+        });
+        imgs.push(im);
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+    }
+    if (!imgs.length) {
+      setVidProgress(null);
+      toast("照片讀取失敗，請改選 JPG 或 PNG");
+      return;
+    }
+
+    const ctx = c.getContext("2d");
+    const drawCoverMotion = (img, p, preset, alpha) => {
+      const t = 0.5 - 0.5 * Math.cos(Math.PI * Math.max(0, Math.min(1, p)));
+      let scale = 1.0 + 0.14 * t, panX = (t - 0.5) * 0.04, panY = (0.5 - t) * 0.025;
+      if (preset % 4 === 1) { scale = 1.14 - 0.14 * t; panX = (0.5 - t) * 0.04; panY = (t - 0.5) * 0.025; }
+      else if (preset % 4 === 2) { scale = 1.02 + 0.13 * t; panX = (0.5 - t) * 0.02; panY = (0.5 - t) * 0.04; }
+      else if (preset % 4 === 3) { scale = 1.15 - 0.13 * t; panX = (t - 0.5) * 0.035; panY = (t - 0.5) * 0.02; }
+      const iw = img.naturalWidth || targetW, ih = img.naturalHeight || targetH;
+      const baseScale = Math.max(targetW / iw, targetH / ih) * scale;
+      const dw = iw * baseScale, dh = ih * baseScale;
+      const dx = (targetW - dw) / 2 + panX * targetW;
+      const dy = (targetH - dh) / 2 + panY * targetH;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.drawImage(img, dx, dy, dw, dh);
+      ctx.restore();
+    };
+
+    // 先擷取第 0 幀作為乾淨的 16:9 封面圖
+    ctx.fillStyle = "#111";
+    ctx.fillRect(0, 0, targetW, targetH);
+    drawCoverMotion(imgs[0], 0, 0, 1);
+    const posterDataUrl = c.toDataURL("image/jpeg", 0.86);
+
+    const stream = c.captureStream(24);
+    const mimeType = ["video/mp4;codecs=avc1", "video/mp4", "video/webm;codecs=vp8", "video/webm"].find(t => {
+      try { return MediaRecorder.isTypeSupported(t); } catch (e) { return false; }
+    }) || "";
+    const rec = new MediaRecorder(stream, mimeType ? { mimeType, videoBitsPerSecond: 1800000 } : { videoBitsPerSecond: 1800000 });
+    const chunks = [];
+    rec.ondataavailable = (ev) => { if (ev.data && ev.data.size > 0) chunks.push(ev.data); };
+
+    const totalMs = imgs.length === 1 ? 8000 : 8400;
+    const segMs = totalMs / imgs.length;
+    const fadeMs = imgs.length > 1 ? Math.min(600, segMs * 0.25) : 0;
+
+    const blob = await new Promise((resolve) => {
+      rec.onstop = () => resolve(new Blob(chunks, { type: mimeType.split(";")[0] || "video/mp4" }));
+      rec.start(250);
+      const startAt = performance.now();
+      let rafId = 0;
+      const tick = () => {
+        const elapsed = performance.now() - startAt;
+        ctx.fillStyle = "#111";
+        ctx.fillRect(0, 0, targetW, targetH);
+        if (imgs.length === 1) {
+          const p = Math.min(1, elapsed / totalMs);
+          drawCoverMotion(imgs[0], p, 0, 1);
+          // 柔和光澤掃過效果，讓單張照片更有動態質感
+          const gx = -targetW * 0.3 + targetW * 1.6 * p;
+          const grad = ctx.createLinearGradient(gx - 120, 0, gx + 120, targetH * 0.4);
+          grad.addColorStop(0, "rgba(255,255,255,0)");
+          grad.addColorStop(0.5, "rgba(255,250,235,0.08)");
+          grad.addColorStop(1, "rgba(255,255,255,0)");
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, 0, targetW, targetH);
+        } else {
+          const idx = Math.min(imgs.length - 1, Math.floor(elapsed / segMs));
+          const segElapsed = elapsed - idx * segMs;
+          const segP = Math.min(1, segElapsed / segMs);
+          drawCoverMotion(imgs[idx], segP, idx, 1);
+          if (idx < imgs.length - 1 && segElapsed > segMs - fadeMs) {
+            const nextAlpha = Math.max(0, Math.min(1, (segElapsed - (segMs - fadeMs)) / fadeMs));
+            drawCoverMotion(imgs[idx + 1], 0, idx + 1, nextAlpha);
+          }
+        }
+        setVidProgress(12 + Math.min(84, (elapsed / totalMs) * 84), "照片轉動動圖中（" + imgs.length + " 張）...");
+        if (elapsed >= totalMs) {
+          cancelAnimationFrame(rafId);
+          if (rec.state !== "inactive") rec.stop();
+          return;
+        }
+        rafId = requestAnimationFrame(tick);
+      };
+      rafId = requestAnimationFrame(tick);
+    });
+
+    if (!blob || blob.size === 0) {
+      setVidProgress(null);
+      toast("動動圖生成失敗，請重試");
+      return;
+    }
+
+    rawPickedVideoBlob = blob;
+    rawPickedVideoName = "photo_motion_" + Date.now() + ".mp4";
+    rawVideoDuration = totalMs / 1000;
+    localVideoBlob = blob;
+    trimStartSec = 0;
+    state.videoPosX = 50;
+    state.videoPos = 50;
+    state.videoZoom = 100;
+    setVideoLoop(false);
+    state.videoUrl = URL.createObjectURL(blob);
+    state.photoUrl = posterDataUrl;
+    dirtySinceSave = true;
+
+    const inp = document.getElementById("inVideoUrl"); if (inp) inp.value = rawPickedVideoName;
+    const del = document.getElementById("btnDelVideo"); if (del) del.style.display = "inline-flex";
+    if (!VIDEO_STYLES.includes(state.style)) {
+      state.style = "video";
+      syncCssVars();
+    }
+    await idbPut("video", { blob, name: rawPickedVideoName });
+    renderPreview();
+    setVidProgress(100, "照片動動圖已完成", 1200);
+    toast(imgs.length > 1 ? ("已將 " + imgs.length + " 張照片轉成輪播動動圖") : "已將照片轉成電影運鏡動動圖");
+  } catch (err) {
+    setVidProgress(null);
+    toast("照片轉動動圖失敗，請換 JPG / PNG 重試");
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "照片變動動圖"; }
+    if (inputEl) setTimeout(() => { inputEl.value = ""; }, 300);
+  }
 }
 function convertYoutube() {
   if (!parseYtId(state.videoUrl)) { toast("請先貼入 YouTube 網址"); return; }
