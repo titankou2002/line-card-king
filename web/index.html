@@ -380,11 +380,14 @@ window.CARD_KING_CONFIG = {
 <main class="studio">
   <!-- 管理員多名片切換列（一般用戶看不到） -->
   <div class="admin-bar" id="adminBar">
-    <select id="adminCardSelect" onchange="onAdminPickCard(this.value)">
-      <option value="">載入名片清單...</option>
+    <select id="adminCatFilter" style="flex:0 0 68px;" onchange="onAdminCatChange(this.value)">
+      <option value="all">全部</option>
     </select>
-    <button type="button" class="abtn pri" onclick="adminNewCard()">＋ 新增</button>
-    <button type="button" class="abtn" title="重新整理清單" onclick="loadAdminCardList()">↻</button>
+    <select id="adminCardSelect" onchange="onAdminPickCard(this.value)">
+      <option value="">＋ 新建一張名片</option>
+    </select>
+    <button type="button" class="abtn pri" onclick="adminNewCard()">＋新增</button>
+    <button type="button" class="abtn" onclick="openAdminMgrModal()">管理</button>
   </div>
 
   <!-- 拍名片 + 預覽開關 -->
@@ -567,10 +570,27 @@ window.CARD_KING_CONFIG = {
       <button type="button" class="slot-tab active" id="tabLogin" onclick="setAuthMode('login')">登入</button>
       <button type="button" class="slot-tab" id="tabReg" onclick="setAuthMode('register')">免費註冊</button>
     </div>
-    <input type="email" id="authEmail" placeholder="Email" style="height:38px;padding:0 10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;">
-    <input type="password" id="authPass" placeholder="密碼（至少 6 碼）" style="height:38px;padding:0 10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;">
+    <input type="text" id="authName" placeholder="姓名" style="display:none;height:38px;padding:0 10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:16px;">
+    <input type="text" id="authCompany" placeholder="公司名稱" style="display:none;height:38px;padding:0 10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:16px;">
+    <input type="email" id="authEmail" placeholder="Email" style="height:38px;padding:0 10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:16px;">
+    <input type="password" id="authPass" placeholder="密碼（至少 6 碼）" style="height:38px;padding:0 10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:16px;">
     <button type="button" class="btn btn-pri" id="btnAuthGo" style="height:40px;" onclick="submitAuth()">登入</button>
     <button type="button" class="btn" onclick="closeAuthModal()">關閉</button>
+  </div>
+</div>
+
+<!-- 管理員名片清單管理彈窗（改名稱 / 改分類 / 刪除 / 雲端同步） -->
+<div class="modal-bg" id="adminMgrModal" onclick="if(event.target===this)closeAdminMgrModal()">
+  <div class="modal-card" style="max-width:420px;max-height:82vh;text-align:left;padding:18px;gap:10px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-size:15px;font-weight:700;">管理員名片清單</div>
+      <button type="button" class="btn btn-sm" onclick="closeAdminMgrModal()">關閉</button>
+    </div>
+    <div id="adminMgrList" style="display:flex;flex-direction:column;gap:8px;overflow-y:auto;max-height:52vh;padding-right:2px;"></div>
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;padding-top:6px;border-top:1px solid var(--border);">
+      <input type="password" id="inAdminKey" placeholder="雲端同步金鑰（選填）" style="height:34px;padding:0 9px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;min-width:0;">
+      <button type="button" class="btn btn-sm btn-pri" onclick="saveAdminKeyAndSync()">同步雲端</button>
+    </div>
   </div>
 </div>
 
@@ -1990,15 +2010,39 @@ function setAuthMode(m) {
   authMode = m;
   document.getElementById("tabLogin").classList.toggle("active", m === "login");
   document.getElementById("tabReg").classList.toggle("active", m === "register");
+  document.getElementById("authName").style.display = m === "register" ? "block" : "none";
+  document.getElementById("authCompany").style.display = m === "register" ? "block" : "none";
   document.getElementById("btnAuthGo").textContent = m === "register" ? "註冊" : "登入";
 }
 async function submitAuth() {
   if (!sb) return;
   const email = document.getElementById("authEmail").value.trim(), password = document.getElementById("authPass").value;
-  if (!email || !password) return;
-  const res = authMode === "register" ? await sb.auth.signUp({ email, password }) : await sb.auth.signInWithPassword({ email, password });
+  if (!email || !password) { toast("請輸入 Email 與密碼"); return; }
+  if (authMode === "register") {
+    const name = document.getElementById("authName").value.trim();
+    const company = document.getElementById("authCompany").value.trim();
+    if (!name) { toast("請輸入姓名"); return; }
+    const res = await sb.auth.signUp({ email, password, options: { data: { full_name: name, company } } });
+    if (res.error) { toast(res.error.message); return; }
+    session = res.data && res.data.session;
+    state.name = name;
+    if (company) state.company = company;
+    state.email = email;
+    const mailRow = (state.infoRows || []).find(r => /信箱|mail|^e\.?$/i.test(r.label || "") || String(r.value || "").includes("@"));
+    if (mailRow) mailRow.value = email;
+    const acctBtn = document.getElementById("btnAuthOpen");
+    if (acctBtn) acctBtn.textContent = name.slice(0, 1);
+    renderSocialControls(); renderPreview();
+    closeAuthModal(); toast("註冊成功，已帶入名片資料");
+    return;
+  }
+  const res = await sb.auth.signInWithPassword({ email, password });
   if (res.error) { toast(res.error.message); return; }
-  closeAuthModal(); toast(authMode === "register" ? "註冊成功" : "已登入");
+  session = res.data && res.data.session;
+  const meta = (res.data && res.data.user && res.data.user.user_metadata) || {};
+  const acctBtn = document.getElementById("btnAuthOpen");
+  if (acctBtn && meta.full_name) acctBtn.textContent = String(meta.full_name).slice(0, 1);
+  closeAuthModal(); toast("已登入");
 }
 
 function toggleChatTheme() {
@@ -2072,55 +2116,157 @@ let isAdminMode = (function () {
   try { return localStorage.getItem("ck_is_admin") === "1"; } catch (e) { return false; }
 })();
 
+const ADMIN_DEFAULT_CATS = ["自己", "客戶", "夥伴", "測試"];
+let adminCatFilter = "all";
+let adminCardsCache = [];
+
 function getLocalAdminCards() {
   try {
     const arr = JSON.parse(localStorage.getItem("ck_admin_cards") || "[]");
     return Array.isArray(arr) ? arr : [];
   } catch (e) { return []; }
 }
+function saveLocalAdminCards(list) {
+  try { localStorage.setItem("ck_admin_cards", JSON.stringify(list.slice(0, 80))); } catch (e) {}
+}
 function rememberAdminCard(cardId, cfg) {
   if (!cardId) return;
+  const old = getLocalAdminCards().find(x => x && x.cardId === cardId) || {};
   const list = getLocalAdminCards().filter(x => x && x.cardId !== cardId);
   list.unshift({
     cardId,
-    cardName: (cfg && cfg.name) || "",
-    enName: (cfg && cfg.enName) || "",
-    company: (cfg && cfg.company) || "",
-    style: (cfg && cfg.style) || ""
+    alias: old.alias || "",
+    category: old.category || (cardId === "bigt" ? "自己" : "客戶"),
+    cardName: (cfg && cfg.name) || old.cardName || "",
+    enName: (cfg && cfg.enName) || old.enName || "",
+    company: (cfg && cfg.company) || old.company || "",
+    style: (cfg && cfg.style) || old.style || ""
   });
-  try { localStorage.setItem("ck_admin_cards", JSON.stringify(list.slice(0, 60))); } catch (e) {}
+  saveLocalAdminCards(list);
+}
+
+function onAdminCatChange(cat) {
+  adminCatFilter = cat || "all";
+  renderAdminSelect();
+}
+
+function renderAdminSelect() {
+  const catSel = document.getElementById("adminCatFilter");
+  const sel = document.getElementById("adminCardSelect");
+  if (!sel) return;
+  const cats = Array.from(new Set(ADMIN_DEFAULT_CATS.concat(adminCardsCache.map(x => x.category).filter(Boolean))));
+  if (catSel) {
+    catSel.innerHTML = ['<option value="all">全部</option>'].concat(
+      cats.map(c => `<option value="${esc(c)}" ${c === adminCatFilter ? "selected" : ""}>${esc(c)}</option>`)
+    ).join("");
+  }
+  const styleNames = { video: "動態影片", full: "全資訊", side: "側邊滿版", hero: "雜誌封面", dark: "深岩燙金", ivory: "極簡象牙", block: "莫蘭迪", frame: "建築黑框" };
+  const filtered = adminCatFilter === "all" ? adminCardsCache : adminCardsCache.filter(it => (it.category || "客戶") === adminCatFilter);
+  const opts = ['<option value="">＋ 新建一張名片</option>'].concat(
+    filtered.map(it => {
+      const catTag = it.category ? `[${it.category}] ` : "";
+      const who = it.alias || [it.cardName || it.clientName, it.enName].filter(Boolean).join(" ") || it.cardId;
+      const co = (!it.alias && it.company) ? ("｜" + it.company) : "";
+      const st = styleNames[it.style] ? ("｜" + styleNames[it.style]) : "";
+      const title = `${catTag}${who}${co}${st} (${it.cardId})`;
+      return `<option value="${esc(it.cardId)}" ${it.cardId === currentCardId ? "selected" : ""}>${esc(title)}</option>`;
+    })
+  );
+  sel.innerHTML = opts.join("");
 }
 
 async function loadAdminCardList() {
   if (!isAdminMode) return;
-  const sel = document.getElementById("adminCardSelect");
-  if (!sel) return;
   if (currentCardId) rememberAdminCard(currentCardId, state);
   const map = new Map();
-  getLocalAdminCards().forEach(it => { if (it && it.cardId) map.set(it.cardId, it); });
-  if (!map.has("bigt")) map.set("bigt", { cardId: "bigt", cardName: "高弘治", enName: "Big-T", company: "高雅瓷", style: "video" });
+  getLocalAdminCards().forEach(it => { if (it && it.cardId) map.set(it.cardId, Object.assign({ category: "客戶", alias: "" }, it)); });
+  if (!map.has("bigt")) map.set("bigt", { cardId: "bigt", alias: "", category: "自己", cardName: "高弘治", enName: "Big-T", company: "高雅瓷", style: "video" });
 
   const adminKey = localStorage.getItem("ck_admin_key") || "";
   if (adminKey) {
     try {
       const r = await fetch(CFG.GAS_API + "?ac=ecardAdminList&key=" + encodeURIComponent(adminKey)).then(x => x.json());
       if (r && r.success && Array.isArray(r.items)) {
-        r.items.forEach(it => { if (it && it.cardId) map.set(it.cardId, it); });
+        r.items.forEach(it => {
+          if (!it || !it.cardId) return;
+          const prev = map.get(it.cardId) || {};
+          map.set(it.cardId, Object.assign({ category: it.cardId === "bigt" ? "自己" : "客戶", alias: "" }, it, { alias: prev.alias || "", category: prev.category || (it.cardId === "bigt" ? "自己" : "客戶") }));
+        });
       }
     } catch (e) {}
   }
+  adminCardsCache = Array.from(map.values());
+  saveLocalAdminCards(adminCardsCache);
+  renderAdminSelect();
+  if (document.getElementById("adminMgrModal").style.display === "flex") renderAdminMgrList();
+}
 
-  const styleNames = { video: "動態影片", full: "全資訊", side: "側邊滿版", hero: "雜誌封面", dark: "深岩燙金", ivory: "極簡象牙", block: "莫蘭迪", frame: "建築黑框" };
-  const opts = ['<option value="">＋ 新建一張名片</option>'].concat(
-    Array.from(map.values()).map(it => {
-      const who = [it.cardName || it.clientName, it.enName].filter(Boolean).join(" ") || it.cardId;
-      const co = it.company ? ("｜" + it.company) : "";
-      const st = styleNames[it.style] ? ("｜" + styleNames[it.style]) : "";
-      const title = `${who}${co}${st} (${it.cardId})`;
-      return `<option value="${esc(it.cardId)}" ${it.cardId === currentCardId ? "selected" : ""}>${esc(title)}</option>`;
-    })
-  );
-  sel.innerHTML = opts.join("");
+function openAdminMgrModal() {
+  const inp = document.getElementById("inAdminKey");
+  if (inp) inp.value = localStorage.getItem("ck_admin_key") || "";
+  renderAdminMgrList();
+  document.getElementById("adminMgrModal").style.display = "flex";
+}
+function closeAdminMgrModal() { document.getElementById("adminMgrModal").style.display = "none"; }
+
+function renderAdminMgrList() {
+  const box = document.getElementById("adminMgrList");
+  if (!box) return;
+  if (!adminCardsCache.length) {
+    box.innerHTML = '<div style="font-size:13px;color:var(--t2);padding:12px 0;text-align:center;">尚無名片紀錄</div>';
+    return;
+  }
+  box.innerHTML = adminCardsCache.map(it => {
+    const defName = it.alias || [it.cardName || it.clientName, it.enName].filter(Boolean).join(" ") || it.cardId;
+    const curCat = it.category || "客戶";
+    const catOpts = Array.from(new Set(ADMIN_DEFAULT_CATS.concat([curCat]))).map(c =>
+      `<option value="${esc(c)}" ${c === curCat ? "selected" : ""}>${esc(c)}</option>`
+    ).join("");
+    return `
+      <div style="display:flex;flex-direction:column;gap:6px;padding:9px;background:var(--bg);border:1px solid var(--border);border-radius:10px;">
+        <div style="display:grid;grid-template-columns:72px minmax(0,1fr);gap:6px;align-items:center;">
+          <select onchange="updateAdminCardMeta('${esc(it.cardId)}','category',this.value)" style="height:30px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:#fff;padding:0 4px;font-family:inherit;">${catOpts}</select>
+          <input type="text" value="${esc(defName)}" placeholder="自訂顯示名稱" onchange="updateAdminCardMeta('${esc(it.cardId)}','alias',this.value)" style="height:30px;border:1px solid var(--border);border-radius:6px;padding:0 8px;font-size:13px;background:#fff;font-family:inherit;min-width:0;">
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+          <span style="font-size:11px;color:var(--t3);">${esc(it.company || "")} (${esc(it.cardId)})</span>
+          <div style="display:flex;gap:5px;">
+            <button type="button" class="btn btn-sm btn-pri" onclick="closeAdminMgrModal();onAdminPickCard('${esc(it.cardId)}')">切換</button>
+            <button type="button" class="btn btn-sm btn-danger" onclick="deleteAdminCardItem('${esc(it.cardId)}')">移除</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function updateAdminCardMeta(cardId, field, val) {
+  const item = adminCardsCache.find(x => x.cardId === cardId);
+  if (!item) return;
+  item[field] = String(val || "").trim();
+  saveLocalAdminCards(adminCardsCache);
+  renderAdminSelect();
+  toast("已更新清單設定");
+}
+
+function deleteAdminCardItem(cardId) {
+  adminCardsCache = adminCardsCache.filter(x => x.cardId !== cardId);
+  saveLocalAdminCards(adminCardsCache);
+  if (currentCardId === cardId) {
+    currentCardId = "";
+    localStorage.removeItem("ck_my_card_id");
+  }
+  renderAdminSelect();
+  renderAdminMgrList();
+  toast("已從清單移除");
+}
+
+async function saveAdminKeyAndSync() {
+  const k = (document.getElementById("inAdminKey").value || "").trim();
+  if (k) localStorage.setItem("ck_admin_key", k);
+  else localStorage.removeItem("ck_admin_key");
+  await loadAdminCardList();
+  toast("已同步雲端名片清單");
 }
 
 async function onAdminPickCard(cardId) {
