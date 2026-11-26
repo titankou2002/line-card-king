@@ -514,6 +514,10 @@ window.CARD_KING_CONFIG = {
       <div class="dock-pane" id="dpane-social">
         <div class="ext-stack">
           <div class="ext-row">
+            <label class="ext-chk"><input type="checkbox" id="chkLine" onchange="setField('lineOn', this.checked)">個人 LINE</label>
+            <input type="text" id="inLineId" placeholder="輸入 LINE ID 或貼行動條碼連結" oninput="setField('lineId', this.value)">
+          </div>
+          <div class="ext-row">
             <label class="ext-chk"><input type="checkbox" id="chkOa" onchange="setField('oaOn', this.checked)">LINE 官方帳號</label>
             <input type="text" id="inOaId" placeholder="@297azzax（有無 @ 皆可）" oninput="setField('oaId', this.value)">
           </div>
@@ -628,6 +632,7 @@ function defaultState() {
       { label: "電話", value: "03-486-3978" },
       { label: "地址", value: "台北市內湖區行愛路77巷16號5樓" }
     ],
+    lineOn: false, lineId: "",
     oaOn: false, oaId: "", mailBtnOn: false,
     igOn: false, igId: "", fbOn: false, fbId: "", thOn: false, thId: ""
   };
@@ -1037,6 +1042,11 @@ async function initSession() {
 
 function buildSocialHtml() {
   const list = [];
+  if (state.lineOn && state.lineId) {
+    const lid = state.lineId.trim().replace(/^~/, "");
+    const u = /^https?:\/\//i.test(lid) ? lid : "https://line.me/ti/p/~" + encodeURIComponent(lid);
+    list.push(`<a class="mc-social-pill" href="${esc(u)}" target="_blank">加我LINE</a>`);
+  }
   if (state.oaOn && state.oaId) {
     const id = state.oaId.trim();
     const u = /^https?:\/\//i.test(id) ? id : "https://line.me/R/ti/p/" + (id.startsWith("@") ? id : "@" + id);
@@ -1178,6 +1188,7 @@ function renderInputs() {
   document.getElementById("inQuickTel").value = (state.infoRows[2] && state.infoRows[2].value) || "";
   document.getElementById("inQuickAddr").value = (state.infoRows[3] && state.infoRows[3].value) || "";
   document.getElementById("inWeb").value = state.website || "";
+  document.getElementById("chkLine").checked = !!state.lineOn; document.getElementById("inLineId").value = state.lineId || "";
   document.getElementById("chkOa").checked = !!state.oaOn; document.getElementById("inOaId").value = state.oaId || "";
   document.getElementById("chkMailBtn").checked = !!state.mailBtnOn; document.getElementById("inMailBtnAddr").value = state.email || "";
   document.getElementById("chkIg").checked = !!state.igOn; document.getElementById("inIgId").value = state.igId || "";
