@@ -876,7 +876,21 @@ function renderPreview() {
     mount.innerHTML = `<article class="mega-card ${extraCls}"><div class="mc-top-bar" data-cslot="accent"></div><div class="mc-head-area" style="padding:14px 18px 10px;" data-cslot="headBg">${brandRow}<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;"><div style="flex:1;min-width:0;">${nameLine}${sloganHtml}</div>${state.showPhoto && state.photoUrl ? `<div class="mc-photo mc-media-click" onclick="triggerMediaUpload(event)"><img src="${esc(state.photoUrl)}"></div>` : ""}</div></div><div class="mc-sep"></div><div class="mc-body" data-cslot="bodyBg">${rowsHtml}</div>${footHtml}</article>`;
   }
 
-  mount.querySelectorAll(".mc-inp").forEach(el => autoSizeInput(el));
+  mount.querySelectorAll(".mc-inp").forEach(el => {
+    autoSizeInput(el);
+    let lastTap = 0;
+    const selectAllNow = () => {
+      if (el.readOnly) return;
+      el.focus();
+      setTimeout(() => { try { el.setSelectionRange(0, el.value.length); } catch (e) { el.select(); } }, 20);
+    };
+    el.addEventListener("dblclick", selectAllNow);
+    el.addEventListener("touchend", () => {
+      const now = Date.now();
+      if (now - lastTap < 350) { selectAllNow(); lastTap = 0; }
+      else lastTap = now;
+    }, { passive: true });
+  });
 
   // 只有在展開「進階設定 → 配色」時，點背景區塊才切換調色部位，平常點字完全不打架
   mount.querySelectorAll("[data-cslot]").forEach(el => {
