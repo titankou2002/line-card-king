@@ -83,7 +83,7 @@ window.CARD_KING_CONFIG = {
     display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
   }
   .icon-btn:hover { background: var(--raised); }
-  .icon-btn.acct-ico { border-radius: 999px; background: #23201b; border-color: #23201b; color: var(--accent); font-size: 13px; font-weight: 700; }
+  .icon-btn.acct-ico { border-radius: 999px; background: #23201b; border-color: #23201b; color: #e2ca88; font-size: 13px; font-weight: 700; }
 
   /* 單欄精簡置中工作台（手機與電腦皆零來回捲動） */
   .studio {
@@ -106,7 +106,7 @@ window.CARD_KING_CONFIG = {
     font-family: inherit; font-size: 13px; font-weight: 700; padding: 7px 8px;
     border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   }
-  .cat-btn.active { background: #23201b; color: var(--accent); box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+  .cat-btn.active { background: #23201b; color: #e2ca88; box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
 
   /* 頂部快選條：拍名片 + 橫滑版型 */
   .top-strip {
@@ -122,7 +122,7 @@ window.CARD_KING_CONFIG = {
     padding: 6px 13px; background: var(--surface); cursor: pointer;
     font-family: inherit; font-size: 12.5px; font-weight: 700; color: var(--t1); white-space: nowrap;
   }
-  .style-opt.active { border-color: #23201b; background: #23201b; color: var(--accent); }
+  .style-opt.active { border-color: #23201b; background: #23201b; color: #e2ca88; }
 
   /* 預覽舞台 */
   .canvas-stage {
@@ -409,6 +409,11 @@ window.CARD_KING_CONFIG = {
         <input type="range" id="inTrimStart" min="0" max="10" step="0.5" value="0" oninput="onTrimStartSlide(this.value)" style="width:100%;accent-color:#23201b;">
       </div>
       <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:12px;font-weight:700;color:var(--t2);flex-shrink:0;">畫面左右</span>
+        <input type="range" id="inVidPosX" min="0" max="100" value="50" oninput="setVideoPosX(this.value)" style="flex:1;accent-color:#23201b;">
+        <span id="lblVidPosX" style="font-size:11.5px;font-weight:700;color:var(--t2);width:34px;text-align:right;">50%</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
         <span style="font-size:12px;font-weight:700;color:var(--t2);flex-shrink:0;">畫面上下</span>
         <input type="range" id="inVidPos" min="0" max="100" value="50" oninput="setVideoPos(this.value)" style="flex:1;accent-color:#23201b;">
         <span id="lblVidPos" style="font-size:11.5px;font-weight:700;color:var(--t2);width:34px;text-align:right;">50%</span>
@@ -651,7 +656,7 @@ function defaultState() {
   return {
     style: "video", font: "jhenghei",
     color: "#C5AE6E", headBg: "#1E1D1B", bodyBg: "#1E1D1B", footBg: "#1E1D1B", btn2Bg: "#312E28", cardFg: "#F3EFE7",
-    logoMono: true, logoRemoveBg: true, logoSize: 32, showPhoto: false, labelMode: "icon", videoPos: 50, videoZoom: 100,
+    logoMono: true, logoRemoveBg: true, logoSize: 32, showPhoto: false, labelMode: "icon", videoPosX: 50, videoPos: 50, videoZoom: 100,
     logoUrl: "https://bigt.cc/line/elitile-logo.png",
     videoUrl: "https://bigt.cc/web/assets/video/refin-moon-1920.mp4",
     photoUrl: "https://bigt.cc/web/assets/video/refin-moon-poster.jpg",
@@ -1209,9 +1214,10 @@ function renderPreview() {
   `;
 
   const ytId = parseYtId(state.videoUrl);
+  const vPosX = Math.max(0, Math.min(100, Number(state.videoPosX ?? 50)));
   const vPos = Math.max(0, Math.min(100, Number(state.videoPos ?? 50)));
   const vZoom = Math.max(1, Math.min(2.2, (Number(state.videoZoom) || 100) / 100));
-  const vStyle = `object-position:50% ${vPos}%;transform:scale(${vZoom});transform-origin:50% ${vPos}%;`;
+  const vStyle = `object-position:${vPosX}% ${vPos}%;transform:scale(${vZoom});transform-origin:${vPosX}% ${vPos}%;`;
   const mediaHtml = ytId
     ? `<img src="https://i.ytimg.com/vi/${ytId}/hqdefault.jpg" style="${vStyle}"><div class="mc-yt-play"><span>▶</span></div>`
     : (state.videoUrl ? `<video autoplay muted loop playsinline src="${esc(state.videoUrl)}" style="${vStyle}" ${state.photoUrl ? `poster="${esc(state.photoUrl)}"` : ""}></video>` : (state.photoUrl ? `<img src="${esc(state.photoUrl)}" style="${vStyle}">` : ""));
@@ -1219,14 +1225,14 @@ function renderPreview() {
   if (state.style === "video" || state.style === "full") {
     mount.innerHTML = `<article class="mega-card"><div class="mc-video-box mc-media-click" onclick="triggerVideoUpload(event)" title="點擊更換影片">${mediaHtml}</div><div class="mc-head-area" style="padding:14px 18px 10px;" data-cslot="headBg">${brandRow}${nameLine}${sloganHtml}</div><div class="mc-sep"></div><div class="mc-body" data-cslot="bodyBg">${rowsHtml}</div>${footHtml}</article>`;
   } else if (state.style === "hero") {
-    mount.innerHTML = `<article class="mega-card"><div class="mc-hero-box mc-media-click" onclick="triggerPhotoUpload(event)" title="點擊更換封面圖片">${state.photoUrl ? `<img class="mc-hero-img" src="${esc(state.photoUrl)}">` : ""}<div class="mc-hero-grad"><div style="display:flex;align-items:center;justify-content:space-between;">${state.logoUrl ? `<span class="mc-logo-pill" onclick="triggerLogoUpload(event)" style="cursor:pointer;"><img src="${esc(state.logoUrl)}"></span>` : "<span></span>"}<span style="color:#fff;">${coHtml}</span></div><div style="color:#fff;">${nameLine}${sloganHtml}</div></div></div><div class="mc-body" data-cslot="bodyBg">${rowsHtml}</div>${footHtml}</article>`;
+    mount.innerHTML = `<article class="mega-card"><div class="mc-hero-box mc-media-click" onclick="triggerPhotoUpload(event)" title="點擊更換封面圖片">${state.photoUrl ? `<img class="mc-hero-img" src="${esc(state.photoUrl)}" style="${vStyle}">` : ""}<div class="mc-hero-grad"><div style="display:flex;align-items:center;justify-content:space-between;">${state.logoUrl ? `<span class="mc-logo-pill" onclick="triggerLogoUpload(event)" style="cursor:pointer;"><img src="${esc(state.logoUrl)}"></span>` : "<span></span>"}<span style="color:#fff;">${coHtml}</span></div><div style="color:#fff;">${nameLine}${sloganHtml}</div></div></div><div class="mc-body" data-cslot="bodyBg">${rowsHtml}</div>${footHtml}</article>`;
   } else if (state.style === "side") {
-    mount.innerHTML = `<article class="mega-card"><div class="mc-side-full"><div class="mc-side-media mc-media-click" onclick="triggerPhotoUpload(event)" title="點擊更換側邊圖片">${state.photoUrl ? `<img src="${esc(state.photoUrl)}">` : ""}</div><div class="mc-side-col"><div class="mc-side-head" data-cslot="headBg">${logoHtml}${nameLine}${coHtml}${sloganHtml}</div><div class="mc-sep"></div><div class="mc-body" data-cslot="bodyBg">${rowsHtml}</div>${footHtml}</div></div></article>`;
+    mount.innerHTML = `<article class="mega-card"><div class="mc-side-full"><div class="mc-side-media mc-media-click" onclick="triggerPhotoUpload(event)" title="點擊更換側邊圖片">${state.photoUrl ? `<img src="${esc(state.photoUrl)}" style="${vStyle}">` : ""}</div><div class="mc-side-col"><div class="mc-side-head" data-cslot="headBg">${logoHtml}${nameLine}${coHtml}${sloganHtml}</div><div class="mc-sep"></div><div class="mc-body" data-cslot="bodyBg">${rowsHtml}</div>${footHtml}</div></div></article>`;
   } else if (state.style === "block") {
     mount.innerHTML = `<article class="mega-card"><div class="mc-block-top" style="background:var(--head-bg);" data-cslot="headBg">${brandRow}${nameLine}${sloganHtml}</div><div class="mc-body" data-cslot="bodyBg">${rowsHtml}</div>${footHtml}</article>`;
   } else {
     const extraCls = state.style === "frame" ? "style-frame" : "";
-    mount.innerHTML = `<article class="mega-card ${extraCls}"><div class="mc-top-bar" data-cslot="accent"></div><div class="mc-head-area" style="padding:14px 18px 10px;" data-cslot="headBg">${brandRow}<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;"><div style="flex:1;min-width:0;">${nameLine}${sloganHtml}</div>${state.showPhoto && state.photoUrl ? `<div class="mc-photo mc-media-click" onclick="triggerMediaUpload(event)"><img src="${esc(state.photoUrl)}"></div>` : ""}</div></div><div class="mc-sep"></div><div class="mc-body" data-cslot="bodyBg">${rowsHtml}</div>${footHtml}</article>`;
+    mount.innerHTML = `<article class="mega-card ${extraCls}"><div class="mc-top-bar" data-cslot="accent"></div><div class="mc-head-area" style="padding:14px 18px 10px;" data-cslot="headBg">${brandRow}<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;"><div style="flex:1;min-width:0;">${nameLine}${sloganHtml}</div>${state.showPhoto && state.photoUrl ? `<div class="mc-photo mc-media-click" onclick="triggerPhotoUpload(event)"><img src="${esc(state.photoUrl)}" style="${vStyle}"></div>` : ""}</div></div><div class="mc-sep"></div><div class="mc-body" data-cslot="bodyBg">${rowsHtml}</div>${footHtml}</article>`;
   }
 
   mount.querySelectorAll(".mc-inp").forEach(el => {
@@ -1414,12 +1420,16 @@ function onPhotoPick(e) {
   const img = new Image();
   img.onload = () => {
     const c = document.createElement("canvas");
-    const sc = Math.min(1, 900 / Math.max(img.naturalWidth, img.naturalHeight));
+    const sc = Math.min(1, 1200 / Math.max(img.naturalWidth, img.naturalHeight));
     c.width = Math.round(img.naturalWidth * sc); c.height = Math.round(img.naturalHeight * sc);
     c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
-    c.toBlob(b => { if (b) idbPut("photo", b); }, "image/jpeg", 0.86);
-    state.photoUrl = c.toDataURL("image/jpeg", 0.86); state.showPhoto = true; document.getElementById("chkPhoto").checked = true; renderPreview();
-    toast("照片已存於手機");
+    c.toBlob(b => { if (b) idbPut("photo", b); }, "image/jpeg", 0.88);
+    state.photoUrl = c.toDataURL("image/jpeg", 0.88);
+    state.videoPosX = 50; state.videoPos = 50; state.videoZoom = 100;
+    state.showPhoto = true; document.getElementById("chkPhoto").checked = true;
+    renderPreview();
+    openVidTrimBar();
+    toast("照片已更新，可拉選左右上下與縮放");
   };
   img.src = URL.createObjectURL(f);
   e.target.value = "";
@@ -1457,17 +1467,18 @@ function setVidProgress(pct, label, hideAfterMs) {
   if (hideAfterMs) setTimeout(() => setVidProgress(null), hideAfterMs);
 }
 
-function compute16x9Crop(vw, vh, vPosPct, vZoomPct) {
-  const dstAspect = 16 / 9;
+function compute16x9Crop(vw, vh, vPosPct, vZoomPct, vPosXPct, customAspect) {
+  const dstAspect = customAspect || (16 / 9);
   const zoom = Math.max(1, Math.min(2.2, (Number(vZoomPct) || 100) / 100));
-  const pos = Math.max(0, Math.min(100, Number(vPosPct ?? 50))) / 100;
+  const posX = Math.max(0, Math.min(100, Number(vPosXPct ?? state.videoPosX ?? 50))) / 100;
+  const posY = Math.max(0, Math.min(100, Number(vPosPct ?? 50))) / 100;
   let baseW = vw, baseH = vh;
   if (vw / vh < dstAspect) { baseH = vw / dstAspect; }
   else { baseW = vh * dstAspect; }
   const sw = Math.max(2, Math.round(baseW / zoom));
   const sh = Math.max(2, Math.round(baseH / zoom));
-  const sx = Math.max(0, Math.min(vw - sw, Math.round((vw - sw) / 2)));
-  const sy = Math.max(0, Math.min(vh - sh, Math.round(pos * (vh - sh))));
+  const sx = Math.max(0, Math.min(vw - sw, Math.round(posX * (vw - sw))));
+  const sy = Math.max(0, Math.min(vh - sh, Math.round(posY * (vh - sh))));
   return { sx, sy, sw, sh };
 }
 
@@ -1517,6 +1528,11 @@ function openVidTrimBar() {
   const bar = document.getElementById("vidTrimBar");
   if (!bar) return;
   bar.style.display = "flex";
+  const posXEl = document.getElementById("inVidPosX");
+  const posXLbl = document.getElementById("lblVidPosX");
+  const curPosX = Math.max(0, Math.min(100, Number(state.videoPosX ?? 50)));
+  if (posXEl) posXEl.value = curPosX;
+  if (posXLbl) posXLbl.textContent = curPosX + "%";
   const posEl = document.getElementById("inVidPos");
   const posLbl = document.getElementById("lblVidPos");
   const curPos = Math.max(0, Math.min(100, Number(state.videoPos ?? 50)));
@@ -1528,7 +1544,7 @@ function openVidTrimBar() {
   if (zEl) zEl.value = curZ;
   if (zLbl) zLbl.textContent = (curZ / 100).toFixed(1) + "×";
   const timeRow = document.getElementById("vidTimeRow");
-  if (rawVideoDuration > 10.5) {
+  if (VIDEO_STYLES.includes(state.style) && rawVideoDuration > 10.5) {
     const maxStart = Math.max(0.5, Math.floor((rawVideoDuration - 10) * 2) / 2);
     const rng = document.getElementById("inTrimStart");
     if (rng) { rng.max = String(maxStart); rng.value = String(Math.min(trimStartSec, maxStart)); }
@@ -1551,13 +1567,21 @@ function onTrimStartSlide(val) {
   if (vid) { try { vid.currentTime = trimStartSec; } catch (e) {} }
 }
 function applyVideoFramingLive() {
-  const p = Math.max(0, Math.min(100, Number(state.videoPos ?? 50)));
+  const px = Math.max(0, Math.min(100, Number(state.videoPosX ?? 50)));
+  const py = Math.max(0, Math.min(100, Number(state.videoPos ?? 50)));
   const z = Math.max(1, Math.min(2.2, (Number(state.videoZoom) || 100) / 100));
-  document.querySelectorAll("#cardMount video, #cardMount .mc-video-box img").forEach(el => {
-    el.style.objectPosition = `50% ${p}%`;
+  document.querySelectorAll("#cardMount video, #cardMount .mc-video-box img, #cardMount .mc-side-media img, #cardMount .mc-hero-img, #cardMount .mc-photo img").forEach(el => {
+    el.style.objectPosition = `${px}% ${py}%`;
     el.style.transform = `scale(${z})`;
-    el.style.transformOrigin = `50% ${p}%`;
+    el.style.transformOrigin = `${px}% ${py}%`;
   });
+}
+function setVideoPosX(v) {
+  const px = Math.max(0, Math.min(100, Number(v) || 50));
+  state.videoPosX = px;
+  const lbl = document.getElementById("lblVidPosX"); if (lbl) lbl.textContent = px + "%";
+  applyVideoFramingLive();
+  persistLocal();
 }
 function setVideoPos(v) {
   const p = Math.max(0, Math.min(100, Number(v) || 50));
@@ -1632,6 +1656,36 @@ function trimVideoTo10s(videoEl, fallbackBlob, startSec, vPosPct, vZoomPct) {
 }
 
 async function applyVideoTrim() {
+  // 圖片版：將目前調整的左右/上下/縮放直接裁切成最終照片（LINE 同步呈現）
+  if (!VIDEO_STYLES.includes(state.style)) {
+    if (!state.photoUrl) { closeVidTrimBar(); return; }
+    const btn = document.getElementById("btnApplyTrim");
+    if (btn) { btn.disabled = true; btn.textContent = "套用中..."; }
+    try {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = state.photoUrl; });
+      const aspect = state.style === "side" ? (1 / 3) : (state.style === "hero" ? (16 / 10) : (60 / 74));
+      const { sx, sy, sw, sh } = compute16x9Crop(img.naturalWidth, img.naturalHeight, state.videoPos ?? 50, state.videoZoom || 100, state.videoPosX ?? 50, aspect);
+      const outW = state.style === "side" ? 360 : (state.style === "hero" ? 960 : 480);
+      const outH = Math.round(outW / aspect);
+      const c = document.createElement("canvas");
+      c.width = outW; c.height = outH;
+      c.getContext("2d").drawImage(img, sx, sy, sw, sh, 0, 0, outW, outH);
+      c.toBlob(b => { if (b) idbPut("photo", b); }, "image/jpeg", 0.88);
+      state.photoUrl = c.toDataURL("image/jpeg", 0.88);
+      state.videoPosX = 50; state.videoPos = 50; state.videoZoom = 100;
+      renderPreview();
+      closeVidTrimBar();
+      toast("已套用圖片裁切位置");
+    } catch (e) {
+      closeVidTrimBar();
+      toast("已套用目前畫面位置");
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = "套用目前位置"; }
+    }
+    return;
+  }
   const srcBlob = rawPickedVideoBlob || localVideoBlob;
   if (!srcBlob) { closeVidTrimBar(); return; }
   const btn = document.getElementById("btnApplyTrim");
@@ -1650,8 +1704,9 @@ async function applyVideoTrim() {
     const vw = v.videoWidth || 720, vh = v.videoHeight || 405;
     const isPortrait = (vw / vh) < 1.5;
     let finalBlob = srcBlob;
-    if (isPortrait || rawVideoDuration > 10.5 || srcBlob.size > 9.5 * 1024 * 1024 || Number(state.videoPos ?? 50) !== 50 || Number(state.videoZoom || 100) !== 100) {
+    if (isPortrait || rawVideoDuration > 10.5 || srcBlob.size > 9.5 * 1024 * 1024 || Number(state.videoPosX ?? 50) !== 50 || Number(state.videoPos ?? 50) !== 50 || Number(state.videoZoom || 100) !== 100) {
       finalBlob = await trimVideoTo10s(v, srcBlob, trimStartSec, state.videoPos ?? 50, state.videoZoom || 100);
+      state.videoPosX = 50;
       state.videoPos = 50;
       state.videoZoom = 100;
     }
