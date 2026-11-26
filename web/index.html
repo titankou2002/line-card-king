@@ -199,8 +199,8 @@ window.CARD_KING_CONFIG = {
   .clean-view .mc-row-tools { display: none !important; }
 
   .mc-btn-link {
-    height: 26px; background: transparent; border: none; color: var(--accent);
-    font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit;
+    height: 22px; background: transparent; border: none; color: var(--accent);
+    font-size: 11px; font-weight: 600; opacity: 0.8; letter-spacing: 0.04em; cursor: pointer; font-family: inherit;
   }
 
   /* 10 顆自適應寬度可拖曳快捷按鈕（依數量自動填滿卡片寬度） */
@@ -493,18 +493,10 @@ window.CARD_KING_CONFIG = {
         <button type="button" class="slot-tab" data-slot="fg" onclick="selectColorSlot('fg')">文字</button>
       </div>
       <div class="color-row">
-        <div class="color-picker-wrap"><input type="color" id="inColor" value="#c5ae6e" oninput="applySlotColor(this.value)"></div>
+        <div class="color-picker-wrap"><input type="color" id="inColor" value="#c5ae6e" oninput="applySlotColor(this.value)" onchange="rememberSwatch(this.value)"></div>
         <input type="text" id="inColorHex" value="#C5AE6E" maxlength="7" oninput="onHexInput(this.value)" style="flex:1;height:34px;padding:0 10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;">
       </div>
-      <div class="swatches" id="swatches">
-        <button type="button" class="swatch active" style="background:#c5ae6e" data-hex="#c5ae6e" onclick="applySlotColor('#c5ae6e')"></button>
-        <button type="button" class="swatch" style="background:#b59e63" data-hex="#b59e63" onclick="applySlotColor('#b59e63')"></button>
-        <button type="button" class="swatch" style="background:#5f7464" data-hex="#5f7464" onclick="applySlotColor('#5f7464')"></button>
-        <button type="button" class="swatch" style="background:#a67c68" data-hex="#a67c68" onclick="applySlotColor('#a67c68')"></button>
-        <button type="button" class="swatch" style="background:#6e818f" data-hex="#6e818f" onclick="applySlotColor('#6e818f')"></button>
-        <button type="button" class="swatch" style="background:#23201b" data-hex="#23201b" onclick="applySlotColor('#23201b')"></button>
-        <button type="button" class="swatch" style="background:#faf7f0" data-hex="#faf7f0" onclick="applySlotColor('#faf7f0')"></button>
-      </div>
+      <div class="swatches" id="swatches"></div>
       <select id="inFont" onchange="setFont(this.value)" style="height:36px;padding:0 10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;background:#fff;">
         <option value="jhenghei">微軟正黑體</option>
         <option value="notosans">思源黑體</option>
@@ -845,6 +837,29 @@ function onLogoOptChange() {
   renderPreview();
 }
 
+const DEFAULT_SWATCHES = ["#C5AE6E", "#B59E63", "#5F7464", "#A67C68", "#6E818F", "#23201B", "#FAF7F0"];
+let recentSwatches = (function () {
+  try { const r = JSON.parse(localStorage.getItem("ck_recent_swatches") || "[]"); return Array.isArray(r) ? r.filter(x => /^#[0-9A-F]{6}$/i.test(x)) : []; } catch (e) { return []; }
+})();
+function renderSwatches() {
+  const cur = (getSlotValue(colorSlot) || "#C5AE6E").toUpperCase();
+  const all = DEFAULT_SWATCHES.concat(recentSwatches.filter(h => !DEFAULT_SWATCHES.includes(h.toUpperCase())));
+  const el = document.getElementById("swatches");
+  if (!el) return;
+  el.innerHTML = all.map(h => {
+    const u = h.toUpperCase();
+    return `<button type="button" class="swatch ${u === cur ? "active" : ""}" style="background:${u}" data-hex="${u}" title="${u}" onclick="applySlotColor('${u}')"></button>`;
+  }).join("");
+}
+function rememberSwatch(hex) {
+  if (!/^#[0-9a-fA-F]{6}$/.test(hex || "")) return;
+  const u = hex.toUpperCase();
+  if (DEFAULT_SWATCHES.includes(u)) return;
+  recentSwatches = [u].concat(recentSwatches.filter(x => x.toUpperCase() !== u)).slice(0, 10);
+  try { localStorage.setItem("ck_recent_swatches", JSON.stringify(recentSwatches)); } catch (e) {}
+  renderSwatches();
+}
+
 const SLOT_NAMES = { accent: "主色", headBg: "上框", bodyBg: "中框", footBg: "下框", btn2Bg: "次鈕", fg: "文字" };
 function getSlotValue(slot) {
   return slot === "headBg" ? state.headBg : (slot === "bodyBg" ? state.bodyBg : (slot === "footBg" ? state.footBg : (slot === "btn2Bg" ? state.btn2Bg : (slot === "fg" ? state.cardFg : state.color))));
@@ -855,7 +870,7 @@ function selectColorSlot(slot) {
   const cur = (getSlotValue(slot) || "#C5AE6E").toUpperCase();
   document.getElementById("inColor").value = cur.toLowerCase();
   document.getElementById("inColorHex").value = cur;
-  document.querySelectorAll("#swatches .swatch").forEach(b => b.classList.toggle("active", b.dataset.hex.toUpperCase() === cur));
+  renderSwatches();
 }
 function syncCssVars() {
   document.documentElement.style.setProperty("--accent", state.color);
@@ -888,7 +903,7 @@ function applySlotColor(hex) {
   else { state.color = u; reprocessLogoIfLoaded(); }
   syncCssVars(); renderPreview();
 }
-function onHexInput(v) { const c = v.trim().startsWith("#") ? v.trim() : "#" + v.trim(); if (/^#[0-9a-fA-F]{6}$/.test(c)) applySlotColor(c); }
+function onHexInput(v) { const c = v.trim().startsWith("#") ? v.trim() : "#" + v.trim(); if (/^#[0-9a-fA-F]{6}$/.test(c)) { applySlotColor(c); rememberSwatch(c); } }
 
 /* 行內直接編輯控制 */
 function editInlineField(key, text) { state[key] = text.trim(); persistLocal(); }
@@ -1133,7 +1148,7 @@ function renderPreview() {
   const footHtml = `
     <div class="mc-foot" data-cslot="footBg">
       ${buildSocialIconsHtml()}
-      <button type="button" class="mc-btn-link" data-cslot="accent" onclick="shareToLine()">轉傳這張名片</button>
+      <button type="button" class="mc-btn-link" data-cslot="accent" onclick="shareToLine()">分享名片 · Share</button>
     </div>
   `;
 
