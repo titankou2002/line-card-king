@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2323201B'/%3E%3Crect x='12' y='18' width='40' height='28' rx='5' fill='none' stroke='%23C5AE6E' stroke-width='4'/%3E%3Cline x1='18' y1='27' x2='36' y2='27' stroke='%23C5AE6E' stroke-width='3.5' stroke-linecap='round'/%3E%3Cline x1='18' y1='35' x2='30' y2='35' stroke='%23E8D9AD' stroke-width='3' stroke-linecap='round'/%3E%3Ccircle cx='43' cy='31' r='4' fill='%23C5AE6E'/%3E%3C/svg%3E">
+<title>LINE 名片王 · 帳號管理後台</title>
+<script>
+window.CARD_KING_CONFIG = {
+  GAS_API: "https://script.google.com/macros/s/AKfycbxB2wyCEt-0xeXL43Ak7NvkB2oNGVMfXwJRJvMZcCR0GYhpNlIbTtEwqy_G4pVJ5N-x/exec",
+  LIFF_ID: "2007666611-fbGOItDt"
+};
+</script>
+<style>
+  :root {
+    --bg: #f6f4ef; --surface: #fffdf9; --raised: #eeeae2; --border: rgba(31,27,22,0.11);
+    --t1: #1f1b16; --t2: #5e554a; --t3: #7b7266;
+    --ok: #2f6b4b; --ok-bg: rgba(47,107,75,0.12);
+    --err: #b4412f; --err-bg: rgba(180,65,47,0.12);
+    --warn: #9a6418; --warn-bg: rgba(154,100,24,0.13);
+    --gold: #c5ae6e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif; background: var(--bg); color: var(--t1); min-height: 100vh; }
+
+  .topbar {
+    position: sticky; top: 0; z-index: 30;
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-dot {
+    width: 28px; height: 28px; border-radius: 8px; background: #23201b;
+    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .topbar h1 { font-size: 15px; font-weight: 700; letter-spacing: 0.02em; }
+  .top-act { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 20px 16px 64px; display: flex; flex-direction: column; gap: 16px; }
+
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+  .stat .k { font-size: 12px; color: var(--t3); }
+  .stat .v { font-size: 24px; font-weight: 700; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .stat .v.ok { color: var(--ok); }
+  .stat .v.err { color: var(--err); }
+
+  .toolbar {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px;
+  }
+  .toolbar-left { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 220px; flex-wrap: wrap; }
+  .search-input {
+    flex: 1; min-width: 180px; height: 36px; padding: 0 12px;
+    border: 1px solid var(--border); border-radius: 8px; background: var(--bg);
+    font-family: inherit; font-size: 14px; color: var(--t1);
+  }
+  .search-input:focus { outline: none; border-color: #23201b; background: #fff; }
+  .pills { display: inline-flex; background: var(--raised); border-radius: 8px; padding: 3px; gap: 2px; }
+  .pill {
+    border: none; background: transparent; color: var(--t2); font-family: inherit;
+    font-size: 12.5px; font-weight: 600; padding: 5px 11px; border-radius: 6px; cursor: pointer;
+  }
+  .pill.active { background: #23201b; color: #e2ca88; }
+  .sort-sel {
+    height: 36px; padding: 0 10px; border: 1px solid var(--border); border-radius: 8px;
+    background: var(--surface); font-family: inherit; font-size: 13px; color: var(--t1); cursor: pointer;
+  }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    text-align: left; font-size: 12px; font-weight: 700; color: var(--t3);
+    padding: 12px 12px; border-bottom: 1px solid var(--border); background: #faf8f3; white-space: nowrap;
+  }
+  td { padding: 13px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr.row-off { background: rgba(180,65,47,0.025); }
+
+  .u-name { font-size: 14px; font-weight: 700; color: var(--t1); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .u-sub { font-size: 12px; color: var(--t2); margin-top: 2px; }
+  .u-meta { font-size: 11.5px; color: var(--t3); margin-top: 3px; word-break: break-all; }
+  .code-tag {
+    display: inline-block; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px; padding: 1px 6px; border-radius: 5px; background: var(--raised); color: var(--t2);
+  }
+  .style-tag {
+    display: inline-block; font-size: 11px; padding: 1px 6px; border-radius: 5px;
+    background: rgba(197,174,110,0.18); color: #6e5922; font-weight: 600;
+  }
+
+  .count-num { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .time-col { font-size: 12px; color: var(--t2); line-height: 1.55; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .time-lbl { color: var(--t3); font-size: 11px; margin-right: 4px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
+  .badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .b-ok { background: var(--ok-bg); color: var(--ok); }
+  .b-off { background: var(--err-bg); color: var(--err); }
+  .b-exp { background: var(--warn-bg); color: var(--warn); }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+    border: 1px solid var(--border); background: var(--surface); color: var(--t1);
+    font-size: 12px; font-weight: 600; padding: 6px 11px; border-radius: 8px;
+    cursor: pointer; font-family: inherit; text-decoration: none; white-space: nowrap;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .btn:hover { background: var(--raised); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-pri { background: #23201b; border-color: #23201b; color: #e2ca88; }
+  .btn-pri:hover { background: #342f28; }
+  .btn-open { background: var(--ok); border-color: var(--ok); color: #fff; }
+  .btn-open:hover { background: #26593e; }
+  .btn-close { background: var(--surface); border-color: rgba(180,65,47,0.45); color: var(--err); }
+  .btn-close:hover { background: var(--err-bg); }
+  .btn-danger { color: var(--err); border-color: rgba(180,65,47,0.28); }
+  .btn-danger:hover { background: var(--err-bg); }
+
+  .act-cell { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+  .login {
+    max-width: 380px; margin: 80px auto; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 16px; padding: 26px 24px;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .login h2 { font-size: 17px; font-weight: 700; }
+  .login input {
+    height: 42px; padding: 0 12px; border: 1px solid var(--border); border-radius: 9px;
+    font-family: inherit; font-size: 16px; background: var(--bg); color: var(--t1);
+  }
+  .login input:focus { outline: none; border-color: #23201b; background: #fff; }
+  .login-err { font-size: 12.5px; color: var(--err); min-height: 18px; }
+
+  .empty { text-align: center; padding: 48px 16px; color: var(--t3); font-size: 13.5px; }
+
+  .modal-bg {
+    position: fixed; inset: 0; z-index: 90; background: rgba(20,18,15,0.45);
+    display: none; align-items: center; justify-content: center; padding: 16px;
+  }
+  .modal-card {
+    width: 100%; max-width: 360px; background: var(--surface); border-radius: 14px;
+    border: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; gap: 12px;
+  }
+  .modal-card h3 { font-size: 15px; font-weight: 700; }
+  .modal-card input {
+    height: 40px; padding: 0 10px; border: 1px solid var(--border); border-radius: 8px;
+    font-family: inherit; font-size: 15px;
+  }
+  .modal-act { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: #1f1b16; color: #fff; padding: 10px 18px; border-radius: 10px;
+    font-size: 13px; opacity: 0; pointer-events: none; transition: 0.2s; z-index: 120;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 780px) {
+    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .topbar { padding: 10px 14px; }
+    .wrap { padding: 14px 12px 56px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-dot">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C5AE6E" stroke-width="2" stroke-linecap="round">
+        <rect x="3" y="5" width="18" height="14" rx="2.5"/>
+        <line x1="7" y1="10" x2="14" y2="10"/>
+        <line x1="7" y1="14" x2="11" y2="14"/>
+      </svg>
+    </span>
+    <h1>LINE 名片王 · 帳號管理後台</h1>
+  </div>
+  <div id="topAct" class="top-act" style="display:none;">
+    <a href="card.html?admin=1" class="btn">名片編輯器</a>
+    <button type="button" class="btn" id="btnRefresh" onclick="loadList(true)">重新整理</button>
+    <button type="button" class="btn" onclick="logout()">登出</button>
+  </div>
+</header>
+
+<section id="loginBox" class="login">
+  <h2>管理員驗證</h2>
+  <input type="password" id="inAdminKey" placeholder="輸入管理金鑰" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()">
+  <div class="login-err" id="loginErr"></div>
+  <button type="button" class="btn btn-pri" id="btnLogin" style="height:42px;font-size:14px;" onclick="login()">進入後台</button>
+</section>
+
+<main id="mainBox" class="wrap" style="display:none;">
+  <section class="stats">
+    <div class="stat"><div class="k">帳號 / 名片總數</div><div class="v" id="stTotal">0</div></div>
+    <div class="stat"><div class="k">啟用中</div><div class="v ok" id="stActive">0</div></div>
+    <div class="stat"><div class="k">已停用 / 到期</div><div class="v err" id="stOff">0</div></div>
+    <div class="stat"><div class="k">累計使用（傳送）次數</div><div class="v" id="stSend">0</div></div>
+  </section>
+
+  <section class="toolbar">
+    <div class="toolbar-left">
+      <input type="search" id="inSearch" class="search-input" placeholder="搜尋姓名、公司、Email、代號..." oninput="renderTable()">
+      <div class="pills" role="tablist">
+        <button type="button" class="pill active" data-f="all" onclick="setFilter('all', this)">全部</button>
+        <button type="button" class="pill" data-f="active" onclick="setFilter('active', this)">啟用中</button>
+        <button type="button" class="pill" data-f="off" onclick="setFilter('off', this)">已停用</button>
+      </div>
+    </div>
+    <select id="selSort" class="sort-sel" onchange="renderTable()">
+      <option value="updated">排序：最近更新</option>
+      <option value="created">排序：最新建立</option>
+      <option value="sends">排序：使用次數多→少</option>
+    </select>
+  </section>
+
+  <section class="card">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>註冊人 / 公司 / 帳號</th>
+            <th>狀態</th>
+            <th>使用次數</th>
+            <th>註冊 / 更新 / 到期時間</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<div class="modal-bg" id="expModal" onclick="if(event.target===this)closeExpModal()">
+  <div class="modal-card">
+    <h3 id="expTitle">設定到期日</h3>
+    <input type="date" id="inExpDate">
+    <div class="modal-act">
+      <button type="button" class="btn" onclick="saveExpire('')">設為永久</button>
+      <button type="button" class="btn" onclick="closeExpModal()">取消</button>
+      <button type="button" class="btn btn-pri" onclick="saveExpire(document.getElementById('inExpDate').value)">儲存</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const CFG = window.CARD_KING_CONFIG || {};
+const STYLE_NAMES = {
+  video: "動態影片", full: "全資訊旗艦", side: "側邊影像", hero: "雜誌封面",
+  dark: "深岩燙金", ivory: "極簡象牙", block: "莫蘭迪撞色", frame: "建築黑框"
+};
+
+let adminKey = "";
+let allItems = [];
+let statusFilter = "all";
+let editingExpId = "";
+
+function esc(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("show"), 2600);
+}
+
+async function login() {
+  const k = document.getElementById("inAdminKey").value.trim();
+  const errEl = document.getElementById("loginErr");
+  errEl.textContent = "";
+  if (!k) { errEl.textContent = "請輸入管理金鑰"; return; }
+  const btn = document.getElementById("btnLogin");
+  btn.disabled = true; btn.textContent = "驗證中...";
+  adminKey = k;
+  const ok = await loadList(false);
+  btn.disabled = false; btn.textContent = "進入後台";
+  if (ok) {
+    localStorage.setItem("ck_admin_key", adminKey);
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("mainBox").style.display = "flex";
+    document.getElementById("topAct").style.display = "flex";
+  } else {
+    adminKey = "";
+    errEl.textContent = "金鑰錯誤或連線失敗";
+  }
+}
+
+function logout() {
+  localStorage.removeItem("ck_admin_key");
+  adminKey = "";
+  allItems = [];
+  location.href = location.pathname;
+}
+
+async function loadList(showToast) {
+  const btn = document.getElementById("btnRefresh");
+  if (btn) { btn.disabled = true; btn.textContent = "載入中..."; }
+  try {
+    const url = CFG.GAS_API + "?ac=ecardAdminList&key=" + encodeURIComponent(adminKey);
+    const r = await fetch(url).then(x => x.json());
+    if (!r || !r.success) {
+      if (showToast) toast((r && r.error) || "讀取失敗");
+      return false;
+    }
+    allItems = Array.isArray(r.items) ? r.items : [];
+    renderStats();
+    renderTable();
+    if (showToast) toast("已更新，共 " + allItems.length + " 筆");
+    return true;
+  } catch (e) {
+    if (showToast) toast("連線失敗");
+    return false;
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "重新整理"; }
+  }
+}
+
+function isEffectiveActive(it) {
+  return it.status === "active" && !it.isExpired;
+}
+
+function renderStats() {
+  const total = allItems.length;
+  const activeCount = allItems.filter(isEffectiveActive).length;
+  const offCount = total - activeCount;
+  const sends = allItems.reduce((s, x) => s + (Number(x.sendCount) || 0), 0);
+  document.getElementById("stTotal").textContent = total;
+  document.getElementById("stActive").textContent = activeCount;
+  document.getElementById("stOff").textContent = offCount;
+  document.getElementById("stSend").textContent = sends.toLocaleString();
+}
+
+function setFilter(f, btn) {
+  statusFilter = f;
+  document.querySelectorAll(".pill").forEach(p => p.classList.toggle("active", p === btn));
+  renderTable();
+}
+
+function parseTimeVal(s) {
+  if (!s) return 0;
+  const t = Date.parse(String(s).replace(" ", "T"));
+  return isNaN(t) ? 0 : t;
+}
+
+function fmtTime(s) {
+  if (!s) return "—";
+  return String(s).replace(/:\d{2}$/, "");
+}
+
+function renderTable() {
+  const q = document.getElementById("inSearch").value.trim().toLowerCase();
+  const sortBy = document.getElementById("selSort").value;
+
+  let list = allItems.filter(it => {
+    if (statusFilter === "active" && !isEffectiveActive(it)) return false;
+    if (statusFilter === "off" && isEffectiveActive(it)) return false;
+    if (q) {
+      const hay = [it.cardId, it.clientName, it.cardName, it.enName, it.company, it.email, it.mobile, it.note]
+        .join(" ").toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  list = list.slice().sort((a, b) => {
+    if (sortBy === "sends") return (Number(b.sendCount) || 0) - (Number(a.sendCount) || 0);
+    if (sortBy === "created") return parseTimeVal(b.createdAt) - parseTimeVal(a.createdAt);
+    return parseTimeVal(b.updatedAt) - parseTimeVal(a.updatedAt);
+  });
+
+  const tbody = document.getElementById("tbody");
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="empty">目前沒有符合條件的帳號資料</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = list.map(it => {
+    const displayName = it.cardName || it.clientName || it.cardId;
+    const enPart = it.enName ? (" " + it.enName) : "";
+    const styleName = STYLE_NAMES[it.style] || it.style || "";
+    const isActive = it.status === "active";
+    const badgeHtml = !isActive
+      ? '<span class="badge b-off">已停用</span>'
+      : (it.isExpired ? '<span class="badge b-exp">已到期</span>' : '<span class="badge b-ok">啟用中</span>');
+    const toggleLabel = isActive ? "關閉帳號" : "開啟帳號";
+    const toggleCls = isActive ? "btn btn-close" : "btn btn-open";
+    const nextStatus = isActive ? "suspended" : "active";
+    const contactParts = [];
+    if (it.note) contactParts.push(it.note);
+    if (it.email && (!it.note || !it.note.toLowerCase().includes(it.email.toLowerCase()))) contactParts.push(it.email);
+    if (it.mobile) contactParts.push(it.mobile);
+
+    return `
+      <tr class="${isActive && !it.isExpired ? "" : "row-off"}">
+        <td>
+          <div class="u-name">
+            <span>${esc(displayName + enPart)}</span>
+            <span class="code-tag">${esc(it.cardId)}</span>
+            ${styleName ? `<span class="style-tag">${esc(styleName)}</span>` : ""}
+          </div>
+          ${it.company ? `<div class="u-sub">${esc(it.company)}</div>` : ""}
+          ${contactParts.length ? `<div class="u-meta">${esc(contactParts.join(" · "))}</div>` : ""}
+        </td>
+        <td>${badgeHtml}</td>
+        <td><span class="count-num">${Number(it.sendCount) || 0}</span> <span style="font-size:11.5px;color:var(--t3);">次</span></td>
+        <td class="time-col">
+          <div><span class="time-lbl">建立</span>${esc(fmtTime(it.createdAt))}</div>
+          <div><span class="time-lbl">更新</span>${esc(fmtTime(it.updatedAt))}</div>
+          <div><span class="time-lbl">到期</span>${it.expireDate ? esc(it.expireDate) : "永久"}</div>
+        </td>
+        <td>
+          <div class="act-cell">
+            <button type="button" class="${toggleCls}" onclick="toggleStatus('${esc(it.cardId)}','${nextStatus}',this)">${toggleLabel}</button>
+            <a class="btn" href="card.html?preview=${encodeURIComponent(it.cardId)}" target="_blank" rel="noopener">預覽</a>
+            <button type="button" class="btn" onclick="openExpModal('${esc(it.cardId)}','${esc(displayName)}','${esc(it.expireDate || "")}')">到期日</button>
+            <button type="button" class="btn btn-danger" onclick="deleteCard('${esc(it.cardId)}','${esc(displayName)}')">刪除</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+async function adminPost(payload) {
+  const r = await fetch(CFG.GAS_API, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({ action: "ecardAdminUpsert", key: adminKey, ...payload })
+  });
+  return r.json();
+}
+
+async function toggleStatus(cardId, nextStatus, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = "處理中..."; }
+  try {
+    const d = await adminPost({ op: "upsert", cardId, status: nextStatus });
+    if (d && d.success) {
+      const target = allItems.find(x => x.cardId === cardId);
+      if (target) target.status = nextStatus;
+      renderStats();
+      renderTable();
+      toast(nextStatus === "active" ? "已開啟帳號：" + cardId : "已關閉帳號：" + cardId);
+    } else {
+      toast((d && d.error) || "更新失敗");
+      renderTable();
+    }
+  } catch (e) {
+    toast("連線失敗");
+    renderTable();
+  }
+}
+
+function openExpModal(cardId, name, currentExp) {
+  editingExpId = cardId;
+  document.getElementById("expTitle").textContent = "設定到期日 · " + name;
+  document.getElementById("inExpDate").value = currentExp || "";
+  document.getElementById("expModal").style.display = "flex";
+}
+
+function closeExpModal() {
+  editingExpId = "";
+  document.getElementById("expModal").style.display = "none";
+}
+
+async function saveExpire(val) {
+  if (!editingExpId) return;
+  const cardId = editingExpId;
+  closeExpModal();
+  try {
+    const d = await adminPost({ op: "upsert", cardId, expireDate: val || "" });
+    if (d && d.success) {
+      toast(val ? ("已設定到期日：" + val) : "已設為永久");
+      loadList(false);
+    } else {
+      toast((d && d.error) || "更新失敗");
+    }
+  } catch (e) {
+    toast("連線失敗");
+  }
+}
+
+async function deleteCard(cardId, name) {
+  if (!confirm("確定刪除「" + name + " (" + cardId + ")」？刪除後無法復原。")) return;
+  try {
+    const d = await adminPost({ op: "delete", cardId });
+    if (d && d.success) {
+      allItems = allItems.filter(x => x.cardId !== cardId);
+      renderStats();
+      renderTable();
+      toast("已刪除：" + cardId);
+    } else {
+      toast((d && d.error) || "刪除失敗");
+    }
+  } catch (e) {
+    toast("連線失敗");
+  }
+}
+
+(async () => {
+  const qs = new URLSearchParams(location.search);
+  const urlKey = (qs.get("key") || "").trim();
+  const savedKey = (localStorage.getItem("ck_admin_key") || "").trim();
+  const tryKey = urlKey || savedKey;
+  if (tryKey) {
+    adminKey = tryKey;
+    document.getElementById("inAdminKey").value = tryKey;
+    const ok = await loadList(false);
+    if (ok) {
+      localStorage.setItem("ck_admin_key", adminKey);
+      document.getElementById("loginBox").style.display = "none";
+      document.getElementById("mainBox").style.display = "flex";
+      document.getElementById("topAct").style.display = "flex";
+    } else {
+      adminKey = "";
+    }
+  }
+})();
+</script>
+</body>
+</html>

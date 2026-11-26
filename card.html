@@ -1,0 +1,2344 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-title" content="LINE 名片王">
+<meta name="theme-color" content="#23201B">
+<link rel="apple-touch-icon" sizes="180x180" href="https://bigt.cc/line/icons/card-king-icon.png">
+<link rel="icon" type="image/png" sizes="180x180" href="https://bigt.cc/line/icons/card-king-icon.png">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2323201B'/%3E%3Crect x='12' y='18' width='40' height='28' rx='5' fill='none' stroke='%23C5AE6E' stroke-width='4'/%3E%3Cline x1='18' y1='27' x2='36' y2='27' stroke='%23C5AE6E' stroke-width='3.5' stroke-linecap='round'/%3E%3Cline x1='18' y1='35' x2='30' y2='35' stroke='%23E8D9AD' stroke-width='3' stroke-linecap='round'/%3E%3Ccircle cx='43' cy='31' r='4' fill='%23C5AE6E'/%3E%3C/svg%3E">
+<title>LINE 名片王</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;700&family=Noto+Serif+TC:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+window.CARD_KING_CONFIG = {
+  SUPABASE_URL: "https://vzpizjhlwxsfzbiguvfo.supabase.co",
+  SUPABASE_ANON_KEY: "sb_publishable_wXvQ3jLB3tXGdkp-8Vgl7w_8A3Vn4gT",
+  GAS_API: "https://script.google.com/macros/s/AKfycbxB2wyCEt-0xeXL43Ak7NvkB2oNGVMfXwJRJvMZcCR0GYhpNlIbTtEwqy_G4pVJ5N-x/exec",
+  YT_CONVERTER_API: "",
+  LIFF_ID: "2007666611-fbGOItDt",
+  DONATE_URL: "https://line.me/R/ti/p/@297azzax"
+};
+</script>
+<style>
+  :root {
+    --bg: #f6f4ef;
+    --surface: #fffdf9;
+    --raised: #eeeae2;
+    --border: rgba(31, 27, 22, 0.11);
+    --t1: #1f1b16;
+    --t2: #5e554a;
+    --t3: #7b7266;
+    --accent: #c5ae6e;
+    --accent-text: #1f1b16;
+    --head-bg: #23201b;
+    --body-bg: #23201b;
+    --foot-bg: #23201b;
+    --btn2-bg: #332e27;
+    --card-fg: #f1ece2;
+    --card-font: "Microsoft JhengHei", "微軟正黑體", sans-serif;
+    --line-green: #06c755;
+    --chat-bg-light: #8cabd9;
+    --chat-bg-dark: #111315;
+    --err: #b4412f;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { overflow-x: hidden; width: 100%; max-width: 100vw; }
+  body {
+    font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif;
+    background: var(--bg);
+    color: var(--t1);
+    min-height: 100vh;
+  }
+
+  /* 頂部列 */
+  .topbar {
+    position: sticky; top: 0; z-index: 30;
+    background: rgba(255, 253, 249, 0.96);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 10px;
+    display: flex; align-items: center; justify-content: space-between; gap: 6px;
+  }
+  .topbar-title { display: flex; align-items: center; gap: 6px; min-width: 0; }
+  .topbar h1 { font-size: 14px; font-weight: 700; white-space: nowrap; }
+  .toolbar { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+
+  .btn {
+    appearance: none; border: 1px solid var(--border); background: var(--surface);
+    color: var(--t1); font-size: 13px; font-weight: 600; padding: 7px 13px;
+    border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center;
+    justify-content: center; gap: 5px; text-decoration: none; font-family: inherit; white-space: nowrap;
+  }
+  .btn:hover { background: var(--raised); }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-pri { background: #23201b; border-color: #23201b; color: #fff; }
+  .btn-line { background: var(--line-green); border-color: var(--line-green); color: #fff; font-weight: 700; }
+  .btn-line:hover { background: #05b34c; }
+  .btn-danger { color: var(--err); border-color: rgba(180,65,47,0.3); }
+  .btn-sm { padding: 5px 10px; font-size: 12px; border-radius: 7px; }
+
+  .icon-btn {
+    appearance: none; width: 32px; height: 32px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--surface); color: var(--t1);
+    display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
+  }
+  .icon-btn:hover { background: var(--raised); }
+  .icon-btn.acct-ico { border-radius: 999px; background: #23201b; border-color: #23201b; color: #e2ca88; font-size: 13px; font-weight: 700; }
+
+  /* 單欄精簡置中工作台（手機與電腦皆零來回捲動） */
+  .studio {
+    max-width: 480px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 12px 12px 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* 管理員多張名片切換列（僅管理員可見，一般用戶完全隱藏） */
+  .admin-bar {
+    display: none; align-items: center; gap: 6px; width: 100%;
+    background: #23201b; border-radius: 11px; padding: 7px 9px; color: #e2ca88;
+  }
+  .admin-bar select {
+    flex: 1; min-width: 0; height: 32px; border-radius: 7px; border: 1px solid rgba(226,202,136,0.35);
+    background: #312d26; color: #fff; font-family: inherit; font-size: 12.5px; font-weight: 600; padding: 0 8px;
+  }
+  .admin-bar .abtn {
+    appearance: none; border: 1px solid rgba(226,202,136,0.45); background: #312d26; color: #e2ca88;
+    height: 32px; padding: 0 10px; border-radius: 7px; font-size: 12px; font-weight: 700;
+    cursor: pointer; font-family: inherit; white-space: nowrap; flex-shrink: 0;
+  }
+  .admin-bar .abtn.pri { background: #c5ae6e; border-color: #c5ae6e; color: #1f1b16; }
+
+  /* 版面大分類：影片版 / 圖片版 */
+  .cat-bar {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+    background: var(--raised); padding: 4px; border-radius: 11px; width: 100%;
+  }
+  .cat-btn {
+    appearance: none; border: none; background: transparent; color: var(--t2);
+    font-family: inherit; font-size: 13px; font-weight: 700; padding: 7px 8px;
+    border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .cat-btn.active { background: #23201b; color: #e2ca88; box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+
+  /* 頂部快選條：拍名片 + 橫滑版型 */
+  .top-strip {
+    display: flex; align-items: center; gap: 8px; width: 100%;
+  }
+  .style-bar {
+    display: flex; overflow-x: auto; flex-wrap: nowrap; gap: 6px; width: 100%;
+    padding: 2px 0; -webkit-overflow-scrolling: touch;
+  }
+  .style-bar::-webkit-scrollbar { display: none; }
+  .style-opt {
+    flex: 0 0 auto; border: 1.5px solid var(--border); border-radius: 999px;
+    padding: 6px 13px; background: var(--surface); cursor: pointer;
+    font-family: inherit; font-size: 12.5px; font-weight: 700; color: var(--t1); white-space: nowrap;
+  }
+  .style-opt.active { border-color: #23201b; background: #23201b; color: #e2ca88; }
+
+  /* 預覽舞台 */
+  .canvas-stage {
+    border-radius: 18px;
+    background: var(--chat-bg-light);
+    padding: 14px 12px 16px;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    transition: background 0.2s;
+  }
+  .canvas-stage.dark-chat { background: var(--chat-bg-dark); }
+
+  /* 所見即所得單張名片（鎖定 LINE mega 真實 300px 寬度） */
+  .mega-card {
+    width: 100%; max-width: 300px; border-radius: 18px; overflow: hidden;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.22);
+    font-family: var(--card-font);
+    background: var(--body-bg);
+    color: var(--card-fg);
+  }
+  .mega-card.style-frame { border: 3px solid var(--card-fg); border-radius: 12px; }
+  .mc-top-bar { height: 5px; background: var(--accent); }
+  .mc-head-area { background: var(--head-bg); }
+  .mc-body { padding: 12px 18px; display: flex; flex-direction: column; gap: 7px; background: var(--body-bg); }
+  .mc-foot { padding: 6px 18px 14px; display: flex; flex-direction: column; gap: 8px; background: var(--foot-bg); }
+
+  /* 行內直接點字編輯樣式（使用原生 input，手機/電腦 100% 支援原生全選） */
+  .ed-wrap { display: inline-flex; align-items: center; gap: 4px; max-width: 100%; }
+  .ed-wrap-full { display: flex; align-items: center; gap: 4px; width: 100%; }
+  .mc-inp {
+    appearance: none; -webkit-appearance: none; border: none; outline: none; background: transparent;
+    color: inherit; font-family: inherit; font-size: inherit; font-weight: inherit; line-height: inherit;
+    padding: 1px 3px; margin: 0; border-radius: 4px; min-width: 24px; max-width: 100%;
+    field-sizing: content; -webkit-user-select: text; user-select: text;
+    transition: background 0.12s, box-shadow 0.12s; cursor: text;
+  }
+  .mc-inp:not([readonly]):hover { background: rgba(197, 174, 110, 0.14); }
+  .mc-inp:not([readonly]):focus { background: rgba(197, 174, 110, 0.22); box-shadow: 0 0 0 1.5px var(--accent); }
+  .mc-inp[readonly] { cursor: default; }
+  .mc-inp-full { width: 100%; flex: 1; min-width: 0; }
+
+  .del-x {
+    appearance: none; border: none; background: rgba(128,128,128,0.28); color: inherit;
+    width: 16px; height: 16px; border-radius: 999px; font-size: 10px; line-height: 1;
+    display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+    flex-shrink: 0; opacity: 0.65;
+  }
+  .del-x:hover { opacity: 1; background: var(--err); color: #fff; }
+  .clean-view .del-x, .clean-view .add-row-inline { display: none !important; }
+
+  .add-row-inline {
+    appearance: none; border: 1px dashed rgba(197,174,110,0.45); background: transparent;
+    color: var(--accent); font-size: 11.5px; font-weight: 700; padding: 4px 10px;
+    border-radius: 6px; cursor: pointer; align-self: flex-start; margin-top: 2px; font-family: inherit;
+  }
+
+  .color-pick-mode [data-cslot] { cursor: crosshair !important; }
+  .color-pick-mode [data-cslot]:hover { outline: 2px dashed var(--accent); outline-offset: -2px; }
+
+  .mc-brand-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+  .mc-logo { height: var(--logo-h, 32px); color: var(--accent); flex-shrink: 0; display: inline-flex; align-items: center; cursor: pointer; }
+  .mc-logo img { height: var(--logo-h, 32px); width: auto; max-width: 180px; object-fit: contain; display: block; }
+  .mc-co-name { font-size: 11.5px; font-weight: 600; opacity: 0.85; color: var(--co-col, inherit); }
+  .mc-name-line { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px; }
+  .mc-name { font-size: 21px; font-weight: 700; line-height: 1.25; color: var(--name-col, inherit); }
+  .mc-en-name { font-size: 15px; font-weight: 700; color: var(--en-col, var(--accent)); }
+  .mc-slogan { font-size: 12px; opacity: 0.85; margin-top: 5px; line-height: 1.4; color: var(--slogan-col, inherit); }
+  .mc-sep { height: 1px; background: var(--sep-col, currentColor); opacity: var(--sep-op, 0.14); margin: 0 18px; }
+
+  .mc-row { display: flex; align-items: center; gap: 8px; font-size: 12.5px; line-height: 1.4; }
+  .mc-lbl { min-width: 34px; flex-shrink: 0; color: var(--row-ico-col, var(--accent)); font-size: 11.5px; font-weight: 700; }
+  .mc-lbl-ico { width: 18px; height: 18px; flex-shrink: 0; color: var(--row-ico-col, var(--accent)); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+  .mc-val { flex: 1; min-width: 0; word-break: break-word; color: var(--row-val-col, inherit); }
+  .mc-row-tools { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+  .clean-view .mc-row-tools { display: none !important; }
+
+  .mc-btn-link {
+    height: 22px; background: transparent; border: none; color: var(--share-col, var(--accent));
+    font-size: 11px; font-weight: 600; opacity: 0.82; letter-spacing: 0.04em; cursor: pointer; font-family: inherit;
+  }
+
+  /* 10 顆自適應寬度可拖曳快捷按鈕（依數量自動填滿卡片寬度） */
+  .mc-action-grid { display: flex; flex-direction: column; gap: 7px; padding: 4px 0 2px; width: 100%; }
+  .mc-icon-row { display: flex; justify-content: center; gap: 7px; width: 100%; }
+  .mc-icon-chip {
+    flex: 1 1 0; min-width: 0; max-width: 112px; height: 50px; border-radius: 11px;
+    background: var(--btn2-bg); border: 1px solid var(--btn-bd-col, rgba(197,174,110,0.36));
+    color: var(--btn-ico-col, var(--accent)); display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    text-decoration: none; cursor: grab; user-select: none; -webkit-user-select: none; touch-action: none;
+    transition: transform 0.14s, border-color 0.14s, box-shadow 0.14s, opacity 0.14s;
+  }
+  .clean-view .mc-icon-chip { cursor: pointer; touch-action: auto; }
+  .mc-icon-chip.dragging { opacity: 0.45; transform: scale(1.08); cursor: grabbing; }
+  .mc-icon-chip.drag-over { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); transform: scale(1.06); }
+  .mc-icon-lbl { font-size: 10px; font-weight: 700; line-height: 1; letter-spacing: 0.02em; pointer-events: none; }
+  .mc-icon-chip svg { pointer-events: none; }
+  .mc-media-click { cursor: pointer; }
+
+  .mc-video-box { position: relative; width: 100%; aspect-ratio: 16/9; background: #14120f; overflow: hidden; }
+  .mc-video-box video, .mc-video-box img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .mc-yt-play { position: absolute; inset: 0; background: rgba(0,0,0,0.24); display: flex; align-items: center; justify-content: center; }
+  .mc-yt-play span { width: 48px; height: 34px; border-radius: 9px; background: rgba(0,0,0,0.72); color: #fff; display: inline-flex; align-items: center; justify-content: center; }
+  .mc-photo { width: 60px; height: 74px; border-radius: 10px; overflow: hidden; flex-shrink: 0; border: 1.5px solid var(--accent); }
+  .mc-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .mc-hero-box { position: relative; height: 176px; background: #2c2822; overflow: hidden; }
+  .mc-hero-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .mc-hero-grad { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(20,18,15,0.12) 0%, rgba(20,18,15,0.2) 40%, rgba(20,18,15,0.88) 100%); display: flex; flex-direction: column; justify-content: space-between; padding: 12px 16px; }
+  .mc-logo-pill { background: rgba(255,253,249,0.92); padding: 4px 8px; border-radius: 6px; display: inline-flex; }
+  .mc-logo-pill img { height: 16px; width: auto; max-width: 100px; display: block; }
+  /* 側邊滿版長向影像版型（左 36%：右 64%，與 LINE 實際比例 1:1 對齊） */
+  .mc-side-full { display: grid; grid-template-columns: 36% minmax(0, 1fr); align-items: stretch; min-height: 330px; }
+  .mc-side-media { position: relative; background: #14120f; overflow: hidden; height: 100%; }
+  .mc-side-media img, .mc-side-media video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+  .mc-side-col { display: flex; flex-direction: column; min-width: 0; background: var(--body-bg); }
+  .mc-side-head { padding: 14px 12px 10px; display: flex; flex-direction: column; gap: 4px; background: var(--head-bg); }
+  .mc-side-full .mc-name { font-size: 18px; }
+  .mc-side-full .mc-en-name { font-size: 13px; }
+  .mc-side-full .mc-co-name { font-size: 11px; }
+  .mc-side-full .mc-slogan { font-size: 11px; margin-top: 2px; }
+  .mc-side-full .mc-sep { margin: 0 12px; }
+  .mc-side-full .mc-body { padding: 10px 12px; gap: 5px; flex: 1; }
+  .mc-side-full .mc-row { font-size: 11.5px; gap: 5px; }
+  .mc-side-full .mc-lbl { min-width: 28px; font-size: 10.5px; }
+  .mc-side-full .mc-foot { padding: 4px 10px 12px; gap: 6px; }
+  .mc-side-full .mc-icon-row { gap: 5px; }
+  .mc-side-full .mc-icon-chip { flex: 1 1 0; min-width: 0; max-width: 72px; width: auto; height: 42px; border-radius: 9px; gap: 2px; }
+  .mc-side-full .mc-icon-chip svg { width: 15px; height: 15px; }
+  .mc-side-full .mc-icon-lbl { font-size: 8.5px; }
+
+  .mc-block-top { padding: 16px 18px 14px; color: #FFFFFF; }
+  .mc-block-top .mc-en-name { color: #F5E6C4; }
+
+  /* 點擊按鈕時浮出的極簡單行編輯條 */
+  .inline-bar {
+    display: none; width: 100%; max-width: 100%; box-sizing: border-box;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 7px 8px; gap: 6px; align-items: center; box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+    overflow: hidden;
+  }
+  .inline-bar input {
+    flex: 1 1 0; width: 0; min-width: 0; height: 36px; padding: 0 10px;
+    border: 1px solid var(--border); border-radius: 8px; font-size: 16px; font-family: inherit;
+    background: #fff;
+  }
+  .inline-bar .btn { flex-shrink: 0; padding: 0 10px; height: 36px; }
+
+  /* 進階設定收合區 */
+  .adv-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 12px;
+    width: 100%; min-width: 0; max-width: 100%;
+  }
+  .dock-tabs {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px;
+    background: var(--raised); padding: 4px; border-radius: 9px;
+  }
+  .dock-tab {
+    border: none; background: transparent; padding: 7px 4px; border-radius: 6px;
+    font-size: 12.5px; font-weight: 700; color: var(--t2); cursor: pointer; font-family: inherit;
+  }
+  .dock-tab.active { background: var(--surface); color: var(--t1); }
+  .dock-pane { display: none; flex-direction: column; gap: 12px; min-width: 0; }
+  .dock-pane.active { display: flex; }
+
+  .slot-tabs { display: flex; flex-wrap: wrap; gap: 4px; background: var(--raised); padding: 3px; border-radius: 8px; }
+  .slot-tab { border: none; background: transparent; padding: 4px 9px; border-radius: 6px; font-size: 12px; font-weight: 700; color: var(--t2); cursor: pointer; font-family: inherit; }
+  .slot-tab.active { background: var(--surface); color: var(--t1); }
+
+  .color-row { display: flex; align-items: center; gap: 8px; }
+  .color-picker-wrap { position: relative; width: 38px; height: 34px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); flex-shrink: 0; }
+  .color-picker-wrap input[type="color"] { position: absolute; inset: -6px; width: 52px; height: 48px; border: none; cursor: pointer; }
+  .swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+  .swatch { width: 26px; height: 26px; border-radius: 999px; border: 2px solid transparent; cursor: pointer; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.12); }
+  .swatch.active { border-color: #1f1b16; }
+
+  .ext-stack { display: flex; flex-direction: column; gap: 7px; }
+  .ext-row {
+    display: grid; grid-template-columns: 44px 82px minmax(0, 1fr); align-items: center; gap: 6px;
+    padding: 6px 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 9px;
+  }
+  .ext-mv { display: inline-flex; gap: 2px; }
+  .ext-mv button {
+    appearance: none; border: 1px solid var(--border); background: var(--surface); color: var(--t2);
+    width: 20px; height: 26px; border-radius: 5px; font-size: 11px; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; padding: 0;
+  }
+  .ext-mv button:hover { background: var(--raised); color: var(--t1); }
+  .ext-chk { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+  .ext-chk input { width: 15px; height: 15px; accent-color: #23201b; }
+  .ext-row input[type="text"], .ext-row input[type="email"] {
+    height: 32px; padding: 0 9px; border: 1px solid var(--border); border-radius: 7px;
+    font-size: 12.5px; background: #fff; font-family: inherit; width: 100%; min-width: 0;
+  }
+
+  .modal-bg { display: none; position: fixed; inset: 0; z-index: 200; background: rgba(31,27,22,0.58); align-items: center; justify-content: center; padding: 20px; }
+  .modal-card { background: #fffdf9; border-radius: 18px; padding: 24px; max-width: 360px; width: 100%; text-align: center; display: flex; flex-direction: column; gap: 12px; }
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px); background: #1f1b16; color: #fff; padding: 9px 16px; border-radius: 10px; font-size: 12.5px; opacity: 0; pointer-events: none; transition: 0.2s; z-index: 400; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .vid-prog-wrap { display: none; flex-direction: column; gap: 4px; width: 100%; }
+  .vid-prog-track { width: 100%; height: 6px; border-radius: 999px; background: var(--raised); overflow: hidden; }
+  .vid-prog-fill { height: 100%; width: 0%; background: var(--accent); border-radius: 999px; transition: width 0.15s ease; }
+  .vid-prog-txt { font-size: 11.5px; font-weight: 700; color: var(--t2); display: flex; justify-content: space-between; }
+  @keyframes ckSpin { to { transform: rotate(360deg); } }
+  .ck-spinner { width: 34px; height: 34px; border: 3px solid var(--raised); border-top-color: var(--accent); border-radius: 999px; animation: ckSpin 0.8s linear infinite; margin: 0 auto; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-title">
+    <svg width="28" height="28" viewBox="0 0 64 64">
+      <rect width="64" height="64" rx="14" fill="#23201B"/>
+      <rect x="12" y="18" width="40" height="28" rx="5" fill="none" stroke="#C5AE6E" stroke-width="4"/>
+      <line x1="18" y1="27" x2="36" y2="27" stroke="#C5AE6E" stroke-width="3.5" stroke-linecap="round"/>
+      <line x1="18" y1="35" x2="30" y2="35" stroke="#E8D9AD" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="43" cy="31" r="4" fill="#C5AE6E"/>
+    </svg>
+    <h1>LINE 名片王</h1>
+  </div>
+  <div class="toolbar">
+    <button type="button" class="btn btn-pri btn-sm" id="btnSave" style="height:32px;padding:0 10px;" onclick="saveCard()">儲存</button>
+    <button type="button" class="btn btn-line btn-sm" style="height:32px;padding:0 10px;" onclick="shareToLine()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>
+      發送名片
+    </button>
+    <button type="button" class="icon-btn" id="btnTheme" title="深淺背景" onclick="toggleChatTheme()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+    </button>
+    <button type="button" class="icon-btn acct-ico" id="btnAuthOpen" title="登入 / 註冊" onclick="openAuthModal()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </button>
+  </div>
+</header>
+
+<main class="studio">
+  <!-- 管理員多名片切換列（一般用戶看不到） -->
+  <div class="admin-bar" id="adminBar">
+    <select id="adminCatFilter" style="flex:0 0 68px;" onchange="onAdminCatChange(this.value)">
+      <option value="all">全部</option>
+    </select>
+    <select id="adminCardSelect" onchange="onAdminPickCard(this.value)">
+      <option value="">＋ 新建一張名片</option>
+    </select>
+    <button type="button" class="abtn pri" onclick="adminNewCard()">＋新增</button>
+    <button type="button" class="abtn" onclick="openAdminMgrModal()">管理</button>
+  </div>
+
+  <!-- 拍名片 + 預覽開關 -->
+  <div class="top-strip">
+    <input type="file" id="ocrFile" accept="image/*" capture="environment" hidden onchange="onOcrPick(event)">
+    <button type="button" class="btn btn-pri" id="btnOcr" style="flex:1;height:38px;" onclick="document.getElementById('ocrFile').click()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      拍名片自動填入
+    </button>
+    <button type="button" class="btn" id="btnCleanToggle" style="height:38px;" onclick="toggleCleanView()">預覽</button>
+  </div>
+
+  <!-- 版面分類：影片版（頂部影片）/ 圖片版（多元排版） -->
+  <div class="cat-bar" id="catBar">
+    <button type="button" class="cat-btn active" data-cat="video" onclick="setLayoutCat('video')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="3"/><polygon points="10 9 15 12 10 15 10 9" fill="currentColor" stroke="none"/></svg>
+      影片版（頂部播放）
+    </button>
+    <button type="button" class="cat-btn" data-cat="image" onclick="setLayoutCat('image')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+      圖片版（多元排版）
+    </button>
+  </div>
+
+  <!-- 依分類顯示對應版型 -->
+  <div class="style-bar" id="styleGrid">
+    <button type="button" class="style-opt active" data-cat="video" data-style="video" onclick="setStyle('video')">動態影片</button>
+    <button type="button" class="style-opt" data-cat="video" data-style="full" onclick="setStyle('full')">全資訊旗艦</button>
+    <button type="button" class="style-opt" data-cat="image" data-style="side" onclick="setStyle('side')">側邊滿版</button>
+    <button type="button" class="style-opt" data-cat="image" data-style="hero" onclick="setStyle('hero')">雜誌封面</button>
+    <button type="button" class="style-opt" data-cat="image" data-style="dark" onclick="setStyle('dark')">深岩燙金</button>
+    <button type="button" class="style-opt" data-cat="image" data-style="ivory" onclick="setStyle('ivory')">極簡象牙</button>
+    <button type="button" class="style-opt" data-cat="image" data-style="block" onclick="setStyle('block')">莫蘭迪撞色</button>
+    <button type="button" class="style-opt" data-cat="image" data-style="frame" onclick="setStyle('frame')">建築黑框</button>
+  </div>
+
+  <!-- 直接點字修改的名片本體 -->
+  <input type="file" id="quickMediaFile" accept="video/*,image/*,.mp4,.mov,.m4v" hidden onchange="onQuickMediaPick(event)">
+  <section class="canvas-stage" id="phoneScreen">
+    <div id="cardMount" style="width:100%;display:flex;justify-content:center;"></div>
+    <div class="vid-prog-wrap" id="stageProgWrap" style="max-width:344px;background:rgba(255,253,249,0.92);padding:8px 12px;border-radius:10px;">
+      <div class="vid-prog-txt"><span id="stageProgLabel">讀取影片中...</span><span id="stageProgPct">0%</span></div>
+      <div class="vid-prog-track"><div class="vid-prog-fill" id="stageProgFill"></div></div>
+    </div>
+    <!-- 影片位置與 10 秒片段拉選列 -->
+    <div id="vidTrimBar" style="display:none;width:100%;max-width:344px;background:rgba(255,253,249,0.96);border:1px solid var(--border);border-radius:12px;padding:10px 12px;flex-direction:column;gap:8px;box-shadow:0 6px 18px rgba(0,0,0,0.12);">
+      <div id="vidTimeRow" style="display:none;flex-direction:column;gap:4px;">
+        <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:var(--t1);">
+          <span>片段起點</span><span id="lblTrimRange">0.0s ～ 10.0s</span>
+        </div>
+        <input type="range" id="inTrimStart" min="0" max="10" step="0.5" value="0" oninput="onTrimStartSlide(this.value)" style="width:100%;accent-color:#23201b;">
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:12px;font-weight:700;color:var(--t2);flex-shrink:0;">畫面左右</span>
+        <input type="range" id="inVidPosX" min="0" max="100" value="50" oninput="setVideoPosX(this.value)" style="flex:1;accent-color:#23201b;">
+        <span id="lblVidPosX" style="font-size:11.5px;font-weight:700;color:var(--t2);width:34px;text-align:right;">50%</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:12px;font-weight:700;color:var(--t2);flex-shrink:0;">畫面上下</span>
+        <input type="range" id="inVidPos" min="0" max="100" value="50" oninput="setVideoPos(this.value)" style="flex:1;accent-color:#23201b;">
+        <span id="lblVidPos" style="font-size:11.5px;font-weight:700;color:var(--t2);width:34px;text-align:right;">50%</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:12px;font-weight:700;color:var(--t2);flex-shrink:0;">畫面縮放</span>
+        <input type="range" id="inVidZoom" min="100" max="220" value="100" oninput="setVideoZoom(this.value)" style="flex:1;accent-color:#23201b;">
+        <span id="lblVidZoom" style="font-size:11.5px;font-weight:700;color:var(--t2);width:34px;text-align:right;">1.0×</span>
+      </div>
+      <div style="display:flex;gap:6px;justify-content:flex-end;">
+        <button type="button" class="btn btn-sm" onclick="closeVidTrimBar()">關閉</button>
+        <button type="button" class="btn btn-sm btn-pri" id="btnApplyTrim" onclick="applyVideoTrim()">套用目前位置</button>
+      </div>
+    </div>
+    <!-- 點擊按鈕浮出的單行編輯條 -->
+    <div class="inline-bar" id="btnEditBar">
+      <input type="text" id="inlineBtnVal" placeholder="">
+      <button type="button" class="btn btn-sm btn-danger" onclick="hideEditingAction()">隱藏</button>
+      <button type="button" class="btn btn-sm btn-pri" onclick="closeInlineBar()">完成</button>
+    </div>
+  </section>
+
+  <!-- 進階設定（預設收合） -->
+  <button type="button" class="btn" style="width:100%;justify-content:space-between;height:38px;" onclick="toggleAdvanced()">
+    <span>進階設定（社群圖示 / 影片 / 配色）</span>
+    <span id="advArrow">▾</span>
+  </button>
+
+  <section class="adv-card" id="advPanel" style="display:none;">
+    <nav class="dock-tabs" id="dockTabs">
+      <button type="button" class="dock-tab active" data-dtab="social" onclick="openEditorTab('social')">社群圖示</button>
+      <button type="button" class="dock-tab" data-dtab="media" onclick="openEditorTab('media')">Logo影片</button>
+      <button type="button" class="dock-tab" data-dtab="style" onclick="openEditorTab('style')">配色字體</button>
+    </nav>
+
+    <div class="dock-pane active" id="dpane-social">
+      <div class="ext-stack" id="socialPanelStack"></div>
+    </div>
+
+    <div class="dock-pane" id="dpane-media">
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+        <input type="file" id="logoFile" accept="image/*" hidden onchange="onLogoPick(event)">
+        <button type="button" class="btn btn-sm" onclick="document.getElementById('logoFile').click()">上傳 Logo</button>
+        <button type="button" class="btn btn-sm" onclick="clearLogo()">刪除 Logo</button>
+        <label class="ext-chk"><input type="checkbox" id="chkLogoBg" checked onchange="onLogoOptChange()">去背</label>
+        <label class="ext-chk"><input type="checkbox" id="chkLogoMono" checked onchange="onLogoOptChange()">純色</label>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:12px;font-weight:700;color:var(--t2);flex-shrink:0;">Logo 大小</span>
+        <input type="range" id="inLogoSize" min="20" max="56" value="32" oninput="setLogoSize(this.value)" style="flex:1;accent-color:#23201b;">
+        <span id="lblLogoSize" style="font-size:12px;font-weight:700;color:var(--t2);width:36px;text-align:right;">32px</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+        <input type="file" id="photoFile" accept="image/*" hidden onchange="onPhotoPick(event)">
+        <button type="button" class="btn btn-sm" onclick="document.getElementById('photoFile').click()">上傳照片</button>
+        <label class="ext-chk"><input type="checkbox" id="chkPhoto" onchange="setField('showPhoto', this.checked)">顯示照片</label>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
+        <input type="file" id="videoFile" accept="video/*,.mp4,.mov,.m4v" hidden onchange="onVideoPick(event)">
+        <button type="button" class="btn btn-sm btn-pri" id="btnUploadVid" onclick="document.getElementById('videoFile').click()">上傳影片（自動切10秒）</button>
+        <button type="button" class="btn btn-sm" onclick="openVidTrimBar()">調整位置</button>
+        <button type="button" class="btn btn-sm" id="btnToggleVidUrl" onclick="toggleVidUrlBox()">貼影片連結 ▾</button>
+        <button type="button" class="btn btn-sm btn-danger" id="btnDelVideo" style="display:none;" onclick="clearVideo()">刪除影片</button>
+      </div>
+      <div class="vid-prog-wrap" id="vidProgWrap">
+        <div class="vid-prog-txt"><span id="vidProgLabel">讀取影片中...</span><span id="vidProgPct">0%</span></div>
+        <div class="vid-prog-track"><div class="vid-prog-fill" id="vidProgFill"></div></div>
+      </div>
+      <div id="vidUrlBox" style="display:none;grid-template-columns:minmax(0,1fr) auto;gap:6px;">
+        <input type="url" id="inVideoUrl" oninput="setField('videoUrl', this.value)" placeholder="貼上 YouTube / 影片連結" style="height:34px;padding:0 9px;border:1px solid var(--border);border-radius:8px;font-size:12.5px;font-family:inherit;min-width:0;width:100%;">
+        <button type="button" class="btn btn-sm btn-pri" id="btnYtConv" onclick="convertYoutube()">轉 MP4</button>
+      </div>
+    </div>
+
+    <div class="dock-pane" id="dpane-style">
+      <div class="slot-tabs">
+        <button type="button" class="slot-tab active" data-slot="accent" onclick="selectColorSlot('accent')">主色</button>
+        <button type="button" class="slot-tab" data-slot="headBg" onclick="selectColorSlot('headBg')">上框</button>
+        <button type="button" class="slot-tab" data-slot="bodyBg" onclick="selectColorSlot('bodyBg')">中框</button>
+        <button type="button" class="slot-tab" data-slot="footBg" onclick="selectColorSlot('footBg')">下框</button>
+        <button type="button" class="slot-tab" data-slot="btn2Bg" onclick="selectColorSlot('btn2Bg')">按鈕底</button>
+        <button type="button" class="slot-tab" data-slot="fg" onclick="selectColorSlot('fg')">文字</button>
+      </div>
+      <div class="color-row">
+        <div class="color-picker-wrap"><input type="color" id="inColor" value="#c5ae6e" oninput="applySlotColor(this.value)" onchange="rememberSwatch(this.value)"></div>
+        <input type="text" id="inColorHex" value="#C5AE6E" maxlength="7" oninput="onHexInput(this.value)" style="flex:1;height:34px;padding:0 10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;">
+      </div>
+      <div class="swatches" id="swatches"></div>
+      <select id="inFont" onchange="setFont(this.value)" style="height:36px;padding:0 10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;background:#fff;">
+        <option value="jhenghei">微軟正黑體</option>
+        <option value="notosans">思源黑體</option>
+        <option value="notoserif">思源宋體</option>
+        <option value="rounded">圓體</option>
+      </select>
+      <button type="button" class="btn btn-sm" style="width:100%;justify-content:space-between;height:34px;" onclick="toggleDetailColors()">
+        <span>細節設定（個別文字 / Icon 顏色）</span>
+        <span id="detailColArrow">▾</span>
+      </button>
+      <div id="detailColorBox" style="display:none;flex-direction:column;gap:8px;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:10px;">
+        <div class="slot-tabs">
+          <button type="button" class="slot-tab" data-slot="coColor" onclick="selectColorSlot('coColor')">公司名</button>
+          <button type="button" class="slot-tab" data-slot="nameColor" onclick="selectColorSlot('nameColor')">中文名</button>
+          <button type="button" class="slot-tab" data-slot="enColor" onclick="selectColorSlot('enColor')">英文名</button>
+          <button type="button" class="slot-tab" data-slot="sloganColor" onclick="selectColorSlot('sloganColor')">標語</button>
+          <button type="button" class="slot-tab" data-slot="rowValColor" onclick="selectColorSlot('rowValColor')">欄位字</button>
+          <button type="button" class="slot-tab" data-slot="rowIconColor" onclick="selectColorSlot('rowIconColor')">欄位圖</button>
+          <button type="button" class="slot-tab" data-slot="btnIconColor" onclick="selectColorSlot('btnIconColor')">按鈕圖</button>
+          <button type="button" class="slot-tab" data-slot="btnBorderColor" onclick="selectColorSlot('btnBorderColor')">按鈕框</button>
+          <button type="button" class="slot-tab" data-slot="sepColor" onclick="selectColorSlot('sepColor')">分隔線</button>
+          <button type="button" class="slot-tab" data-slot="shareColor" onclick="selectColorSlot('shareColor')">分享字</button>
+        </div>
+        <button type="button" class="btn btn-sm" style="align-self:flex-end;" onclick="resetDetailColors()">還原細節配色</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- 登入 / 註冊彈窗 -->
+<div class="modal-bg" id="authModal" onclick="if(event.target===this)closeAuthModal()">
+  <div class="modal-card">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--raised);padding:4px;border-radius:10px;">
+      <button type="button" class="slot-tab active" id="tabLogin" onclick="setAuthMode('login')">登入</button>
+      <button type="button" class="slot-tab" id="tabReg" onclick="setAuthMode('register')">免費註冊</button>
+    </div>
+    <input type="text" id="authName" placeholder="姓名" style="display:none;height:38px;padding:0 10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:16px;">
+    <input type="text" id="authCompany" placeholder="公司名稱" style="display:none;height:38px;padding:0 10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:16px;">
+    <input type="email" id="authEmail" placeholder="Email" style="height:38px;padding:0 10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:16px;">
+    <input type="password" id="authPass" placeholder="密碼（至少 6 碼）" style="height:38px;padding:0 10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:16px;">
+    <button type="button" class="btn btn-pri" id="btnAuthGo" style="height:40px;" onclick="submitAuth()">登入</button>
+    <button type="button" class="btn" onclick="closeAuthModal()">關閉</button>
+  </div>
+</div>
+
+<!-- 管理員名片清單管理彈窗（改名稱 / 改分類 / 刪除 / 雲端同步） -->
+<div class="modal-bg" id="adminMgrModal" onclick="if(event.target===this)closeAdminMgrModal()">
+  <div class="modal-card" style="max-width:420px;max-height:82vh;text-align:left;padding:18px;gap:10px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+      <div style="font-size:15px;font-weight:700;">管理員名片清單</div>
+      <div style="display:flex;gap:6px;">
+        <a href="card_admin.html" target="_blank" rel="noopener" class="btn btn-sm btn-pri" style="color:#e2ca88;text-decoration:none;">帳號後台</a>
+        <button type="button" class="btn btn-sm" onclick="closeAdminMgrModal()">關閉</button>
+      </div>
+    </div>
+    <div id="adminMgrList" style="display:flex;flex-direction:column;gap:8px;overflow-y:auto;max-height:52vh;padding-right:2px;"></div>
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;padding-top:6px;border-top:1px solid var(--border);">
+      <input type="password" id="inAdminKey" placeholder="雲端同步金鑰（選填）" style="height:34px;padding:0 9px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;min-width:0;">
+      <button type="button" class="btn btn-sm btn-pri" onclick="saveAdminKeyAndSync()">同步雲端</button>
+    </div>
+  </div>
+</div>
+
+<!-- Donate 贊助彈窗 -->
+<div class="modal-bg" id="donateModal" onclick="if(event.target===this)closeDonateModal()">
+  <div class="modal-card">
+    <div style="font-size:18px;font-weight:700;">贊助解鎖無限修改</div>
+    <a id="donateLink" href="https://line.me/R/ti/p/@297azzax" target="_blank" rel="noopener" class="btn btn-pri" style="height:42px;color:#c5ae6e;">聯繫贊助並開通</a>
+    <button type="button" class="btn" onclick="closeDonateModal()">關閉</button>
+  </div>
+</div>
+
+<!-- 置中讀取進度彈窗（發送名片 / 同步影片時顯示在畫面正中央） -->
+<div class="modal-bg" id="busyModal" style="z-index:260;">
+  <div class="modal-card" style="max-width:272px;padding:24px 20px;gap:12px;">
+    <div class="ck-spinner"></div>
+    <div id="busyTitle" style="font-size:15px;font-weight:700;color:var(--t1);">同步最新名片中...</div>
+    <div class="vid-prog-track"><div class="vid-prog-fill" id="busyFill" style="width:20%;"></div></div>
+    <div id="busySub" style="font-size:12px;color:var(--t2);line-height:1.5;word-break:break-word;">準備開啟 LINE 分享</div>
+    <button type="button" class="btn btn-pri" id="busyOkBtn" style="display:none;height:38px;color:#e2ca88;" onclick="hideBusy()">知道了</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const CFG = window.CARD_KING_CONFIG || {};
+const sb = (CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY) ? window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY) : null;
+
+const SVG_ICONS = {
+  phone: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>',
+  line: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>',
+  mail: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>',
+  web: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><line x1="3" y1="12" x2="21" y2="12"/></svg>',
+  oa: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3z"/><path d="M9 12l2 2 4-4"/></svg>',
+  fb: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h-3a4 4 0 0 0-4 4v3H6v4h3v7h4v-7h3l1-4h-4V7a1 1 0 0 1 1-1h2V3z"/></svg>',
+  ig: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>',
+  threads: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 11c0-4-2.5-7-6.5-7C7 4 4 7.5 4 12s3 8 7.5 8c3 0 5.5-1.3 6.5-3.5"/><path d="M9.5 10.5c1-1 2.2-1.5 3.5-1.2 2 .3 3 1.7 3 4 0 2.6-1.5 4-4 4-1.8 0-3-.9-3-2.3s1.3-2.4 3.5-2.4c1.5 0 2.8.4 3.6 1"/></svg>',
+  yt: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="4"/><polygon points="10 9 15 12 10 15 10 9" fill="currentColor" stroke="none"/></svg>',
+  tiktok: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg>'
+};
+
+const ROW_ICONS = {
+  mobile: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><rect x="6" y="2" width="12" height="20" rx="2.5"/><line x1="11" y1="18" x2="13" y2="18"/></svg>',
+  mail: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>',
+  tel: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>',
+  pin: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 1 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+  clock: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></svg>',
+  dot: '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="4"/></svg>'
+};
+const LABEL_MODES = ["icon", "en", "zh", "none"];
+const LABEL_MODE_NAMES = { icon: "圖示", en: "英文", zh: "中文", none: "隱藏" };
+function getRowKind(lbl, val) {
+  const s = String(lbl || "").toLowerCase(), v = String(val || "").toLowerCase();
+  if (/時間|營業|時段|hour|time|open|^h\.?$/.test(s) || /\d+\s*(am|pm)\b|\d{1,2}:\d{2}/.test(v)) return "clock";
+  if (/手機|mobile|^m\.?$/.test(s)) return "mobile";
+  if (/信箱|mail|^e\.?$/.test(s) || v.includes("@")) return "mail";
+  if (/電話|市話|傳真|tel|^t\.?$/.test(s)) return "tel";
+  if (/地址|門市|位置|據點|add|^a\.?$/.test(s)) return "pin";
+  return "dot";
+}
+function getRowEnLabel(lbl, val) {
+  const k = getRowKind(lbl, val);
+  return k === "mobile" ? "M." : (k === "mail" ? "E." : (k === "tel" ? "T." : (k === "pin" ? "A." : (k === "clock" ? "H." : (lbl || "•")))));
+}
+function cycleLabelMode() {
+  const cur = LABEL_MODES.includes(state.labelMode) ? state.labelMode : "icon";
+  state.labelMode = LABEL_MODES[(LABEL_MODES.indexOf(cur) + 1) % LABEL_MODES.length];
+  renderPreview();
+  toast("欄位標籤：" + LABEL_MODE_NAMES[state.labelMode]);
+}
+
+const DEFAULT_ACTION_ORDER = ["phone", "line", "mail", "web", "oa", "fb", "ig", "threads", "yt", "tiktok"];
+const ACTION_META = {
+  phone:   { chk: "phoneOn",   val: "mobile",  label: "TEL",  ph: "輸入撥打手機號碼" },
+  line:    { chk: "lineOn",    val: "lineId",  label: "LINE", ph: "個人 LINE ID 或連結" },
+  mail:    { chk: "mailBtnOn", val: "email",   label: "MAIL", ph: "name@example.com" },
+  web:     { chk: "webOn",     val: "website", label: "WEB",  ph: "https://..." },
+  oa:      { chk: "oaOn",      val: "oaId",    label: "OA",   ph: "@297azzax（有無 @ 皆可）" },
+  fb:      { chk: "fbOn",      val: "fbId",    label: "FB",   ph: "FB 帳號或粉專連結" },
+  ig:      { chk: "igOn",      val: "igId",    label: "IG",   ph: "IG 帳號（有無 @ 皆可）" },
+  threads: { chk: "thOn",      val: "thId",    label: "TH",   ph: "Threads 帳號" },
+  yt:      { chk: "ytOn",      val: "ytId",    label: "YT",   ph: "YouTube 頻道或網址" },
+  tiktok:  { chk: "ttOn",      val: "ttId",    label: "TK",   ph: "TikTok / 抖音帳號" }
+};
+
+const FONTS = {
+  jhenghei: '"Microsoft JhengHei", "微軟正黑體", sans-serif',
+  notosans: '"Noto Sans TC", "Microsoft JhengHei", sans-serif',
+  notoserif: '"Noto Serif TC", "PMingLiU", serif',
+  rounded: '"Hiragino Maru Gothic ProN", "Microsoft JhengHei", sans-serif'
+};
+
+const STYLE_DEFAULTS = {
+  video: { color: "#C5AE6E", headBg: "#1E1D1B", bodyBg: "#1E1D1B", footBg: "#1E1D1B", btn2Bg: "#312E28", fg: "#F3EFE7" },
+  dark:  { color: "#D2B878", headBg: "#23201B", bodyBg: "#23201B", footBg: "#23201B", btn2Bg: "#353028", fg: "#F1ECE2" },
+  hero:  { color: "#A67C68", headBg: "#FFFDF9", bodyBg: "#FFFDF9", footBg: "#FFFDF9", btn2Bg: "#EFE9E1", fg: "#231E1A" },
+  ivory: { color: "#5F7464", headBg: "#FAF7F0", bodyBg: "#FAF7F0", footBg: "#FAF7F0", btn2Bg: "#E9E5DC", fg: "#1F2420" },
+  full:  { color: "#C8B27A", headBg: "#212A34", bodyBg: "#212A34", footBg: "#1B232C", btn2Bg: "#313D4B", fg: "#EEF2F6" },
+  side:  { color: "#C9B582", headBg: "#1F2D27", bodyBg: "#1F2D27", footBg: "#192520", btn2Bg: "#2E4038", fg: "#EDF2EF" },
+  block: { color: "#C5A869", headBg: "#566B7A", bodyBg: "#FAF7F0", footBg: "#F3EFE6", btn2Bg: "#E6E2DA", fg: "#1F1B16" },
+  frame: { color: "#8E8475", headBg: "#FFFFFF", bodyBg: "#FFFFFF", footBg: "#FFFFFF", btn2Bg: "#ECE8E1", fg: "#1A1A1A" }
+};
+
+let authMode = "login", session = null, profile = null;
+let colorSlot = "accent", advOpen = false, cleanView = false;
+let editingInlineKey = "";
+let rawLogoSource = null;
+let localEditUsed = Number(localStorage.getItem("ck_local_edit_used") || 0);
+let currentCardId = localStorage.getItem("ck_my_card_id") || "";
+
+function defaultState() {
+  return {
+    style: "video", font: "jhenghei",
+    color: "#C5AE6E", headBg: "#1E1D1B", bodyBg: "#1E1D1B", footBg: "#1E1D1B", btn2Bg: "#312E28", cardFg: "#F3EFE7",
+    logoMono: true, logoRemoveBg: true, logoSize: 32, showPhoto: false, labelMode: "icon", videoPosX: 50, videoPos: 50, videoZoom: 100,
+    logoUrl: "https://bigt.cc/line/elitile-logo.png",
+    videoUrl: "https://bigt.cc/web/assets/video/refin-moon-1920.mp4",
+    photoUrl: "https://bigt.cc/web/assets/video/refin-moon-poster.jpg",
+    company: "高雅瓷國際企業有限公司",
+    slogan: "歐洲精品磁磚 · 建築與室內設計專業夥伴",
+    name: "高弘治", enName: "Big-T",
+    mobile: "0977-393-811", email: "titankou2002@gmail.com", website: "https://bigt.cc/web/",
+    infoRows: [
+      { label: "手機", value: "0977-393-811" },
+      { label: "信箱", value: "titankou2002@gmail.com" },
+      { label: "電話", value: "03-486-3978" },
+      { label: "地址", value: "台北市內湖區行愛路77巷16號5樓" }
+    ],
+    phoneOn: false, webOn: true,
+    lineOn: true, lineId: "bigt_line", oaOn: true, oaId: "@297azzax", mailBtnOn: false,
+    igOn: true, igId: "bigt.cc", fbOn: true, fbId: "bigt.cc", thOn: true, thId: "bigt.cc",
+    ytOn: true, ytId: "bigt", ttOn: true, ttId: "bigt",
+    actionOrder: DEFAULT_ACTION_ORDER.slice()
+  };
+}
+
+function ensureActionOrder() {
+  const cur = Array.isArray(state.actionOrder) ? state.actionOrder.filter(k => ACTION_META[k]) : [];
+  DEFAULT_ACTION_ORDER.forEach(k => { if (!cur.includes(k)) cur.push(k); });
+  state.actionOrder = cur;
+  return cur;
+}
+
+let state = (function () {
+  try {
+    const r = localStorage.getItem("ck_state_v8");
+    if (r) {
+      const parsed = JSON.parse(r);
+      if (parsed.videoUrl && String(parsed.videoUrl).startsWith("blob:")) parsed.videoUrl = "";
+      return Object.assign(defaultState(), parsed);
+    }
+  } catch (e) {}
+  return defaultState();
+})();
+let localVideoBlob = null;
+
+/* 手機本機自動存檔（localStorage + IndexedDB 存影片與高畫質圖檔） */
+function openLocalDB() {
+  return new Promise((resolve, reject) => {
+    if (!window.indexedDB) { reject(new Error("no idb")); return; }
+    const req = indexedDB.open("CardKingLocalDB", 1);
+    req.onupgradeneeded = () => { if (!req.result.objectStoreNames.contains("media")) req.result.createObjectStore("media"); };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function idbPut(key, val) {
+  try {
+    const db = await openLocalDB();
+    await new Promise((res, rej) => {
+      const tx = db.transaction("media", "readwrite");
+      tx.objectStore("media").put(val, key);
+      tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+    });
+  } catch (e) {}
+}
+async function idbGet(key) {
+  try {
+    const db = await openLocalDB();
+    return await new Promise((res, rej) => {
+      const tx = db.transaction("media", "readonly");
+      const r = tx.objectStore("media").get(key);
+      r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+    });
+  } catch (e) { return null; }
+}
+async function idbDel(key) {
+  try {
+    const db = await openLocalDB();
+    await new Promise((res, rej) => {
+      const tx = db.transaction("media", "readwrite");
+      tx.objectStore("media").delete(key);
+      tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+    });
+  } catch (e) {}
+}
+
+let _saveTimer = null;
+let dirtySinceSave = false;
+function persistLocal() {
+  dirtySinceSave = true;
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(() => {
+    try {
+      const copy = Object.assign({}, state);
+      if (copy.videoUrl && String(copy.videoUrl).startsWith("blob:")) copy.videoUrl = "";
+      if (copy.photoUrl && String(copy.photoUrl).startsWith("data:") && copy.photoUrl.length > 350000) copy.photoUrl = "";
+      localStorage.setItem("ck_state_v8", JSON.stringify(copy));
+    } catch (e) {
+      try {
+        const slim = Object.assign({}, state, { photoUrl: "", videoUrl: String(state.videoUrl || "").startsWith("blob:") ? "" : state.videoUrl });
+        localStorage.setItem("ck_state_v8", JSON.stringify(slim));
+      } catch (e2) {}
+    }
+  }, 120);
+}
+
+async function restoreLocalMedia() {
+  if (new URLSearchParams(location.search).get("preview")) return;
+  let changed = false;
+  const savedLogo = await idbGet("rawLogo");
+  if (savedLogo) {
+    await new Promise(res => {
+      const img = new Image();
+      img.onload = () => { rawLogoSource = img; reprocessLogoIfLoaded(); changed = true; res(); };
+      img.onerror = res;
+      img.src = URL.createObjectURL(savedLogo);
+    });
+  }
+  const savedPhoto = await idbGet("photo");
+  if (savedPhoto) {
+    state.photoUrl = URL.createObjectURL(savedPhoto);
+    changed = true;
+  }
+  const savedVid = await idbGet("video");
+  if (savedVid && savedVid.blob) {
+    localVideoBlob = savedVid.blob;
+    state.videoUrl = URL.createObjectURL(savedVid.blob);
+    const inp = document.getElementById("inVideoUrl"); if (inp) inp.value = savedVid.name || "本機影片.mp4";
+    const del = document.getElementById("btnDelVideo"); if (del) del.style.display = "inline-flex";
+    changed = true;
+  }
+  if (changed) renderPreview();
+}
+
+function esc(s) { return String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function parseYtId(u) { const m = String(u || "").match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/); return m ? m[1] : ""; }
+function getContrast(hex) { const h = hex.replace("#",""); return (parseInt(h.slice(0,2),16)*299 + parseInt(h.slice(2,4),16)*587 + parseInt(h.slice(4,6),16)*114)/1000 >= 165 ? "#1F1B16" : "#FFFFFF"; }
+
+function toggleCleanView() {
+  cleanView = !cleanView;
+  document.getElementById("phoneScreen").classList.toggle("clean-view", cleanView);
+  document.getElementById("btnCleanToggle").textContent = cleanView ? "編輯" : "預覽";
+  renderPreview();
+}
+
+function toggleAdvanced(force) {
+  advOpen = typeof force === "boolean" ? force : !advOpen;
+  document.getElementById("advPanel").style.display = advOpen ? "flex" : "none";
+  document.getElementById("advArrow").textContent = advOpen ? "▴" : "▾";
+  updateColorPickMode();
+}
+
+function openEditorTab(tab) {
+  if (!advOpen) toggleAdvanced(true);
+  document.querySelectorAll("#dockTabs .dock-tab").forEach(b => b.classList.toggle("active", b.dataset.dtab === tab));
+  document.querySelectorAll(".dock-pane").forEach(p => p.classList.toggle("active", p.id === "dpane-" + tab));
+  updateColorPickMode();
+}
+
+function updateColorPickMode() {
+  const isColorTab = advOpen && document.getElementById("dpane-style").classList.contains("active");
+  document.getElementById("phoneScreen").classList.toggle("color-pick-mode", isColorTab);
+}
+
+const VIDEO_STYLES = ["video", "full"];
+function syncLayoutCatUI() {
+  const cat = VIDEO_STYLES.includes(state.style) ? "video" : "image";
+  document.querySelectorAll("#catBar .cat-btn").forEach(b => b.classList.toggle("active", b.dataset.cat === cat));
+  document.querySelectorAll("#styleGrid .style-opt").forEach(el => {
+    el.style.display = (el.dataset.cat === cat) ? "inline-flex" : "none";
+    el.classList.toggle("active", el.dataset.style === state.style);
+  });
+}
+function setLayoutCat(cat) {
+  if (cat === "video" && !VIDEO_STYLES.includes(state.style)) {
+    setStyle("video");
+  } else if (cat === "image" && VIDEO_STYLES.includes(state.style)) {
+    setStyle("side");
+  } else {
+    syncLayoutCatUI();
+  }
+}
+
+function setStyle(s) {
+  state.style = s;
+  const def = STYLE_DEFAULTS[s] || STYLE_DEFAULTS.dark;
+  state.color = def.color; state.headBg = def.headBg; state.bodyBg = def.bodyBg;
+  state.footBg = def.footBg; state.btn2Bg = def.btn2Bg; state.cardFg = def.fg;
+  syncLayoutCatUI();
+  syncCssVars(); reprocessLogoIfLoaded(); renderPreview();
+}
+
+function setFont(f) { state.font = f; syncCssVars(); persistLocal(); }
+function setField(k, v) { state[k] = v; renderPreview(); }
+function setLogoSize(v) {
+  state.logoSize = Math.max(20, Math.min(56, Number(v) || 32));
+  document.documentElement.style.setProperty("--logo-h", state.logoSize + "px");
+  const lbl = document.getElementById("lblLogoSize");
+  if (lbl) lbl.textContent = state.logoSize + "px";
+  persistLocal();
+}
+function onLogoOptChange() {
+  state.logoRemoveBg = document.getElementById("chkLogoBg").checked;
+  state.logoMono = document.getElementById("chkLogoMono").checked;
+  reprocessLogoIfLoaded();
+  renderPreview();
+}
+
+const DEFAULT_SWATCHES = ["#C5AE6E", "#B59E63", "#5F7464", "#A67C68", "#6E818F", "#23201B", "#FAF7F0"];
+let recentSwatches = (function () {
+  try { const r = JSON.parse(localStorage.getItem("ck_recent_swatches") || "[]"); return Array.isArray(r) ? r.filter(x => /^#[0-9A-F]{6}$/i.test(x)) : []; } catch (e) { return []; }
+})();
+function renderSwatches() {
+  const cur = (getSlotValue(colorSlot) || "#C5AE6E").toUpperCase();
+  const all = DEFAULT_SWATCHES.concat(recentSwatches.filter(h => !DEFAULT_SWATCHES.includes(h.toUpperCase())));
+  const el = document.getElementById("swatches");
+  if (!el) return;
+  el.innerHTML = all.map(h => {
+    const u = h.toUpperCase();
+    return `<button type="button" class="swatch ${u === cur ? "active" : ""}" style="background:${u}" data-hex="${u}" title="${u}" onclick="applySlotColor('${u}')"></button>`;
+  }).join("");
+}
+function rememberSwatch(hex) {
+  if (!/^#[0-9a-fA-F]{6}$/.test(hex || "")) return;
+  const u = hex.toUpperCase();
+  if (DEFAULT_SWATCHES.includes(u)) return;
+  recentSwatches = [u].concat(recentSwatches.filter(x => x.toUpperCase() !== u)).slice(0, 10);
+  try { localStorage.setItem("ck_recent_swatches", JSON.stringify(recentSwatches)); } catch (e) {}
+  renderSwatches();
+}
+
+const DETAIL_SLOTS = [
+  { key: "coColor", css: "--co-col", fallback: () => state.cardFg },
+  { key: "nameColor", css: "--name-col", fallback: () => state.cardFg },
+  { key: "enColor", css: "--en-col", fallback: () => state.color },
+  { key: "sloganColor", css: "--slogan-col", fallback: () => state.cardFg },
+  { key: "rowValColor", css: "--row-val-col", fallback: () => state.cardFg },
+  { key: "rowIconColor", css: "--row-ico-col", fallback: () => state.color },
+  { key: "btnIconColor", css: "--btn-ico-col", fallback: () => state.color },
+  { key: "btnBorderColor", css: "--btn-bd-col", fallback: () => state.color },
+  { key: "sepColor", css: "--sep-col", fallback: () => state.cardFg },
+  { key: "shareColor", css: "--share-col", fallback: () => state.color }
+];
+const SLOT_NAMES = {
+  accent: "主色", headBg: "上框", bodyBg: "中框", footBg: "下框", btn2Bg: "按鈕底", fg: "文字",
+  coColor: "公司名", nameColor: "中文名", enColor: "英文名", sloganColor: "標語",
+  rowValColor: "欄位字", rowIconColor: "欄位圖", btnIconColor: "按鈕圖", btnBorderColor: "按鈕框",
+  sepColor: "分隔線", shareColor: "分享字"
+};
+function toggleDetailColors() {
+  const box = document.getElementById("detailColorBox");
+  const arr = document.getElementById("detailColArrow");
+  const open = box.style.display !== "flex";
+  box.style.display = open ? "flex" : "none";
+  if (arr) arr.textContent = open ? "▴" : "▾";
+}
+function resetDetailColors() {
+  DETAIL_SLOTS.forEach(d => { delete state[d.key]; });
+  syncCssVars(); renderPreview();
+  toast("已還原細節配色");
+}
+function getSlotValue(slot) {
+  const d = DETAIL_SLOTS.find(x => x.key === slot);
+  if (d) return state[d.key] || d.fallback();
+  return slot === "headBg" ? state.headBg : (slot === "bodyBg" ? state.bodyBg : (slot === "footBg" ? state.footBg : (slot === "btn2Bg" ? state.btn2Bg : (slot === "fg" ? state.cardFg : state.color))));
+}
+function selectColorSlot(slot) {
+  colorSlot = slot;
+  document.querySelectorAll(".slot-tab[data-slot]").forEach(b => b.classList.toggle("active", b.dataset.slot === slot));
+  const cur = (getSlotValue(slot) || "#C5AE6E").toUpperCase();
+  document.getElementById("inColor").value = cur.toLowerCase();
+  document.getElementById("inColorHex").value = cur;
+  renderSwatches();
+}
+function syncCssVars() {
+  document.documentElement.style.setProperty("--accent", state.color);
+  document.documentElement.style.setProperty("--accent-text", getContrast(state.color));
+  document.documentElement.style.setProperty("--head-bg", state.headBg);
+  document.documentElement.style.setProperty("--body-bg", state.bodyBg);
+  document.documentElement.style.setProperty("--foot-bg", state.footBg);
+  document.documentElement.style.setProperty("--btn2-bg", state.btn2Bg);
+  document.documentElement.style.setProperty("--card-fg", state.cardFg);
+  document.documentElement.style.setProperty("--card-font", FONTS[state.font] || FONTS.jhenghei);
+  DETAIL_SLOTS.forEach(d => {
+    if (state[d.key]) document.documentElement.style.setProperty(d.css, state[d.key]);
+    else document.documentElement.style.removeProperty(d.css);
+  });
+  document.documentElement.style.setProperty("--sep-op", state.sepColor ? "0.7" : "0.14");
+  const sz = Math.max(20, Math.min(56, Number(state.logoSize) || 32));
+  document.documentElement.style.setProperty("--logo-h", sz + "px");
+  const sEl = document.getElementById("inLogoSize"); if (sEl) sEl.value = sz;
+  const lEl = document.getElementById("lblLogoSize"); if (lEl) lEl.textContent = sz + "px";
+  const bEl = document.getElementById("chkLogoBg"); if (bEl) bEl.checked = state.logoRemoveBg !== false;
+  const mEl = document.getElementById("chkLogoMono"); if (mEl) mEl.checked = state.logoMono !== false;
+  const fEl = document.getElementById("inFont"); if (fEl) fEl.value = state.font || "jhenghei";
+  const pEl = document.getElementById("chkPhoto"); if (pEl) pEl.checked = !!state.showPhoto;
+  syncLayoutCatUI();
+  selectColorSlot(colorSlot);
+}
+function applySlotColor(hex) {
+  if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return;
+  const u = hex.toUpperCase();
+  if (DETAIL_SLOTS.some(x => x.key === colorSlot)) state[colorSlot] = u;
+  else if (colorSlot === "headBg") state.headBg = u;
+  else if (colorSlot === "bodyBg") state.bodyBg = u;
+  else if (colorSlot === "footBg") state.footBg = u;
+  else if (colorSlot === "btn2Bg") state.btn2Bg = u;
+  else if (colorSlot === "fg") state.cardFg = u;
+  else { state.color = u; reprocessLogoIfLoaded(); }
+  syncCssVars(); renderPreview();
+}
+function onHexInput(v) { const c = v.trim().startsWith("#") ? v.trim() : "#" + v.trim(); if (/^#[0-9a-fA-F]{6}$/.test(c)) { applySlotColor(c); rememberSwatch(c); } }
+
+/* 行內直接編輯控制 */
+function editInlineField(key, text) { state[key] = text.trim(); persistLocal(); }
+function removeField(key) { state[key] = ""; renderPreview(); }
+function addInfoRow() { if (!Array.isArray(state.infoRows)) state.infoRows = []; state.infoRows.push({ label: "地址", value: "輸入內容" }); renderPreview(); }
+function editInfoCell(i, k, val) { if (state.infoRows && state.infoRows[i]) { state.infoRows[i][k] = val.trim(); persistLocal(); } }
+function delInfoRow(i) { state.infoRows.splice(i, 1); renderPreview(); }
+
+function openActionEditor(key) {
+  if (cleanView) return;
+  const meta = ACTION_META[key]; if (!meta) return;
+  editingInlineKey = key;
+  const bar = document.getElementById("btnEditBar");
+  const inp = document.getElementById("inlineBtnVal");
+  inp.placeholder = meta.label + "：" + meta.ph;
+  inp.value = state[meta.val] || "";
+  inp.oninput = () => { state[meta.val] = inp.value.trim(); persistLocal(); renderSocialControls(); };
+  bar.style.display = "flex";
+  inp.focus();
+  inp.select();
+}
+function hideEditingAction() {
+  const meta = ACTION_META[editingInlineKey];
+  if (meta) { state[meta.chk] = false; renderSocialControls(); }
+  closeInlineBar();
+}
+function closeInlineBar() { document.getElementById("btnEditBar").style.display = "none"; renderPreview(); }
+
+/* 進階設定「社群圖示」清單（含上下調整順序） */
+function moveAction(key, dir) {
+  const ord = ensureActionOrder();
+  const idx = ord.indexOf(key);
+  const next = idx + dir;
+  if (idx < 0 || next < 0 || next >= ord.length) return;
+  ord.splice(idx, 1);
+  ord.splice(next, 0, key);
+  state.actionOrder = ord;
+  renderSocialControls();
+  renderPreview();
+}
+
+function renderSocialControls() {
+  const ord = ensureActionOrder();
+  document.getElementById("socialPanelStack").innerHTML = ord.map((k, idx) => {
+    const it = ACTION_META[k];
+    return `
+      <div class="ext-row">
+        <span class="ext-mv">
+          <button type="button" title="上移" onclick="moveAction('${k}',-1)" ${idx === 0 ? "disabled" : ""}>↑</button>
+          <button type="button" title="下移" onclick="moveAction('${k}',1)" ${idx === ord.length - 1 ? "disabled" : ""}>↓</button>
+        </span>
+        <label class="ext-chk"><input type="checkbox" ${state[it.chk] ? "checked" : ""} onchange="setField('${it.chk}', this.checked)">${SVG_ICONS[k]}<span>${it.label}</span></label>
+        <input type="text" data-skey="${it.val}" value="${esc(state[it.val] || '')}" placeholder="${it.ph}" oninput="setField('${it.val}', this.value)">
+      </div>
+    `;
+  }).join("");
+}
+
+function triggerLogoUpload(e) {
+  if (cleanView) return;
+  if (e) e.stopPropagation();
+  document.getElementById("logoFile").click();
+}
+function triggerPhotoUpload(e) {
+  if (cleanView) return;
+  if (e && (e.target.tagName === "INPUT" || e.target.closest(".del-x") || e.target.closest(".mc-logo-pill"))) return;
+  if (e) e.stopPropagation();
+  document.getElementById("photoFile").click();
+}
+function triggerVideoUpload(e) {
+  if (cleanView) return;
+  if (e) e.stopPropagation();
+  document.getElementById("videoFile").click();
+}
+function triggerMediaUpload(e) {
+  if (VIDEO_STYLES.includes(state.style)) triggerVideoUpload(e);
+  else triggerPhotoUpload(e);
+}
+
+const _measureCanvas = document.createElement("canvas");
+function autoSizeInput(el) {
+  if (!el || el.classList.contains("mc-inp-full")) return;
+  const ctx = _measureCanvas.getContext("2d");
+  const cs = getComputedStyle(el);
+  ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+  const w = Math.ceil(ctx.measureText(el.value || " ").width) + 12;
+  el.style.width = Math.max(26, w) + "px";
+}
+
+function onQuickMediaPick(e) {
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  const isVid = (f.type && f.type.startsWith("video/")) || /\.(mp4|mov|m4v|webm|3gp)$/i.test(f.name || "");
+  if (isVid) {
+    onVideoPick(e);
+    return;
+  }
+  const isImg = (f.type && f.type.startsWith("image/")) || /\.(jpg|jpeg|png|webp|heic|gif)$/i.test(f.name || "");
+  if (isImg) {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement("canvas");
+      const sc = Math.min(1, 1080 / Math.max(img.naturalWidth, img.naturalHeight));
+      c.width = Math.round(img.naturalWidth * sc); c.height = Math.round(img.naturalHeight * sc);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      c.toBlob(b => { if (b) idbPut("photo", b); }, "image/jpeg", 0.86);
+      state.photoUrl = c.toDataURL("image/jpeg", 0.86);
+      state.showPhoto = true;
+      localVideoBlob = null; idbDel("video");
+      state.videoUrl = "";
+      document.getElementById("inVideoUrl").value = "";
+      document.getElementById("btnDelVideo").style.display = "none";
+      const chk = document.getElementById("chkPhoto"); if (chk) chk.checked = true;
+      renderPreview();
+      toast("圖片已更新並存於手機");
+    };
+    img.src = URL.createObjectURL(f);
+  }
+  e.target.value = "";
+}
+
+function splitBalancedRows(list, isSide) {
+  const n = list.length;
+  if (!n) return [];
+  if (isSide) {
+    const out = [];
+    for (let i = 0; i < n; i += 3) out.push(list.slice(i, i + 3));
+    return out;
+  }
+  if (n <= 5) return [list];
+  const first = n <= 6 ? 3 : (n <= 8 ? 4 : 5);
+  return [list.slice(0, first), list.slice(first)];
+}
+
+function buildSocialIconsHtml() {
+  const ord = ensureActionOrder();
+  const active = ord.filter(k => {
+    const m = ACTION_META[k];
+    return m && state[m.chk] && String(state[m.val] || "").trim();
+  });
+  if (!active.length) return "";
+  const rows = splitBalancedRows(active, state.style === "side");
+  return `<div class="mc-action-grid">${rows.map(row =>
+    `<div class="mc-icon-row">${row.map(k => {
+      const m = ACTION_META[k];
+      return `<span class="mc-icon-chip" data-akey="${k}" title="${m.label}（按住可拖曳排序）">${SVG_ICONS[k]}<span class="mc-icon-lbl">${m.label}</span></span>`;
+    }).join("")}</div>`
+  ).join("")}</div>`;
+}
+
+function bindActionDrag(mount) {
+  const chips = mount.querySelectorAll(".mc-icon-chip[data-akey]");
+  chips.forEach(chip => {
+    chip.addEventListener("pointerdown", (e) => {
+      if (cleanView) return;
+      if (e.button && e.button !== 0) return;
+      const dragKey = chip.dataset.akey;
+      const sx = e.clientX, sy = e.clientY;
+      let dragging = false;
+      let overKey = "";
+      try { chip.setPointerCapture(e.pointerId); } catch (err) {}
+
+      const clearOver = () => mount.querySelectorAll(".mc-icon-chip.drag-over").forEach(x => x.classList.remove("drag-over"));
+      const onMove = (ev) => {
+        if (!dragging && Math.hypot(ev.clientX - sx, ev.clientY - sy) > 8) {
+          dragging = true;
+          chip.classList.add("dragging");
+        }
+        if (!dragging) return;
+        clearOver();
+        chip.style.pointerEvents = "none";
+        const hit = document.elementFromPoint(ev.clientX, ev.clientY);
+        chip.style.pointerEvents = "";
+        const target = hit && hit.closest ? hit.closest(".mc-icon-chip[data-akey]") : null;
+        if (target && target.dataset.akey !== dragKey) {
+          target.classList.add("drag-over");
+          overKey = target.dataset.akey;
+        } else {
+          overKey = "";
+        }
+      };
+      const onUp = () => {
+        chip.classList.remove("dragging");
+        clearOver();
+        chip.removeEventListener("pointermove", onMove);
+        chip.removeEventListener("pointerup", onUp);
+        chip.removeEventListener("pointercancel", onUp);
+        if (dragging && overKey && overKey !== dragKey) {
+          const ord = ensureActionOrder();
+          const from = ord.indexOf(dragKey), to = ord.indexOf(overKey);
+          if (from >= 0 && to >= 0) {
+            ord.splice(from, 1);
+            ord.splice(to, 0, dragKey);
+            state.actionOrder = ord;
+            renderSocialControls();
+            renderPreview();
+          }
+        } else if (!dragging) {
+          openActionEditor(dragKey);
+        }
+      };
+      chip.addEventListener("pointermove", onMove);
+      chip.addEventListener("pointerup", onUp);
+      chip.addEventListener("pointercancel", onUp);
+    });
+  });
+}
+
+function renderPreview() {
+  if (!Array.isArray(state.infoRows)) state.infoRows = [];
+  const mount = document.getElementById("cardMount");
+  const ro = cleanView ? "readonly" : "";
+
+  const coHtml = state.company
+    ? `<span class="ed-wrap"><input type="text" class="mc-inp mc-co-name" ${ro} value="${esc(state.company)}" oninput="editInlineField('company',this.value);autoSizeInput(this)"><button type="button" class="del-x" onclick="removeField('company')">×</button></span>` : "";
+  const logoHtml = state.logoUrl
+    ? `<span class="ed-wrap"><span class="mc-logo" onclick="triggerLogoUpload(event)" title="點擊更換 Logo"><img src="${esc(state.logoUrl)}" alt="Logo"></span><button type="button" class="del-x" onclick="event.stopPropagation();clearLogo()">×</button></span>` : "";
+  const brandRow = (logoHtml || coHtml) ? `<div class="mc-brand-row">${logoHtml || '<span></span>'}${coHtml}</div>` : "";
+
+  const nameHtml = state.name
+    ? `<span class="ed-wrap"><input type="text" class="mc-inp mc-name" ${ro} value="${esc(state.name)}" oninput="editInlineField('name',this.value);autoSizeInput(this)"><button type="button" class="del-x" onclick="removeField('name')">×</button></span>` : "";
+  const enHtml = state.enName
+    ? `<span class="ed-wrap"><input type="text" class="mc-inp mc-en-name" ${ro} value="${esc(state.enName)}" oninput="editInlineField('enName',this.value);autoSizeInput(this)"><button type="button" class="del-x" onclick="removeField('enName')">×</button></span>` : "";
+  const nameLine = (nameHtml || enHtml) ? `<div class="mc-name-line">${nameHtml}${enHtml}</div>` : "";
+  const sloganHtml = state.slogan
+    ? `<div class="mc-slogan"><div class="ed-wrap-full"><input type="text" class="mc-inp mc-inp-full" ${ro} value="${esc(state.slogan)}" oninput="editInlineField('slogan',this.value)"><button type="button" class="del-x" onclick="removeField('slogan')">×</button></div></div>` : "";
+
+  const lMode = LABEL_MODES.includes(state.labelMode) ? state.labelMode : "icon";
+  const rowsHtml = state.infoRows.map((r, i) => {
+    let lblHtml = "";
+    if (lMode === "icon") {
+      const k = getRowKind(r.label, r.value);
+      lblHtml = `<span class="mc-lbl-ico" onclick="if(!cleanView)cycleLabelMode()" title="點此切換標籤（圖示 / 英文 / 中文 / 隱藏）">${ROW_ICONS[k] || ROW_ICONS.dot}</span>`;
+    } else if (lMode === "en") {
+      const enVal = getRowEnLabel(r.label, r.value);
+      lblHtml = `<input type="text" class="mc-inp mc-lbl" ${ro} value="${esc(enVal)}" oninput="editInfoCell(${i},'label',this.value);autoSizeInput(this)">`;
+    } else if (lMode === "zh") {
+      lblHtml = `<input type="text" class="mc-inp mc-lbl" ${ro} value="${esc(r.label)}" oninput="editInfoCell(${i},'label',this.value);autoSizeInput(this)">`;
+    }
+    return `
+      <div class="mc-row">
+        ${lblHtml}
+        <input type="text" class="mc-inp mc-inp-full mc-val" ${ro} value="${esc(r.value)}" oninput="editInfoCell(${i},'value',this.value)">
+        <button type="button" class="del-x" onclick="delInfoRow(${i})">×</button>
+      </div>
+    `;
+  }).join("") + `<div class="mc-row-tools"><button type="button" class="add-row-inline" onclick="addInfoRow()">＋ 新增欄位</button><button type="button" class="add-row-inline" onclick="cycleLabelMode()">標籤：${LABEL_MODE_NAMES[lMode]}</button></div>`;
+
+  const footHtml = `
+    <div class="mc-foot" data-cslot="footBg">
+      ${buildSocialIconsHtml()}
+      <button type="button" class="mc-btn-link" data-cslot="accent" onclick="shareToLine()">分享名片 · Share</button>
+    </div>
+  `;
+
+  const ytId = parseYtId(state.videoUrl);
+  const vPosX = Math.max(0, Math.min(100, Number(state.videoPosX ?? 50)));
+  const vPos = Math.max(0, Math.min(100, Number(state.videoPos ?? 50)));
+  const vZoom = Math.max(1, Math.min(2.2, (Number(state.videoZoom) || 100) / 100));
+  const vStyle = `object-position:${vPosX}% ${vPos}%;transform:scale(${vZoom});transform-origin:${vPosX}% ${vPos}%;`;
+  const mediaHtml = ytId
+    ? `<img src="https://i.ytimg.com/vi/${ytId}/hqdefault.jpg" style="${vStyle}"><div class="mc-yt-play"><span>▶</span></div>`
+    : (state.videoUrl ? `<video autoplay muted loop playsinline src="${esc(state.videoUrl)}" style="${vStyle}" ${state.photoUrl ? `poster="${esc(state.photoUrl)}"` : ""}></video>` : (state.photoUrl ? `<img src="${esc(state.photoUrl)}" style="${vStyle}">` : ""));
+
+  if (state.style === "video" || state.style === "full") {
+    mount.innerHTML = `<article class="mega-card"><div class="mc-video-box mc-media-click" onclick="triggerVideoUpload(event)" title="點擊更換影片">${mediaHtml}</div><div class="mc-head-area" style="padding:14px 18px 10px;" data-cslot="headBg">${brandRow}${nameLine}${sloganHtml}</div><div class="mc-sep"></div><div class="mc-body" data-cslot="bodyBg">${rowsHtml}</div>${footHtml}</article>`;
+  } else if (state.style === "hero") {
+    mount.innerHTML = `<article class="mega-card"><div class="mc-hero-box mc-media-click" onclick="triggerPhotoUpload(event)" title="點擊更換封面圖片">${state.photoUrl ? `<img class="mc-hero-img" src="${esc(state.photoUrl)}" style="${vStyle}">` : ""}<div class="mc-hero-grad"><div style="display:flex;align-items:center;justify-content:space-between;">${state.logoUrl ? `<span class="mc-logo-pill" onclick="triggerLogoUpload(event)" style="cursor:pointer;"><img src="${esc(state.logoUrl)}"></span>` : "<span></span>"}<span style="color:#fff;">${coHtml}</span></div><div style="color:#fff;">${nameLine}${sloganHtml}</div></div></div><div class="mc-body" data-cslot="bodyBg">${rowsHtml}</div>${footHtml}</article>`;
+  } else if (state.style === "side") {
+    mount.innerHTML = `<article class="mega-card"><div class="mc-side-full"><div class="mc-side-media mc-media-click" onclick="triggerPhotoUpload(event)" title="點擊更換側邊圖片">${state.photoUrl ? `<img src="${esc(state.photoUrl)}" style="${vStyle}">` : ""}</div><div class="mc-side-col"><div class="mc-side-head" data-cslot="headBg">${logoHtml}${nameLine}${coHtml}${sloganHtml}</div><div class="mc-sep"></div><div class="mc-body" data-cslot="bodyBg">${rowsHtml}</div>${footHtml}</div></div></article>`;
+  } else if (state.style === "block") {
+    mount.innerHTML = `<article class="mega-card"><div class="mc-block-top" style="background:var(--head-bg);" data-cslot="headBg">${brandRow}${nameLine}${sloganHtml}</div><div class="mc-body" data-cslot="bodyBg">${rowsHtml}</div>${footHtml}</article>`;
+  } else {
+    const extraCls = state.style === "frame" ? "style-frame" : "";
+    mount.innerHTML = `<article class="mega-card ${extraCls}"><div class="mc-top-bar" data-cslot="accent"></div><div class="mc-head-area" style="padding:14px 18px 10px;" data-cslot="headBg">${brandRow}<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;"><div style="flex:1;min-width:0;">${nameLine}${sloganHtml}</div>${state.showPhoto && state.photoUrl ? `<div class="mc-photo mc-media-click" onclick="triggerPhotoUpload(event)"><img src="${esc(state.photoUrl)}" style="${vStyle}"></div>` : ""}</div></div><div class="mc-sep"></div><div class="mc-body" data-cslot="bodyBg">${rowsHtml}</div>${footHtml}</article>`;
+  }
+
+  mount.querySelectorAll(".mc-inp").forEach(el => {
+    autoSizeInput(el);
+    let lastTap = 0;
+    const selectAllNow = () => {
+      if (el.readOnly) return;
+      el.focus();
+      setTimeout(() => { try { el.setSelectionRange(0, el.value.length); } catch (e) { el.select(); } }, 20);
+    };
+    el.addEventListener("dblclick", selectAllNow);
+    el.addEventListener("touchend", () => {
+      const now = Date.now();
+      if (now - lastTap < 350) { selectAllNow(); lastTap = 0; }
+      else lastTap = now;
+    }, { passive: true });
+  });
+  mount.querySelectorAll("video").forEach(v => { v.muted = true; v.play().catch(() => {}); });
+  bindActionDrag(mount);
+
+  // 只有在展開「進階設定 → 配色」時，點背景區塊才切換調色部位，平常點字完全不打架
+  mount.querySelectorAll("[data-cslot]").forEach(el => {
+    el.addEventListener("click", (e) => {
+      if (!document.getElementById("phoneScreen").classList.contains("color-pick-mode")) return;
+      if (e.target.tagName === "INPUT") return;
+      e.stopPropagation();
+      const slot = el.getAttribute("data-cslot");
+      if (slot) { selectColorSlot(slot); toast("調色：" + (SLOT_NAMES[slot] || slot)); }
+    });
+  });
+  persistLocal();
+}
+
+/* Logo 自動去背 + 自動裁掉空白邊界 + 純色處理 */
+function processLogoCanvas(src, opts) {
+  const sw = src.naturalWidth || src.width, sh = src.naturalHeight || src.height;
+  if (!sw || !sh) return "";
+  const sc = Math.min(1, 640 / Math.max(sw, sh));
+  const w = Math.max(1, Math.round(sw * sc)), h = Math.max(1, Math.round(sh * sc));
+  const c = document.createElement("canvas");
+  c.width = w; c.height = h;
+  const ctx = c.getContext("2d");
+  ctx.drawImage(src, 0, 0, w, h);
+
+  const imgData = ctx.getImageData(0, 0, w, h);
+  const px = imgData.data;
+  const corners = [0, (w - 1) * 4, ((h - 1) * w) * 4, ((h - 1) * w + (w - 1)) * 4];
+  const transparentCorners = corners.filter(idx => px[idx + 3] < 128).length;
+
+  if (opts.removeBg && transparentCorners < 2) {
+    let br = 0, bg = 0, bb = 0;
+    corners.forEach(idx => { br += px[idx]; bg += px[idx + 1]; bb += px[idx + 2]; });
+    br /= 4; bg /= 4; bb /= 4;
+    for (let i = 0; i < px.length; i += 4) {
+      if (px[i + 3] === 0) continue;
+      const dist = Math.hypot(px[i] - br, px[i + 1] - bg, px[i + 2] - bb);
+      if (dist < 38) px[i + 3] = 0;
+      else if (dist < 76) px[i + 3] = Math.round(((dist - 38) / 38) * px[i + 3]);
+    }
+  }
+
+  if (opts.mono && opts.accentHex) {
+    const hc = opts.accentHex.replace("#", "");
+    const ar = parseInt(hc.slice(0, 2), 16), ag = parseInt(hc.slice(2, 4), 16), ab = parseInt(hc.slice(4, 6), 16);
+    for (let i = 0; i < px.length; i += 4) {
+      if (px[i + 3] > 0) { px[i] = ar; px[i + 1] = ag; px[i + 2] = ab; }
+    }
+  }
+  ctx.putImageData(imgData, 0, 0);
+
+  // 自動緊密裁切透明白邊，避免文字 Logo 在白框裡縮成一小點
+  let minX = w, minY = h, maxX = -1, maxY = -1;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (px[(y * w + x) * 4 + 3] > 18) {
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+  if (maxX >= minX && maxY >= minY) {
+    const pad = 4;
+    const tw = (maxX - minX + 1) + pad * 2, th = (maxY - minY + 1) + pad * 2;
+    const out = document.createElement("canvas");
+    out.width = tw; out.height = th;
+    out.getContext("2d").drawImage(c, minX, minY, maxX - minX + 1, maxY - minY + 1, pad, pad, maxX - minX + 1, maxY - minY + 1);
+    return out.toDataURL("image/png");
+  }
+  return c.toDataURL("image/png");
+}
+
+function reprocessLogoIfLoaded() {
+  if (!rawLogoSource) return;
+  const processed = processLogoCanvas(rawLogoSource, {
+    removeBg: state.logoRemoveBg !== false,
+    mono: state.logoMono !== false,
+    accentHex: state.color
+  });
+  if (processed) state.logoUrl = processed;
+}
+
+/* 拍名片 AI 辨識 + 自動去背裁切 Logo */
+function cropLogoFromCard(img, box) {
+  if (!Array.isArray(box) || box.length !== 4) return "";
+  let [ymin, xmin, ymax, xmax] = box.map(Number);
+  if ([ymin, xmin, ymax, xmax].some(isNaN) || ymax <= ymin || xmax <= xmin) return "";
+  const iw = img.naturalWidth, ih = img.naturalHeight;
+  const padX = (xmax - xmin) * 0.04, padY = (ymax - ymin) * 0.04;
+  const sx = Math.max(0, Math.round(((xmin - padX) / 1000) * iw));
+  const sy = Math.max(0, Math.round(((ymin - padY) / 1000) * ih));
+  const sw = Math.min(iw - sx, Math.max(10, Math.round(((xmax - xmin + padX * 2) / 1000) * iw)));
+  const sh = Math.min(ih - sy, Math.max(10, Math.round(((ymax - ymin + padY * 2) / 1000) * ih)));
+  const c = document.createElement("canvas");
+  c.width = sw; c.height = sh;
+  c.getContext("2d").drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+  rawLogoSource = c;
+  c.toBlob(b => { if (b) idbPut("rawLogo", b); }, "image/png");
+  return processLogoCanvas(c, { removeBg: state.logoRemoveBg !== false, mono: state.logoMono !== false, accentHex: state.color });
+}
+
+function onOcrPick(e) {
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  const btn = document.getElementById("btnOcr");
+  btn.disabled = true; btn.textContent = "辨識中...";
+  const img = new Image();
+  img.onload = async () => {
+    try {
+      const c = document.createElement("canvas");
+      const sc = Math.min(1, 1280 / Math.max(img.naturalWidth, img.naturalHeight));
+      c.width = Math.round(img.naturalWidth * sc); c.height = Math.round(img.naturalHeight * sc);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      const r = await fetch(CFG.GAS_API, {
+        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "ecardOcr", dataUrl: c.toDataURL("image/jpeg", 0.85) })
+      }).then(x => x.json());
+      if (!r || !r.success || !r.data) { toast((r && r.error) || "辨識失敗"); return; }
+      const d = r.data;
+      if (d.company) state.company = d.company;
+      if (d.name) state.name = d.name;
+      if (d.enName) state.enName = d.enName;
+      if (d.mobile) state.mobile = d.mobile;
+      if (d.email) state.email = d.email;
+      if (d.website) state.website = d.website;
+      if (d.slogan) state.slogan = d.slogan;
+      state.infoRows = [
+        { label: "手機", value: d.mobile || "" },
+        { label: "信箱", value: d.email || "" },
+        { label: "電話", value: d.tel || "" },
+        { label: "地址", value: d.address || "" }
+      ].filter(x => x.value);
+      if (d.logoBox) {
+        const cr = cropLogoFromCard(img, d.logoBox);
+        if (cr) state.logoUrl = cr;
+      }
+      renderSocialControls(); renderPreview(); toast("名片已自動填入");
+    } catch (err) { toast("辨識失敗"); }
+    finally {
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>拍名片自動填入';
+      e.target.value = "";
+    }
+  };
+  img.src = URL.createObjectURL(f);
+}
+
+/* 素材上傳（同步自動存於手機本機 IndexedDB，重整不遺失） */
+function onLogoPick(e) {
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  idbPut("rawLogo", f);
+  const img = new Image();
+  img.onload = () => {
+    rawLogoSource = img;
+    reprocessLogoIfLoaded();
+    renderPreview();
+    toast("Logo 已自動去背並存於手機");
+  };
+  img.src = URL.createObjectURL(f);
+  e.target.value = "";
+}
+function clearLogo() { rawLogoSource = null; state.logoUrl = ""; idbDel("rawLogo"); renderPreview(); }
+function onPhotoPick(e) {
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  const img = new Image();
+  img.onload = () => {
+    const c = document.createElement("canvas");
+    const sc = Math.min(1, 1200 / Math.max(img.naturalWidth, img.naturalHeight));
+    c.width = Math.round(img.naturalWidth * sc); c.height = Math.round(img.naturalHeight * sc);
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    c.toBlob(b => { if (b) idbPut("photo", b); }, "image/jpeg", 0.88);
+    state.photoUrl = c.toDataURL("image/jpeg", 0.88);
+    state.videoPosX = 50; state.videoPos = 50; state.videoZoom = 100;
+    state.showPhoto = true; document.getElementById("chkPhoto").checked = true;
+    renderPreview();
+    openVidTrimBar();
+    toast("照片已更新，可拉選左右上下與縮放");
+  };
+  img.src = URL.createObjectURL(f);
+  e.target.value = "";
+}
+function toggleVidUrlBox() {
+  const box = document.getElementById("vidUrlBox");
+  const btn = document.getElementById("btnToggleVidUrl");
+  const open = box.style.display !== "grid";
+  box.style.display = open ? "grid" : "none";
+  if (btn) btn.textContent = open ? "貼影片連結 ▴" : "貼影片連結 ▾";
+}
+
+function setVidProgress(pct, label, hideAfterMs) {
+  const btn = document.getElementById("btnUploadVid");
+  const wraps = [
+    { w: document.getElementById("vidProgWrap"), f: document.getElementById("vidProgFill"), l: document.getElementById("vidProgLabel"), p: document.getElementById("vidProgPct") },
+    { w: document.getElementById("stageProgWrap"), f: document.getElementById("stageProgFill"), l: document.getElementById("stageProgLabel"), p: document.getElementById("stageProgPct") }
+  ];
+  if (pct === null) {
+    wraps.forEach(x => { if (x.w) x.w.style.display = "none"; });
+    if (btn) { btn.disabled = false; btn.textContent = "上傳影片（自動切10秒）"; }
+    return;
+  }
+  const p = Math.max(0, Math.min(100, Math.round(pct)));
+  wraps.forEach(x => {
+    if (x.w) x.w.style.display = "flex";
+    if (x.f) x.f.style.width = p + "%";
+    if (x.l) x.l.textContent = label || "處理影片中...";
+    if (x.p) x.p.textContent = p + "%";
+  });
+  if (btn) {
+    btn.disabled = p < 100;
+    btn.textContent = p < 100 ? ("處理中 " + p + "%") : "完成 100%";
+  }
+  if (hideAfterMs) setTimeout(() => setVidProgress(null), hideAfterMs);
+}
+
+function compute16x9Crop(vw, vh, vPosPct, vZoomPct, vPosXPct, customAspect) {
+  const dstAspect = customAspect || (16 / 9);
+  const zoom = Math.max(1, Math.min(2.2, (Number(vZoomPct) || 100) / 100));
+  const posX = Math.max(0, Math.min(100, Number(vPosXPct ?? state.videoPosX ?? 50))) / 100;
+  const posY = Math.max(0, Math.min(100, Number(vPosPct ?? 50))) / 100;
+  let baseW = vw, baseH = vh;
+  if (vw / vh < dstAspect) { baseH = vw / dstAspect; }
+  else { baseW = vh * dstAspect; }
+  const sw = Math.max(2, Math.round(baseW / zoom));
+  const sh = Math.max(2, Math.round(baseH / zoom));
+  const sx = Math.max(0, Math.min(vw - sw, Math.round(posX * (vw - sw))));
+  const sy = Math.max(0, Math.min(vh - sh, Math.round(posY * (vh - sh))));
+  return { sx, sy, sw, sh };
+}
+
+/* 從影片自動擷取 16:9 橫式封面縮圖（符合使用者拉選的上下與縮放） */
+async function captureVideoPoster(videoEl) {
+  try {
+    const vw = videoEl.videoWidth || 720, vh = videoEl.videoHeight || 405;
+    if (!vw || !vh) return "";
+    if (videoEl.currentTime < 0.15 && (!isFinite(videoEl.duration) || videoEl.duration > 0.3)) {
+      await new Promise(res => {
+        const done = () => { videoEl.removeEventListener("seeked", done); res(); };
+        videoEl.addEventListener("seeked", done);
+        setTimeout(done, 500);
+        try { videoEl.currentTime = 0.2; } catch (e) { done(); }
+      });
+    }
+    const { sx, sy, sw, sh } = compute16x9Crop(vw, vh, state.videoPos ?? 50, state.videoZoom || 100);
+    const c = document.createElement("canvas");
+    c.width = 720; c.height = 405;
+    c.getContext("2d").drawImage(videoEl, sx, sy, sw, sh, 0, 0, 720, 405);
+    const dataUrl = c.toDataURL("image/jpeg", 0.85);
+    c.toBlob(b => { if (b) idbPut("photo", b); }, "image/jpeg", 0.85);
+    return dataUrl;
+  } catch (e) { return ""; }
+}
+
+/* 影片裁切成指定起點 10 秒 + 套用畫面上下裁切位置 */
+let rawPickedVideoBlob = null;
+let rawPickedVideoName = "video.mp4";
+let rawVideoDuration = 0;
+let trimStartSec = 0;
+
+function showBusy(title, pct, sub) {
+  const m = document.getElementById("busyModal");
+  if (!m) return;
+  const sp = m.querySelector(".ck-spinner"); if (sp) sp.style.display = "block";
+  const tr = m.querySelector(".vid-prog-track"); if (tr) tr.style.display = "block";
+  const bt = document.getElementById("busyOkBtn"); if (bt) bt.style.display = "none";
+  document.getElementById("busyTitle").textContent = title || "同步名片中...";
+  document.getElementById("busyFill").style.width = Math.max(5, Math.min(100, Math.round(pct || 20))) + "%";
+  document.getElementById("busySub").textContent = sub || "";
+  m.style.display = "flex";
+}
+function hideBusy() {
+  const m = document.getElementById("busyModal");
+  if (m) m.style.display = "none";
+  const sp = m && m.querySelector(".ck-spinner"); if (sp) sp.style.display = "block";
+  const tr = m && m.querySelector(".vid-prog-track"); if (tr) tr.style.display = "block";
+  const bt = document.getElementById("busyOkBtn"); if (bt) bt.style.display = "none";
+}
+
+function openVidTrimBar() {
+  const bar = document.getElementById("vidTrimBar");
+  if (!bar) return;
+  bar.style.display = "flex";
+  const posXEl = document.getElementById("inVidPosX");
+  const posXLbl = document.getElementById("lblVidPosX");
+  const curPosX = Math.max(0, Math.min(100, Number(state.videoPosX ?? 50)));
+  if (posXEl) posXEl.value = curPosX;
+  if (posXLbl) posXLbl.textContent = curPosX + "%";
+  const posEl = document.getElementById("inVidPos");
+  const posLbl = document.getElementById("lblVidPos");
+  const curPos = Math.max(0, Math.min(100, Number(state.videoPos ?? 50)));
+  if (posEl) posEl.value = curPos;
+  if (posLbl) posLbl.textContent = curPos + "%";
+  const zEl = document.getElementById("inVidZoom");
+  const zLbl = document.getElementById("lblVidZoom");
+  const curZ = Math.max(100, Math.min(220, Number(state.videoZoom) || 100));
+  if (zEl) zEl.value = curZ;
+  if (zLbl) zLbl.textContent = (curZ / 100).toFixed(1) + "×";
+  const timeRow = document.getElementById("vidTimeRow");
+  if (VIDEO_STYLES.includes(state.style) && rawVideoDuration > 10.5) {
+    const maxStart = Math.max(0.5, Math.floor((rawVideoDuration - 10) * 2) / 2);
+    const rng = document.getElementById("inTrimStart");
+    if (rng) { rng.max = String(maxStart); rng.value = String(Math.min(trimStartSec, maxStart)); }
+    onTrimStartSlide(rng ? rng.value : 0);
+    if (timeRow) timeRow.style.display = "flex";
+  } else if (timeRow) {
+    timeRow.style.display = "none";
+  }
+}
+function closeVidTrimBar() {
+  const bar = document.getElementById("vidTrimBar");
+  if (bar) bar.style.display = "none";
+}
+function onTrimStartSlide(val) {
+  trimStartSec = Math.max(0, Number(val) || 0);
+  const end = Math.min(rawVideoDuration || (trimStartSec + 10), trimStartSec + 10);
+  const lbl = document.getElementById("lblTrimRange");
+  if (lbl) lbl.textContent = trimStartSec.toFixed(1) + "s ～ " + end.toFixed(1) + "s";
+  const vid = document.querySelector("#cardMount video");
+  if (vid) { try { vid.currentTime = trimStartSec; } catch (e) {} }
+}
+function applyVideoFramingLive() {
+  const px = Math.max(0, Math.min(100, Number(state.videoPosX ?? 50)));
+  const py = Math.max(0, Math.min(100, Number(state.videoPos ?? 50)));
+  const z = Math.max(1, Math.min(2.2, (Number(state.videoZoom) || 100) / 100));
+  document.querySelectorAll("#cardMount video, #cardMount .mc-video-box img, #cardMount .mc-side-media img, #cardMount .mc-hero-img, #cardMount .mc-photo img").forEach(el => {
+    el.style.objectPosition = `${px}% ${py}%`;
+    el.style.transform = `scale(${z})`;
+    el.style.transformOrigin = `${px}% ${py}%`;
+  });
+}
+function setVideoPosX(v) {
+  const px = Math.max(0, Math.min(100, Number(v) || 50));
+  state.videoPosX = px;
+  const lbl = document.getElementById("lblVidPosX"); if (lbl) lbl.textContent = px + "%";
+  applyVideoFramingLive();
+  persistLocal();
+}
+function setVideoPos(v) {
+  const p = Math.max(0, Math.min(100, Number(v) || 50));
+  state.videoPos = p;
+  const lbl = document.getElementById("lblVidPos"); if (lbl) lbl.textContent = p + "%";
+  applyVideoFramingLive();
+  persistLocal();
+}
+function setVideoZoom(v) {
+  const z = Math.max(100, Math.min(220, Number(v) || 100));
+  state.videoZoom = z;
+  const lbl = document.getElementById("lblVidZoom"); if (lbl) lbl.textContent = (z / 100).toFixed(1) + "×";
+  applyVideoFramingLive();
+  persistLocal();
+}
+
+function trimVideoTo10s(videoEl, fallbackBlob, startSec, vPosPct, vZoomPct) {
+  return new Promise(async (resolve) => {
+    try {
+      const vw = videoEl.videoWidth || 720, vh = videoEl.videoHeight || 405;
+      // 強制輸出 16:9 橫式滿版畫面（720x405），直式影片也不會有左右灰邊
+      const targetW = 720, targetH = 406;
+      const c = document.createElement("canvas");
+      c.width = targetW; c.height = targetH;
+      const ctx = c.getContext("2d");
+      const { sx, sy, sw, sh } = compute16x9Crop(vw, vh, vPosPct ?? 50, vZoomPct || 100);
+      if (typeof c.captureStream !== "function" || typeof MediaRecorder === "undefined") {
+        resolve(fallbackBlob);
+        return;
+      }
+      const stream = c.captureStream(24);
+      const mimeType = ["video/mp4;codecs=avc1", "video/mp4", "video/webm;codecs=vp8", "video/webm"].find(t => {
+        try { return MediaRecorder.isTypeSupported(t); } catch (e) { return false; }
+      }) || "";
+      const rec = mimeType ? new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 1800000 }) : new MediaRecorder(stream, { videoBitsPerSecond: 1800000 });
+      const chunks = [];
+      rec.ondataavailable = (ev) => { if (ev.data && ev.data.size > 0) chunks.push(ev.data); };
+      rec.onstop = () => {
+        const out = chunks.length ? new Blob(chunks, { type: mimeType.split(";")[0] || "video/mp4" }) : fallbackBlob;
+        resolve(out.size > 0 ? out : fallbackBlob);
+      };
+      videoEl.muted = true;
+      await new Promise(res => {
+        const done = () => { videoEl.removeEventListener("seeked", done); res(); };
+        videoEl.addEventListener("seeked", done);
+        setTimeout(done, 500);
+        try { videoEl.currentTime = startSec || 0; } catch (e) { done(); }
+      });
+      await videoEl.play();
+      rec.start(250);
+      const startAt = performance.now();
+      const remain = Math.max(1, (videoEl.duration || 10) - (startSec || 0));
+      const targetMs = Math.min(10000, remain * 1000);
+      let rafId = 0;
+      const tick = () => {
+        const elapsed = performance.now() - startAt;
+        try { ctx.drawImage(videoEl, sx, sy, sw, sh, 0, 0, targetW, targetH); } catch (e) {}
+        setVidProgress(15 + Math.min(78, (elapsed / targetMs) * 78), "轉成橫式 16:9 影片中...");
+        if (elapsed >= targetMs || videoEl.ended) {
+          cancelAnimationFrame(rafId);
+          videoEl.pause();
+          if (rec.state !== "inactive") rec.stop();
+          return;
+        }
+        rafId = requestAnimationFrame(tick);
+      };
+      rafId = requestAnimationFrame(tick);
+    } catch (e) {
+      resolve(fallbackBlob);
+    }
+  });
+}
+
+async function applyVideoTrim() {
+  // 圖片版：將目前調整的左右/上下/縮放直接裁切成最終照片（LINE 同步呈現）
+  if (!VIDEO_STYLES.includes(state.style)) {
+    if (!state.photoUrl) { closeVidTrimBar(); return; }
+    const btn = document.getElementById("btnApplyTrim");
+    if (btn) { btn.disabled = true; btn.textContent = "套用中..."; }
+    try {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = state.photoUrl; });
+      const aspect = state.style === "side" ? (1 / 3) : (state.style === "hero" ? (16 / 10) : (60 / 74));
+      const { sx, sy, sw, sh } = compute16x9Crop(img.naturalWidth, img.naturalHeight, state.videoPos ?? 50, state.videoZoom || 100, state.videoPosX ?? 50, aspect);
+      const outW = state.style === "side" ? 360 : (state.style === "hero" ? 960 : 480);
+      const outH = Math.round(outW / aspect);
+      const c = document.createElement("canvas");
+      c.width = outW; c.height = outH;
+      c.getContext("2d").drawImage(img, sx, sy, sw, sh, 0, 0, outW, outH);
+      c.toBlob(b => { if (b) idbPut("photo", b); }, "image/jpeg", 0.88);
+      state.photoUrl = c.toDataURL("image/jpeg", 0.88);
+      state.videoPosX = 50; state.videoPos = 50; state.videoZoom = 100;
+      renderPreview();
+      closeVidTrimBar();
+      toast("已套用圖片裁切位置");
+    } catch (e) {
+      closeVidTrimBar();
+      toast("已套用目前畫面位置");
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = "套用目前位置"; }
+    }
+    return;
+  }
+  const srcBlob = rawPickedVideoBlob || localVideoBlob;
+  if (!srcBlob) { closeVidTrimBar(); return; }
+  const btn = document.getElementById("btnApplyTrim");
+  if (btn) { btn.disabled = true; btn.textContent = "轉檔中..."; }
+  setVidProgress(10, "套用橫式 16:9 裁切...");
+  try {
+    const tmpUrl = URL.createObjectURL(srcBlob);
+    const v = document.createElement("video");
+    v.preload = "auto"; v.muted = true; v.playsInline = true; v.src = tmpUrl;
+    await new Promise(res => {
+      v.onloadeddata = res; v.onerror = res; setTimeout(res, 2000);
+      try { v.load(); } catch (e) {}
+    });
+    try { v.currentTime = trimStartSec || 0.2; } catch (e) {}
+    const poster = await captureVideoPoster(v);
+    const vw = v.videoWidth || 720, vh = v.videoHeight || 405;
+    const isPortrait = (vw / vh) < 1.5;
+    let finalBlob = srcBlob;
+    if (isPortrait || rawVideoDuration > 10.5 || srcBlob.size > 9.5 * 1024 * 1024 || Number(state.videoPosX ?? 50) !== 50 || Number(state.videoPos ?? 50) !== 50 || Number(state.videoZoom || 100) !== 100) {
+      finalBlob = await trimVideoTo10s(v, srcBlob, trimStartSec, state.videoPos ?? 50, state.videoZoom || 100);
+      state.videoPosX = 50;
+      state.videoPos = 50;
+      state.videoZoom = 100;
+    }
+    URL.revokeObjectURL(tmpUrl);
+    localVideoBlob = finalBlob;
+    await idbPut("video", { blob: finalBlob, name: rawPickedVideoName });
+    state.videoUrl = URL.createObjectURL(finalBlob);
+    if (poster) state.photoUrl = poster;
+    renderPreview();
+    setVidProgress(100, "已轉成橫式影片", 1000);
+    closeVidTrimBar();
+    toast("已套用橫式 16:9 影片");
+  } catch (e) {
+    setVidProgress(null);
+    toast("已套用目前畫面位置");
+    closeVidTrimBar();
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "套用目前位置"; }
+  }
+}
+
+/* 立即載入 MP4/MOV，不卡 FileReader，不提早清空 input */
+function onVideoPick(e) {
+  const input = e.target;
+  const f = input.files && input.files[0]; if (!f) return;
+  if (f.size > 60 * 1024 * 1024) {
+    toast("原始影片超過 60MB，請先剪短再選");
+    input.value = "";
+    return;
+  }
+  setVidProgress(25, "載入影片中...");
+  const rawUrl = URL.createObjectURL(f);
+  rawPickedVideoBlob = f;
+  rawPickedVideoName = f.name || "video.mp4";
+  localVideoBlob = f;
+  trimStartSec = 0;
+  state.videoUrl = rawUrl;
+  if (String(state.photoUrl || "").includes("refin-moon-poster")) state.photoUrl = "";
+  const inp = document.getElementById("inVideoUrl"); if (inp) inp.value = rawPickedVideoName;
+  const del = document.getElementById("btnDelVideo"); if (del) del.style.display = "inline-flex";
+  if (!VIDEO_STYLES.includes(state.style)) {
+    state.style = "video";
+    syncCssVars();
+  }
+  renderPreview();
+  idbPut("video", { blob: f, name: rawPickedVideoName });
+
+  // 等畫面上真正的 <video> 載入或播放後立刻擷取新封面並開啟位置拉選條
+  const cardVid = document.querySelector("#cardMount video");
+  const probe = cardVid || document.createElement("video");
+  let handled = false;
+  const grabPosterSafe = async () => {
+    if (probe.videoWidth > 0) {
+      const poster = await captureVideoPoster(probe);
+      if (poster) { state.photoUrl = poster; persistLocal(); }
+    }
+  };
+  const onReady = async () => {
+    if (handled) return;
+    handled = true;
+    rawVideoDuration = isFinite(probe.duration) ? probe.duration : 0;
+    await grabPosterSafe();
+    setVidProgress(100, "影片已更新", 900);
+    openVidTrimBar();
+    toast(rawVideoDuration > 10.5 ? "影片已載入，可拉選要切的 10 秒與畫面位置" : "影片已更新，可拉選上下位置");
+    setTimeout(() => { input.value = ""; }, 300);
+  };
+  probe.addEventListener("playing", grabPosterSafe, { once: true });
+  if (probe.readyState >= 2) {
+    onReady();
+  } else {
+    probe.addEventListener("loadeddata", onReady, { once: true });
+    probe.addEventListener("loadedmetadata", () => {
+      rawVideoDuration = isFinite(probe.duration) ? probe.duration : 0;
+    }, { once: true });
+    setTimeout(onReady, 1800);
+  }
+}
+function clearVideo() {
+  localVideoBlob = null; idbDel("video");
+  state.videoUrl = ""; document.getElementById("inVideoUrl").value = "";
+  document.getElementById("btnDelVideo").style.display = "none"; renderPreview();
+}
+function convertYoutube() {
+  if (!parseYtId(state.videoUrl)) { toast("請先貼入 YouTube 網址"); return; }
+  localVideoBlob = null; idbDel("video");
+  setStyle("video"); toast("已套用 YouTube 影片");
+}
+
+function blobToDataUrl(blob) {
+  return new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(blob); });
+}
+let lastUploadError = "";
+async function uploadLocalAsset(kind, dataUrl) {
+  lastUploadError = "";
+  try {
+    const r = await fetch(CFG.GAS_API, {
+      method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "ecardUploadAsset", publicUpload: true, cardId: currentCardId || "card", kind, dataUrl })
+    }).then(x => x.json());
+    if (r && r.success && r.url) return r.url;
+    lastUploadError = (r && r.error) ? String(r.error) : "伺服器沒有回傳網址";
+    return "";
+  } catch (e) {
+    lastUploadError = "網路連線失敗或檔案太大，請重試";
+    return "";
+  }
+}
+
+/* 置中錯誤視窗：不會被任何東西蓋住，必須按「知道了」才關閉 */
+function showBusyError(title, detail) {
+  const m = document.getElementById("busyModal");
+  if (!m) { alert(title + "\n" + detail); return; }
+  document.getElementById("busyTitle").textContent = title;
+  document.getElementById("busySub").textContent = detail || "";
+  const sp = document.querySelector("#busyModal .ck-spinner"); if (sp) sp.style.display = "none";
+  const tr = document.querySelector("#busyModal .vid-prog-track"); if (tr) tr.style.display = "none";
+  const bt = document.getElementById("busyOkBtn"); if (bt) bt.style.display = "inline-flex";
+  m.style.display = "flex";
+}
+
+/* 送出前確保影片 ≤10MB / ≤10 秒：太大就自動壓縮裁切，不需要使用者手動按「套用」 */
+async function ensureVideoUploadable() {
+  if (!VIDEO_STYLES.includes(state.style)) return true;
+  if (!localVideoBlob || !String(state.videoUrl || "").startsWith("blob:")) return true;
+  const tooBig = localVideoBlob.size > 9.5 * 1024 * 1024;
+  const tooLong = rawVideoDuration > 10.5;
+  if (!tooBig && !tooLong) return true;
+  showBusy("影片過大，自動壓縮至 10 秒內...", 25, "約需 10～15 秒，請勿離開畫面");
+  rawPickedVideoBlob = rawPickedVideoBlob || localVideoBlob;
+  await applyVideoTrim();
+  return !!(localVideoBlob && localVideoBlob.size <= 10 * 1024 * 1024);
+}
+
+/* 儲存 + Telegram 通知 */
+async function saveCard(silent, withModal) {
+  if (!silent && !isAdminMode && localEditUsed >= 3 && !(profile && profile.donated)) { openDonateModal(); return false; }
+  persistLocal();
+  const btn = document.getElementById("btnSave");
+  btn.disabled = true; btn.textContent = "儲存中";
+  if (withModal) showBusy("同步最新名片中...", 18, "正在準備 Logo 與素材");
+  try {
+    const okSize = await ensureVideoUploadable();
+    if (!okSize) {
+      showBusyError("影片太大，無法上傳", "請改選 10 秒內的影片，或按「調整位置 → 套用目前位置」先壓縮後再發送。");
+      return false;
+    }
+    const publishCfg = Object.assign({}, state);
+    if (VIDEO_STYLES.includes(publishCfg.style) && publishCfg.videoUrl && !String(publishCfg.videoUrl).includes("refin-moon")) {
+      const liveVid = document.querySelector("#cardMount video");
+      if (liveVid && liveVid.videoWidth > 0 && (!publishCfg.photoUrl || String(publishCfg.photoUrl).includes("refin-moon-poster"))) {
+        const freshPoster = await captureVideoPoster(liveVid);
+        if (freshPoster) { publishCfg.photoUrl = freshPoster; state.photoUrl = freshPoster; }
+      }
+    }
+
+    let videoFailMsg = "";
+    const tasks = [];
+    if (publishCfg.logoUrl && publishCfg.logoUrl.startsWith("data:image/")) {
+      tasks.push(uploadLocalAsset("logo", publishCfg.logoUrl).then(u => {
+        if (u) { publishCfg.logoUrl = u; state.logoUrl = u; }
+      }));
+    }
+    if (publishCfg.photoUrl && (publishCfg.photoUrl.startsWith("data:image/") || publishCfg.photoUrl.startsWith("blob:"))) {
+      tasks.push((async () => {
+        const photoData = publishCfg.photoUrl.startsWith("blob:") ? await fetch(publishCfg.photoUrl).then(x => x.blob()).then(blobToDataUrl) : publishCfg.photoUrl;
+        const u = await uploadLocalAsset("photo", photoData);
+        if (u) { publishCfg.photoUrl = u; state.photoUrl = u; }
+      })());
+    }
+    if (publishCfg.videoUrl && publishCfg.videoUrl.startsWith("blob:") && localVideoBlob) {
+      tasks.push((async () => {
+        if (withModal) showBusy("上傳影片至雲端...", 55, "檔案較大時需幾秒鐘");
+        setVidProgress(40, "上傳影片至雲端...");
+        const dataUrl = await blobToDataUrl(localVideoBlob);
+        if (withModal) showBusy("同步影片連結...", 80, "即將完成");
+        setVidProgress(75, "同步影片連結...");
+        const u = await uploadLocalAsset("video", dataUrl);
+        if (u) { publishCfg.videoUrl = u; state.videoUrl = u; }
+        else videoFailMsg = lastUploadError || "未知原因";
+        setVidProgress(100, "雲端同步完成", 900);
+      })());
+    }
+    if (tasks.length) {
+      if (withModal) showBusy("上傳素材中...", 45, "Logo、圖片與影片同步上傳");
+      await Promise.all(tasks);
+    }
+
+    // 影片版上傳失敗：明確擋下，不可以偷偷送出沒有影片的名片
+    if (VIDEO_STYLES.includes(publishCfg.style) && videoFailMsg) {
+      showBusyError("影片上傳失敗，名片未送出", videoFailMsg);
+      return false;
+    }
+
+    // 防止未上傳成功的 data:/blob: 撐爆 Google Sheets 50,000 字元上限
+    if (publishCfg.logoUrl && !/^https?:\/\//i.test(publishCfg.logoUrl)) publishCfg.logoUrl = "";
+    if (publishCfg.photoUrl && !/^https?:\/\//i.test(publishCfg.photoUrl)) publishCfg.photoUrl = "";
+    if (publishCfg.videoUrl && !/^https?:\/\//i.test(publishCfg.videoUrl)) publishCfg.videoUrl = "";
+    if (VIDEO_STYLES.includes(publishCfg.style) && !publishCfg.videoUrl) {
+      showBusyError("沒有可用的影片", "影片版需要先選一支影片（或貼 YouTube 連結），或改用圖片版。");
+      return false;
+    }
+
+    if (!silent) {
+      localEditUsed++;
+      localStorage.setItem("ck_local_edit_used", String(localEditUsed));
+    }
+    if (withModal) showBusy("建立名片連結...", 92, "即將開啟 LINE 分享名單");
+    const r = await fetch(CFG.GAS_API, {
+      method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "ecardNotifyCreate", cardId: (profile && profile.slug) || currentCardId || "", userEmail: (session && session.user && session.user.email) || "", config: publishCfg })
+    }).then(x => x.json());
+    if (r && r.success && r.cardId) {
+      currentCardId = r.cardId;
+      localStorage.setItem("ck_my_card_id", currentCardId);
+      rememberAdminCard(currentCardId, publishCfg);
+      dirtySinceSave = false;
+      persistLocal();
+      dirtySinceSave = false;
+      if (isAdminMode) loadAdminCardList();
+      if (!silent) toast("已儲存");
+      return true;
+    }
+    showBusyError("雲端儲存失敗", (r && r.error) ? String(r.error) : "請檢查網路後重試");
+    return false;
+  } catch (e) {
+    showBusyError("雲端同步失敗", String(e && e.message || e));
+    return false;
+  } finally {
+    btn.disabled = false; btn.textContent = "儲存";
+  }
+}
+
+function openAuthModal() { document.getElementById("authModal").style.display = "flex"; }
+function closeAuthModal() { document.getElementById("authModal").style.display = "none"; }
+function openDonateModal() { document.getElementById("donateModal").style.display = "flex"; }
+function closeDonateModal() { document.getElementById("donateModal").style.display = "none"; }
+function setAuthMode(m) {
+  authMode = m;
+  document.getElementById("tabLogin").classList.toggle("active", m === "login");
+  document.getElementById("tabReg").classList.toggle("active", m === "register");
+  document.getElementById("authName").style.display = m === "register" ? "block" : "none";
+  document.getElementById("authCompany").style.display = m === "register" ? "block" : "none";
+  document.getElementById("btnAuthGo").textContent = m === "register" ? "註冊" : "登入";
+}
+async function submitAuth() {
+  if (!sb) return;
+  const email = document.getElementById("authEmail").value.trim(), password = document.getElementById("authPass").value;
+  if (!email || !password) { toast("請輸入 Email 與密碼"); return; }
+  if (authMode === "register") {
+    const name = document.getElementById("authName").value.trim();
+    const company = document.getElementById("authCompany").value.trim();
+    if (!name) { toast("請輸入姓名"); return; }
+    const res = await sb.auth.signUp({ email, password, options: { data: { full_name: name, company } } });
+    if (res.error) { toast(res.error.message); return; }
+    session = res.data && res.data.session;
+    state.name = name;
+    if (company) state.company = company;
+    state.email = email;
+    const mailRow = (state.infoRows || []).find(r => /信箱|mail|^e\.?$/i.test(r.label || "") || String(r.value || "").includes("@"));
+    if (mailRow) mailRow.value = email;
+    const acctBtn = document.getElementById("btnAuthOpen");
+    if (acctBtn) acctBtn.textContent = name.slice(0, 1);
+    renderSocialControls(); renderPreview();
+    closeAuthModal(); toast("註冊成功，已帶入名片資料");
+    try {
+      const regCfg = { ...state };
+      if (regCfg.logoUrl && !/^https?:\/\//i.test(regCfg.logoUrl)) regCfg.logoUrl = "";
+      if (regCfg.photoUrl && !/^https?:\/\//i.test(regCfg.photoUrl)) regCfg.photoUrl = "";
+      if (regCfg.videoUrl && !/^https?:\/\//i.test(regCfg.videoUrl)) regCfg.videoUrl = "";
+      fetch(CFG.GAS_API, {
+        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "ecardNotifyCreate", cardId: currentCardId || "", userEmail: email, config: regCfg })
+      }).then(x => x.json()).then(r => {
+        if (r && r.success && r.cardId) {
+          currentCardId = r.cardId;
+          localStorage.setItem("ck_my_card_id", currentCardId);
+        }
+      }).catch(() => {});
+    } catch (e) {}
+    return;
+  }
+  const res = await sb.auth.signInWithPassword({ email, password });
+  if (res.error) { toast(res.error.message); return; }
+  session = res.data && res.data.session;
+  const meta = (res.data && res.data.user && res.data.user.user_metadata) || {};
+  const acctBtn = document.getElementById("btnAuthOpen");
+  if (acctBtn && meta.full_name) acctBtn.textContent = String(meta.full_name).slice(0, 1);
+  closeAuthModal(); toast("已登入");
+}
+
+function toggleChatTheme() {
+  const s = document.getElementById("phoneScreen"), d = s.classList.toggle("dark-chat");
+  document.getElementById("btnTheme").innerHTML = d
+    ? '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
+    : '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>';
+}
+
+async function shareToLine() {
+  const isMobile = /iPhone|iPad|Android|Line|Mobile/i.test(navigator.userAgent);
+  const needSync = dirtySinceSave || !currentCardId || (state.videoUrl && state.videoUrl.startsWith("blob:")) || (state.logoUrl && state.logoUrl.startsWith("data:")) || (state.photoUrl && (state.photoUrl.startsWith("data:") || state.photoUrl.startsWith("blob:")));
+  let popup = null;
+  if (!isMobile) {
+    try { popup = window.open("about:blank", "_blank"); } catch (e) {}
+  }
+  showBusy("發送名片中...", 15, needSync ? "同步最新文字與素材" : "正在開啟 LINE 分享名單");
+  if (needSync) {
+    let ok = false;
+    try {
+      ok = await Promise.race([saveCard(true, true), new Promise(res => setTimeout(() => res(false), 90000))]);
+    } catch (e) { ok = false; }
+    if (!ok) {
+      // 同步失敗：絕不開啟 LINE，避免把舊版/不完整名片傳出去（錯誤視窗已由 saveCard 顯示）
+      if (popup && !popup.closed) popup.close();
+      const m = document.getElementById("busyModal");
+      if (!m || m.style.display === "none" || document.getElementById("busyOkBtn").style.display === "none") {
+        showBusyError("同步逾時，名片未送出", "網路較慢或影片太大，請稍後再按一次「發送名片」。");
+      }
+      return;
+    }
+  }
+  const slug = (profile && profile.slug) || currentCardId;
+  if (!slug) {
+    if (popup && !popup.closed) popup.close();
+    showBusyError("尚未建立名片", "請先按右上角「儲存」，再發送名片。");
+    return;
+  }
+  const url = `https://liff.line.me/${CFG.LIFF_ID}?mode=card&id=${encodeURIComponent(slug)}`;
+  hideBusy();
+  if (popup && !popup.closed) {
+    popup.location.href = url;
+  } else {
+    location.href = url;
+  }
+}
+
+window.addEventListener("pageshow", hideBusy);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) hideBusy(); });
+
+async function loadPreviewParamIfAny() {
+  const pid = new URLSearchParams(location.search).get("preview");
+  if (!pid) return;
+  try {
+    const r = await fetch(CFG.GAS_API + "?ac=ecardGet&id=" + encodeURIComponent(pid)).then(x => x.json());
+    if (r && r.success && r.config) {
+      state = Object.assign(defaultState(), r.config);
+      currentCardId = pid; syncCssVars(); renderSocialControls(); renderPreview();
+    }
+  } catch (e) {}
+}
+
+/* 管理員多張名片切換（開啟 ?admin=1 即記住在此裝置，一般用戶完全看不到） */
+let isAdminMode = (function () {
+  const qs = new URLSearchParams(location.search);
+  const qp = qs.get("admin");
+  const qk = qs.get("key");
+  if (qk) { try { localStorage.setItem("ck_admin_key", qk); } catch (e) {} }
+  if (qp === "1") { try { localStorage.setItem("ck_is_admin", "1"); } catch (e) {} return true; }
+  if (qp === "0") { try { localStorage.removeItem("ck_is_admin"); } catch (e) {} return false; }
+  try { return localStorage.getItem("ck_is_admin") === "1"; } catch (e) { return false; }
+})();
+
+const ADMIN_DEFAULT_CATS = ["自己", "客戶", "夥伴", "測試"];
+let adminCatFilter = "all";
+let adminCardsCache = [];
+
+function getLocalAdminCards() {
+  try {
+    const arr = JSON.parse(localStorage.getItem("ck_admin_cards") || "[]");
+    return Array.isArray(arr) ? arr : [];
+  } catch (e) { return []; }
+}
+function saveLocalAdminCards(list) {
+  try { localStorage.setItem("ck_admin_cards", JSON.stringify(list.slice(0, 80))); } catch (e) {}
+}
+function rememberAdminCard(cardId, cfg) {
+  if (!cardId) return;
+  const old = getLocalAdminCards().find(x => x && x.cardId === cardId) || {};
+  const list = getLocalAdminCards().filter(x => x && x.cardId !== cardId);
+  list.unshift({
+    cardId,
+    alias: old.alias || "",
+    category: old.category || (cardId === "bigt" ? "自己" : "客戶"),
+    cardName: (cfg && cfg.name) || old.cardName || "",
+    enName: (cfg && cfg.enName) || old.enName || "",
+    company: (cfg && cfg.company) || old.company || "",
+    style: (cfg && cfg.style) || old.style || ""
+  });
+  saveLocalAdminCards(list);
+}
+
+function onAdminCatChange(cat) {
+  adminCatFilter = cat || "all";
+  renderAdminSelect();
+}
+
+function renderAdminSelect() {
+  const catSel = document.getElementById("adminCatFilter");
+  const sel = document.getElementById("adminCardSelect");
+  if (!sel) return;
+  const cats = Array.from(new Set(ADMIN_DEFAULT_CATS.concat(adminCardsCache.map(x => x.category).filter(Boolean))));
+  if (catSel) {
+    catSel.innerHTML = ['<option value="all">全部</option>'].concat(
+      cats.map(c => `<option value="${esc(c)}" ${c === adminCatFilter ? "selected" : ""}>${esc(c)}</option>`)
+    ).join("");
+  }
+  const styleNames = { video: "動態影片", full: "全資訊", side: "側邊滿版", hero: "雜誌封面", dark: "深岩燙金", ivory: "極簡象牙", block: "莫蘭迪", frame: "建築黑框" };
+  const filtered = adminCatFilter === "all" ? adminCardsCache : adminCardsCache.filter(it => (it.category || "客戶") === adminCatFilter);
+  const opts = ['<option value="">＋ 新建一張名片</option>'].concat(
+    filtered.map(it => {
+      const catTag = it.category ? `[${it.category}] ` : "";
+      const who = it.alias || [it.cardName || it.clientName, it.enName].filter(Boolean).join(" ") || it.cardId;
+      const co = (!it.alias && it.company) ? ("｜" + it.company) : "";
+      const st = styleNames[it.style] ? ("｜" + styleNames[it.style]) : "";
+      const title = `${catTag}${who}${co}${st} (${it.cardId})`;
+      return `<option value="${esc(it.cardId)}" ${it.cardId === currentCardId ? "selected" : ""}>${esc(title)}</option>`;
+    })
+  );
+  sel.innerHTML = opts.join("");
+}
+
+async function loadAdminCardList() {
+  if (!isAdminMode) return;
+  if (currentCardId) rememberAdminCard(currentCardId, state);
+  const map = new Map();
+  getLocalAdminCards().forEach(it => { if (it && it.cardId) map.set(it.cardId, Object.assign({ category: "客戶", alias: "" }, it)); });
+  if (!map.has("bigt")) map.set("bigt", { cardId: "bigt", alias: "", category: "自己", cardName: "高弘治", enName: "Big-T", company: "高雅瓷", style: "video" });
+
+  const adminKey = localStorage.getItem("ck_admin_key") || "";
+  if (adminKey) {
+    try {
+      const r = await fetch(CFG.GAS_API + "?ac=ecardAdminList&key=" + encodeURIComponent(adminKey)).then(x => x.json());
+      if (r && r.success && Array.isArray(r.items)) {
+        r.items.forEach(it => {
+          if (!it || !it.cardId) return;
+          const prev = map.get(it.cardId) || {};
+          map.set(it.cardId, Object.assign({ category: it.cardId === "bigt" ? "自己" : "客戶", alias: "" }, it, { alias: prev.alias || "", category: prev.category || (it.cardId === "bigt" ? "自己" : "客戶") }));
+        });
+      }
+    } catch (e) {}
+  }
+  adminCardsCache = Array.from(map.values());
+  saveLocalAdminCards(adminCardsCache);
+  renderAdminSelect();
+  if (document.getElementById("adminMgrModal").style.display === "flex") renderAdminMgrList();
+}
+
+function openAdminMgrModal() {
+  const inp = document.getElementById("inAdminKey");
+  if (inp) inp.value = localStorage.getItem("ck_admin_key") || "";
+  renderAdminMgrList();
+  document.getElementById("adminMgrModal").style.display = "flex";
+}
+function closeAdminMgrModal() { document.getElementById("adminMgrModal").style.display = "none"; }
+
+function renderAdminMgrList() {
+  const box = document.getElementById("adminMgrList");
+  if (!box) return;
+  if (!adminCardsCache.length) {
+    box.innerHTML = '<div style="font-size:13px;color:var(--t2);padding:12px 0;text-align:center;">尚無名片紀錄</div>';
+    return;
+  }
+  box.innerHTML = adminCardsCache.map(it => {
+    const defName = it.alias || [it.cardName || it.clientName, it.enName].filter(Boolean).join(" ") || it.cardId;
+    const curCat = it.category || "客戶";
+    const catOpts = Array.from(new Set(ADMIN_DEFAULT_CATS.concat([curCat]))).map(c =>
+      `<option value="${esc(c)}" ${c === curCat ? "selected" : ""}>${esc(c)}</option>`
+    ).join("");
+    return `
+      <div style="display:flex;flex-direction:column;gap:6px;padding:9px;background:var(--bg);border:1px solid var(--border);border-radius:10px;">
+        <div style="display:grid;grid-template-columns:72px minmax(0,1fr);gap:6px;align-items:center;">
+          <select onchange="updateAdminCardMeta('${esc(it.cardId)}','category',this.value)" style="height:30px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:#fff;padding:0 4px;font-family:inherit;">${catOpts}</select>
+          <input type="text" value="${esc(defName)}" placeholder="自訂顯示名稱" onchange="updateAdminCardMeta('${esc(it.cardId)}','alias',this.value)" style="height:30px;border:1px solid var(--border);border-radius:6px;padding:0 8px;font-size:13px;background:#fff;font-family:inherit;min-width:0;">
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+          <span style="font-size:11px;color:var(--t3);">${esc(it.company || "")} (${esc(it.cardId)})</span>
+          <div style="display:flex;gap:5px;">
+            <button type="button" class="btn btn-sm btn-pri" onclick="closeAdminMgrModal();onAdminPickCard('${esc(it.cardId)}')">切換</button>
+            <button type="button" class="btn btn-sm btn-danger" onclick="deleteAdminCardItem('${esc(it.cardId)}')">移除</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function updateAdminCardMeta(cardId, field, val) {
+  const item = adminCardsCache.find(x => x.cardId === cardId);
+  if (!item) return;
+  item[field] = String(val || "").trim();
+  saveLocalAdminCards(adminCardsCache);
+  renderAdminSelect();
+  toast("已更新清單設定");
+}
+
+function deleteAdminCardItem(cardId) {
+  adminCardsCache = adminCardsCache.filter(x => x.cardId !== cardId);
+  saveLocalAdminCards(adminCardsCache);
+  if (currentCardId === cardId) {
+    currentCardId = "";
+    localStorage.removeItem("ck_my_card_id");
+  }
+  renderAdminSelect();
+  renderAdminMgrList();
+  toast("已從清單移除");
+}
+
+async function saveAdminKeyAndSync() {
+  const k = (document.getElementById("inAdminKey").value || "").trim();
+  if (k) localStorage.setItem("ck_admin_key", k);
+  else localStorage.removeItem("ck_admin_key");
+  await loadAdminCardList();
+  toast("已同步雲端名片清單");
+}
+
+async function onAdminPickCard(cardId) {
+  if (!cardId) { adminNewCard(); return; }
+  showBusy("載入名片中...", 45, cardId);
+  try {
+    const r = await fetch(CFG.GAS_API + "?ac=ecardGet&id=" + encodeURIComponent(cardId)).then(x => x.json());
+    if (r && r.success && r.config) {
+      localVideoBlob = null; rawPickedVideoBlob = null; rawLogoSource = null;
+      await Promise.all([idbDel("video"), idbDel("photo"), idbDel("rawLogo")]);
+      state = Object.assign(defaultState(), r.config);
+      currentCardId = cardId;
+      localStorage.setItem("ck_my_card_id", currentCardId);
+      syncCssVars(); renderSocialControls(); renderPreview();
+      dirtySinceSave = false;
+      toast("已切換：" + (state.name || cardId));
+    } else {
+      toast("載入失敗");
+    }
+  } catch (e) { toast("載入失敗"); }
+  finally { hideBusy(); }
+}
+
+async function adminNewCard() {
+  localVideoBlob = null; rawPickedVideoBlob = null; rawLogoSource = null;
+  await Promise.all([idbDel("video"), idbDel("photo"), idbDel("rawLogo")]);
+  currentCardId = "";
+  localStorage.removeItem("ck_my_card_id");
+  state = defaultState();
+  const sel = document.getElementById("adminCardSelect");
+  if (sel) sel.value = "";
+  syncCssVars(); renderSocialControls(); renderPreview();
+  toast("已開新名片（不覆蓋舊卡片）");
+}
+
+function initAdminBar() {
+  if (!isAdminMode) return;
+  const bar = document.getElementById("adminBar");
+  if (bar) bar.style.display = "flex";
+  loadAdminCardList();
+}
+
+let tTimer;
+function toast(msg) {
+  const el = document.getElementById("toast"); el.textContent = msg; el.classList.add("show");
+  clearTimeout(tTimer); tTimer = setTimeout(() => el.classList.remove("show"), 2000);
+}
+
+syncCssVars();
+renderSocialControls();
+renderPreview();
+restoreLocalMedia();
+loadPreviewParamIfAny();
+initAdminBar();
+</script>
+</body>
+</html>
