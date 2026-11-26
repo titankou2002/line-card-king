@@ -100,6 +100,22 @@ window.CARD_KING_CONFIG = {
     gap: 10px;
   }
 
+  /* 管理員多張名片切換列（僅管理員可見，一般用戶完全隱藏） */
+  .admin-bar {
+    display: none; align-items: center; gap: 6px; width: 100%;
+    background: #23201b; border-radius: 11px; padding: 7px 9px; color: #e2ca88;
+  }
+  .admin-bar select {
+    flex: 1; min-width: 0; height: 32px; border-radius: 7px; border: 1px solid rgba(226,202,136,0.35);
+    background: #312d26; color: #fff; font-family: inherit; font-size: 12.5px; font-weight: 600; padding: 0 8px;
+  }
+  .admin-bar .abtn {
+    appearance: none; border: 1px solid rgba(226,202,136,0.45); background: #312d26; color: #e2ca88;
+    height: 32px; padding: 0 10px; border-radius: 7px; font-size: 12px; font-weight: 700;
+    cursor: pointer; font-family: inherit; white-space: nowrap; flex-shrink: 0;
+  }
+  .admin-bar .abtn.pri { background: #c5ae6e; border-color: #c5ae6e; color: #1f1b16; }
+
   /* 版面大分類：影片版 / 圖片版 */
   .cat-bar {
     display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
@@ -362,6 +378,15 @@ window.CARD_KING_CONFIG = {
 </header>
 
 <main class="studio">
+  <!-- 管理員多名片切換列（一般用戶看不到） -->
+  <div class="admin-bar" id="adminBar">
+    <select id="adminCardSelect" onchange="onAdminPickCard(this.value)">
+      <option value="">載入名片清單...</option>
+    </select>
+    <button type="button" class="abtn pri" onclick="adminNewCard()">＋ 新增</button>
+    <button type="button" class="abtn" title="重新整理清單" onclick="loadAdminCardList()">↻</button>
+  </div>
+
   <!-- 拍名片 + 預覽開關 -->
   <div class="top-strip">
     <input type="file" id="ocrFile" accept="image/*" capture="environment" hidden onchange="onOcrPick(event)">
@@ -1821,7 +1846,7 @@ async function uploadLocalAsset(kind, dataUrl) {
 
 /* 儲存 + Telegram 通知 */
 async function saveCard(silent, withModal) {
-  if (!silent && localEditUsed >= 3 && !(profile && profile.donated)) { openDonateModal(); return false; }
+  if (!silent && !isAdminMode && localEditUsed >= 3 && !(profile && profile.donated)) { openDonateModal(); return false; }
   persistLocal();
   const btn = document.getElementById("btnSave");
   btn.disabled = true; btn.textContent = "儲存中";
@@ -1886,6 +1911,7 @@ async function saveCard(silent, withModal) {
       dirtySinceSave = false;
       persistLocal();
       dirtySinceSave = false;
+      if (isAdminMode) loadAdminCardList();
       if (!silent) toast("已儲存");
       return true;
     }
@@ -1969,6 +1995,71 @@ async function loadPreviewParamIfAny() {
   } catch (e) {}
 }
 
+/* 管理員多張名片切換（開啟 ?admin=1 即記住在此裝置，一般用戶完全看不到） */
+let isAdminMode = (function () {
+  const qp = new URLSearchParams(location.search).get("admin");
+  if (qp === "1") { try { localStorage.setItem("ck_is_admin", "1"); } catch (e) {} return true; }
+  if (qp === "0") { try { localStorage.removeItem("ck_is_admin"); } catch (e) {} return false; }
+  try { return localStorage.getItem("ck_is_admin") === "1"; } catch (e) { return false; }
+})();
+
+async function loadAdminCardList() {
+  if (!isAdminMode) return;
+  const sel = document.getElementById("adminCardSelect");
+  if (!sel) return;
+  try {
+    const r = await fetch(CFG.GAS_API + "?ac=ecardAdminList").then(x => x.json());
+    if (!r || !r.success || !Array.isArray(r.items)) return;
+    const opts = ['<option value="">＋ 新建一張名片</option>'].concat(
+      r.items.map(it => {
+        const title = (it.cardName || it.clientName || it.cardId) + "（" + it.cardId + "）";
+        return `<option value="${esc(it.cardId)}" ${it.cardId === currentCardId ? "selected" : ""}>${esc(title)}</option>`;
+      })
+    );
+    sel.innerHTML = opts.join("");
+  } catch (e) {}
+}
+
+async function onAdminPickCard(cardId) {
+  if (!cardId) { adminNewCard(); return; }
+  showBusy("載入名片中...", 45, cardId);
+  try {
+    const r = await fetch(CFG.GAS_API + "?ac=ecardGet&id=" + encodeURIComponent(cardId)).then(x => x.json());
+    if (r && r.success && r.config) {
+      localVideoBlob = null; rawPickedVideoBlob = null; rawLogoSource = null;
+      await Promise.all([idbDel("video"), idbDel("photo"), idbDel("rawLogo")]);
+      state = Object.assign(defaultState(), r.config);
+      currentCardId = cardId;
+      localStorage.setItem("ck_my_card_id", currentCardId);
+      syncCssVars(); renderSocialControls(); renderPreview();
+      dirtySinceSave = false;
+      toast("已切換：" + (state.name || cardId));
+    } else {
+      toast("載入失敗");
+    }
+  } catch (e) { toast("載入失敗"); }
+  finally { hideBusy(); }
+}
+
+async function adminNewCard() {
+  localVideoBlob = null; rawPickedVideoBlob = null; rawLogoSource = null;
+  await Promise.all([idbDel("video"), idbDel("photo"), idbDel("rawLogo")]);
+  currentCardId = "";
+  localStorage.removeItem("ck_my_card_id");
+  state = defaultState();
+  const sel = document.getElementById("adminCardSelect");
+  if (sel) sel.value = "";
+  syncCssVars(); renderSocialControls(); renderPreview();
+  toast("已開新名片（不覆蓋舊卡片）");
+}
+
+function initAdminBar() {
+  if (!isAdminMode) return;
+  const bar = document.getElementById("adminBar");
+  if (bar) bar.style.display = "flex";
+  loadAdminCardList();
+}
+
 let tTimer;
 function toast(msg) {
   const el = document.getElementById("toast"); el.textContent = msg; el.classList.add("show");
@@ -1980,6 +2071,7 @@ renderSocialControls();
 renderPreview();
 restoreLocalMedia();
 loadPreviewParamIfAny();
+initAdminBar();
 </script>
 </body>
 </html>
