@@ -203,11 +203,11 @@ window.CARD_KING_CONFIG = {
     font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit;
   }
 
-  /* 10 顆統一尺寸可拖曳快捷按鈕（智慧平衡分排） */
-  .mc-action-grid { display: flex; flex-direction: column; gap: 7px; padding: 4px 0 2px; }
-  .mc-icon-row { display: flex; justify-content: center; gap: 7px; }
+  /* 10 顆自適應寬度可拖曳快捷按鈕（依數量自動填滿卡片寬度） */
+  .mc-action-grid { display: flex; flex-direction: column; gap: 7px; padding: 4px 0 2px; width: 100%; }
+  .mc-icon-row { display: flex; justify-content: center; gap: 7px; width: 100%; }
   .mc-icon-chip {
-    width: 50px; height: 50px; border-radius: 11px;
+    flex: 1 1 0; min-width: 0; max-width: 112px; height: 50px; border-radius: 11px;
     background: rgba(128,128,128,0.16); border: 1px solid rgba(197,174,110,0.36);
     color: var(--accent); display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
     text-decoration: none; cursor: grab; user-select: none; -webkit-user-select: none; touch-action: none;
@@ -246,8 +246,8 @@ window.CARD_KING_CONFIG = {
   .mc-side-full .mc-row { font-size: 11.5px; gap: 5px; }
   .mc-side-full .mc-lbl { min-width: 28px; font-size: 10.5px; }
   .mc-side-full .mc-foot { padding: 4px 10px 12px; gap: 6px; }
-  .mc-side-full .mc-icon-row { gap: 4px; }
-  .mc-side-full .mc-icon-chip { width: 39px; height: 40px; border-radius: 9px; gap: 2px; }
+  .mc-side-full .mc-icon-row { gap: 5px; }
+  .mc-side-full .mc-icon-chip { flex: 1 1 0; min-width: 0; max-width: 72px; width: auto; height: 42px; border-radius: 9px; gap: 2px; }
   .mc-side-full .mc-icon-chip svg { width: 15px; height: 15px; }
   .mc-side-full .mc-icon-lbl { font-size: 8.5px; }
 
