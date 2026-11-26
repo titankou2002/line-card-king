@@ -204,11 +204,14 @@ window.CARD_KING_CONFIG = {
   .mc-brand-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
   .mc-logo { height: var(--logo-h, 32px); color: var(--accent); flex-shrink: 0; display: inline-flex; align-items: center; cursor: pointer; }
   .mc-logo img { height: var(--logo-h, 32px); width: auto; max-width: 180px; object-fit: contain; display: block; }
-  .mc-co-name { font-size: var(--co-sz, 11.5px); font-weight: var(--co-fw, 600); font-style: var(--co-fs, normal); text-decoration: var(--co-td, none); text-align: var(--co-ta, left); opacity: 0.85; color: var(--co-col, inherit); }
+  .mc-co-slot { flex: 1; min-width: 0; display: flex; justify-content: var(--co-jc, flex-end); }
+  .mc-brand-row.no-logo .mc-co-slot { justify-content: var(--co-jc, flex-start); }
+  .mc-co-name { font-size: var(--co-sz, 11px); font-weight: var(--co-fw, 600); font-style: var(--co-fs, normal); text-decoration: var(--co-td, none); text-align: var(--co-ta, left); opacity: 0.85; color: var(--co-col, inherit); }
   .mc-name-line { display: flex; align-items: baseline; justify-content: var(--name-jc, flex-start); flex-wrap: wrap; gap: 6px; width: 100%; }
-  .mc-name { font-size: var(--name-sz, 21px); font-weight: var(--name-fw, 700); font-style: var(--name-fs, normal); text-decoration: var(--name-td, none); line-height: 1.25; color: var(--name-col, inherit); }
-  .mc-en-name { font-size: var(--en-sz, 15px); font-weight: var(--en-fw, 700); font-style: var(--en-fs, normal); text-decoration: var(--en-td, none); color: var(--en-col, var(--accent)); }
-  .mc-slogan { font-size: var(--slogan-sz, 12px); font-weight: var(--slogan-fw, 400); font-style: var(--slogan-fs, normal); text-decoration: var(--slogan-td, none); text-align: var(--slogan-ta, left); opacity: 0.85; margin-top: 5px; line-height: 1.4; color: var(--slogan-col, inherit); }
+  .mc-name { font-size: var(--name-sz, 19px); font-weight: var(--name-fw, 700); font-style: var(--name-fs, normal); text-decoration: var(--name-td, none); line-height: 1.25; color: var(--name-col, inherit); }
+  .mc-en-slot { flex: var(--en-flex, 0 0 auto); min-width: 0; display: flex; justify-content: var(--en-jc, flex-start); }
+  .mc-en-name { font-size: var(--en-sz, 13px); font-weight: var(--en-fw, 700); font-style: var(--en-fs, normal); text-decoration: var(--en-td, none); color: var(--en-col, var(--accent)); }
+  .mc-slogan { font-size: var(--slogan-sz, 11.5px); font-weight: var(--slogan-fw, 400); font-style: var(--slogan-fs, normal); text-decoration: var(--slogan-td, none); text-align: var(--slogan-ta, left); opacity: 0.85; margin-top: 5px; line-height: 1.4; color: var(--slogan-col, inherit); }
   .mc-slogan .mc-inp { font-size: inherit; font-weight: inherit; font-style: inherit; text-decoration: inherit; text-align: var(--slogan-ta, left); }
   .mc-sep { height: 1px; background: var(--sep-col, currentColor); opacity: var(--sep-op, 0.14); margin: 0 18px; }
 
@@ -581,8 +584,8 @@ window.CARD_KING_CONFIG = {
         <div id="detailTypoBox" style="display:none;flex-direction:column;gap:8px;padding-top:6px;border-top:1px solid var(--border);">
           <div style="display:flex;align-items:center;gap:8px;">
             <span style="font-size:12px;font-weight:700;color:var(--t2);flex-shrink:0;">字體大小</span>
-            <input type="range" id="inTextSize" min="9" max="32" step="1" value="14" oninput="setSlotTextStyle('size', Number(this.value))" style="flex:1;accent-color:#23201b;">
-            <span id="lblTextSize" style="font-size:12px;font-weight:700;color:var(--t2);width:36px;text-align:right;">14px</span>
+            <input type="range" id="inTextSize" min="9" max="26" step="1" value="13" oninput="setSlotTextStyle('size', Number(this.value))" style="flex:1;accent-color:#23201b;">
+            <span id="lblTextSize" style="font-size:12px;font-weight:700;color:var(--t2);width:36px;text-align:right;">13px</span>
           </div>
           <div class="typo-bar">
             <div class="typo-grp" role="group" aria-label="對齊">
@@ -1013,9 +1016,9 @@ function toggleDetailColors() {
 }
 const TEXT_STYLE_META = {
   coColor:     { prefix: "co",     size: 11, align: "end",    bold: true },
-  nameColor:   { prefix: "name",   size: 21, align: "start",  bold: true },
-  enColor:     { prefix: "en",     size: 15, align: "start",  bold: true },
-  sloganColor: { prefix: "slogan", size: 12, align: "start",  bold: false },
+  nameColor:   { prefix: "name",   size: 19, align: "start",  bold: true },
+  enColor:     { prefix: "en",     size: 13, align: "start",  bold: true },
+  sloganColor: { prefix: "slogan", size: 11, align: "start",  bold: false },
   rowValColor: { prefix: "row",    size: 12, align: "start",  bold: false },
   shareColor:  { prefix: "share",  size: 11, align: "center", bold: true }
 };
@@ -1024,7 +1027,7 @@ function getSlotTextStyle(slot) {
   if (!m) return null;
   const o = (state.textStyles && state.textStyles[slot]) || {};
   return {
-    size: (Number(o.size) >= 9 && Number(o.size) <= 32) ? Number(o.size) : m.size,
+    size: (Number(o.size) >= 9 && Number(o.size) <= 26) ? Number(o.size) : m.size,
     align: (o.align === "start" || o.align === "center" || o.align === "end") ? o.align : m.align,
     bold: typeof o.bold === "boolean" ? o.bold : m.bold,
     italic: !!o.italic,
@@ -1104,7 +1107,7 @@ function syncCssVars() {
     const o = (state.textStyles && state.textStyles[slot]) || null;
     const p = "--" + m.prefix;
     if (!o) {
-      ["-sz", "-fw", "-fs", "-td", "-ta", "-jc"].forEach(s => document.documentElement.style.removeProperty(p + s));
+      ["-sz", "-fw", "-fs", "-td", "-ta", "-jc", "-flex"].forEach(s => document.documentElement.style.removeProperty(p + s));
       return;
     }
     const st = getSlotTextStyle(slot);
@@ -1118,6 +1121,9 @@ function syncCssVars() {
     const jc = st.align === "center" ? "center" : (st.align === "end" ? "flex-end" : "flex-start");
     document.documentElement.style.setProperty(p + "-ta", ta);
     document.documentElement.style.setProperty(p + "-jc", jc);
+    if (slot === "enColor") {
+      document.documentElement.style.setProperty("--en-flex", (st.align === "center" || st.align === "end") ? "1 1 auto" : "0 0 auto");
+    }
   });
   document.documentElement.style.setProperty("--sep-op", state.sepColor ? "0.7" : "0.14");
   const sz = Math.max(20, Math.min(56, Number(state.logoSize) || 32));
@@ -1365,13 +1371,13 @@ function renderPreview() {
     ? `<span class="ed-wrap"><input type="text" class="mc-inp mc-co-name" ${ro} value="${esc(state.company)}" oninput="editInlineField('company',this.value);autoSizeInput(this)"><button type="button" class="del-x" onclick="removeField('company')">×</button></span>` : "";
   const logoHtml = state.logoUrl
     ? `<span class="ed-wrap"><span class="mc-logo" onclick="triggerLogoUpload(event)" title="點擊更換 Logo"><img src="${esc(state.logoUrl)}" alt="Logo"></span><button type="button" class="del-x" onclick="event.stopPropagation();clearLogo()">×</button></span>` : "";
-  const brandRow = (logoHtml || coHtml) ? `<div class="mc-brand-row">${logoHtml || '<span></span>'}${coHtml}</div>` : "";
+  const brandRow = (logoHtml || coHtml) ? `<div class="mc-brand-row${logoHtml ? "" : " no-logo"}">${logoHtml || ""}${coHtml ? `<div class="mc-co-slot">${coHtml}</div>` : ""}</div>` : "";
 
   const nameHtml = state.name
     ? `<span class="ed-wrap"><input type="text" class="mc-inp mc-name" ${ro} value="${esc(state.name)}" oninput="editInlineField('name',this.value);autoSizeInput(this)"><button type="button" class="del-x" onclick="removeField('name')">×</button></span>` : "";
   const enHtml = state.enName
     ? `<span class="ed-wrap"><input type="text" class="mc-inp mc-en-name" ${ro} value="${esc(state.enName)}" oninput="editInlineField('enName',this.value);autoSizeInput(this)"><button type="button" class="del-x" onclick="removeField('enName')">×</button></span>` : "";
-  const nameLine = (nameHtml || enHtml) ? `<div class="mc-name-line">${nameHtml}${enHtml}</div>` : "";
+  const nameLine = (nameHtml || enHtml) ? `<div class="mc-name-line">${nameHtml}${enHtml ? `<div class="mc-en-slot">${enHtml}</div>` : ""}</div>` : "";
   const sloganHtml = state.slogan
     ? `<div class="mc-slogan"><div class="ed-wrap-full"><input type="text" class="mc-inp mc-inp-full" ${ro} value="${esc(state.slogan)}" oninput="editInlineField('slogan',this.value)"><button type="button" class="del-x" onclick="removeField('slogan')">×</button></div></div>` : "";
 
