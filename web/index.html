@@ -503,9 +503,104 @@ function defaultState() {
 }
 
 let state = (function () {
-  try { const r = localStorage.getItem("ck_state_v8"); if (r) return Object.assign(defaultState(), JSON.parse(r)); } catch (e) {}
+  try {
+    const r = localStorage.getItem("ck_state_v8");
+    if (r) {
+      const parsed = JSON.parse(r);
+      if (parsed.videoUrl && String(parsed.videoUrl).startsWith("blob:")) parsed.videoUrl = "";
+      return Object.assign(defaultState(), parsed);
+    }
+  } catch (e) {}
   return defaultState();
 })();
+let localVideoBlob = null;
+
+/* 手機本機自動存檔（localStorage + IndexedDB 存影片與高畫質圖檔） */
+function openLocalDB() {
+  return new Promise((resolve, reject) => {
+    if (!window.indexedDB) { reject(new Error("no idb")); return; }
+    const req = indexedDB.open("CardKingLocalDB", 1);
+    req.onupgradeneeded = () => { if (!req.result.objectStoreNames.contains("media")) req.result.createObjectStore("media"); };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function idbPut(key, val) {
+  try {
+    const db = await openLocalDB();
+    await new Promise((res, rej) => {
+      const tx = db.transaction("media", "readwrite");
+      tx.objectStore("media").put(val, key);
+      tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+    });
+  } catch (e) {}
+}
+async function idbGet(key) {
+  try {
+    const db = await openLocalDB();
+    return await new Promise((res, rej) => {
+      const tx = db.transaction("media", "readonly");
+      const r = tx.objectStore("media").get(key);
+      r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+    });
+  } catch (e) { return null; }
+}
+async function idbDel(key) {
+  try {
+    const db = await openLocalDB();
+    await new Promise((res, rej) => {
+      const tx = db.transaction("media", "readwrite");
+      tx.objectStore("media").delete(key);
+      tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+    });
+  } catch (e) {}
+}
+
+let _saveTimer = null;
+function persistLocal() {
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(() => {
+    try {
+      const copy = Object.assign({}, state);
+      if (copy.videoUrl && String(copy.videoUrl).startsWith("blob:")) copy.videoUrl = "";
+      if (copy.photoUrl && String(copy.photoUrl).startsWith("data:") && copy.photoUrl.length > 350000) copy.photoUrl = "";
+      localStorage.setItem("ck_state_v8", JSON.stringify(copy));
+    } catch (e) {
+      try {
+        const slim = Object.assign({}, state, { photoUrl: "", videoUrl: String(state.videoUrl || "").startsWith("blob:") ? "" : state.videoUrl });
+        localStorage.setItem("ck_state_v8", JSON.stringify(slim));
+      } catch (e2) {}
+    }
+  }, 120);
+}
+
+async function restoreLocalMedia() {
+  if (new URLSearchParams(location.search).get("preview")) return;
+  let changed = false;
+  const savedLogo = await idbGet("rawLogo");
+  if (savedLogo) {
+    await new Promise(res => {
+      const img = new Image();
+      img.onload = () => { rawLogoSource = img; reprocessLogoIfLoaded(); changed = true; res(); };
+      img.onerror = res;
+      img.src = URL.createObjectURL(savedLogo);
+    });
+  }
+  const savedPhoto = await idbGet("photo");
+  if (savedPhoto) {
+    state.photoUrl = URL.createObjectURL(savedPhoto);
+    changed = true;
+  }
+  const savedVid = await idbGet("video");
+  if (savedVid && savedVid.blob) {
+    localVideoBlob = savedVid.blob;
+    state.videoUrl = URL.createObjectURL(savedVid.blob);
+    const inp = document.getElementById("inVideoUrl"); if (inp) inp.value = savedVid.name || "本機影片.mp4";
+    const del = document.getElementById("btnDelVideo"); if (del) del.style.display = "inline-flex";
+    changed = true;
+  }
+  if (changed) renderPreview();
+}
 
 function esc(s) { return String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 function parseYtId(u) { const m = String(u || "").match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/); return m ? m[1] : ""; }
@@ -546,13 +641,14 @@ function setStyle(s) {
   syncCssVars(); reprocessLogoIfLoaded(); renderPreview();
 }
 
-function setFont(f) { state.font = f; syncCssVars(); }
+function setFont(f) { state.font = f; syncCssVars(); persistLocal(); }
 function setField(k, v) { state[k] = v; renderPreview(); }
 function setLogoSize(v) {
   state.logoSize = Math.max(20, Math.min(56, Number(v) || 32));
   document.documentElement.style.setProperty("--logo-h", state.logoSize + "px");
   const lbl = document.getElementById("lblLogoSize");
   if (lbl) lbl.textContent = state.logoSize + "px";
+  persistLocal();
 }
 function onLogoOptChange() {
   state.logoRemoveBg = document.getElementById("chkLogoBg").checked;
@@ -588,6 +684,9 @@ function syncCssVars() {
   const lEl = document.getElementById("lblLogoSize"); if (lEl) lEl.textContent = sz + "px";
   const bEl = document.getElementById("chkLogoBg"); if (bEl) bEl.checked = state.logoRemoveBg !== false;
   const mEl = document.getElementById("chkLogoMono"); if (mEl) mEl.checked = state.logoMono !== false;
+  const fEl = document.getElementById("inFont"); if (fEl) fEl.value = state.font || "jhenghei";
+  const pEl = document.getElementById("chkPhoto"); if (pEl) pEl.checked = !!state.showPhoto;
+  document.querySelectorAll("#styleGrid .style-opt").forEach(el => el.classList.toggle("active", el.dataset.style === state.style));
   selectColorSlot(colorSlot);
 }
 function applySlotColor(hex) {
@@ -604,10 +703,10 @@ function applySlotColor(hex) {
 function onHexInput(v) { const c = v.trim().startsWith("#") ? v.trim() : "#" + v.trim(); if (/^#[0-9a-fA-F]{6}$/.test(c)) applySlotColor(c); }
 
 /* 行內直接編輯控制 */
-function editInlineField(key, text) { state[key] = text.trim(); }
+function editInlineField(key, text) { state[key] = text.trim(); persistLocal(); }
 function removeField(key) { state[key] = ""; renderPreview(); }
 function addInfoRow() { if (!Array.isArray(state.infoRows)) state.infoRows = []; state.infoRows.push({ label: "地址", value: "輸入內容" }); renderPreview(); }
-function editInfoCell(i, k, val) { if (state.infoRows && state.infoRows[i]) state.infoRows[i][k] = val.trim(); }
+function editInfoCell(i, k, val) { if (state.infoRows && state.infoRows[i]) { state.infoRows[i][k] = val.trim(); persistLocal(); } }
 function delInfoRow(i) { state.infoRows.splice(i, 1); renderPreview(); }
 
 function openBtnEditor(kind) {
@@ -617,7 +716,7 @@ function openBtnEditor(kind) {
   const inp = document.getElementById("inlineBtnVal");
   inp.placeholder = kind === "mobile" ? "輸入撥打電話號碼" : "輸入官方網站網址";
   inp.value = state[kind] || "";
-  inp.oninput = () => { state[kind] = inp.value.trim(); };
+  inp.oninput = () => { state[kind] = inp.value.trim(); persistLocal(); };
   bar.style.display = "flex";
   inp.focus();
 }
@@ -658,23 +757,23 @@ function renderPreview() {
   const ce = cleanView ? "" : 'contenteditable="true" spellcheck="false"';
 
   const coHtml = state.company
-    ? `<span class="ed-wrap"><span class="mc-co-name" ${ce} onblur="editInlineField('company',this.textContent)">${esc(state.company)}</span><button type="button" class="del-x" onclick="removeField('company')">×</button></span>` : "";
+    ? `<span class="ed-wrap"><span class="mc-co-name" ${ce} oninput="editInlineField('company',this.textContent)" onblur="editInlineField('company',this.textContent)">${esc(state.company)}</span><button type="button" class="del-x" onclick="removeField('company')">×</button></span>` : "";
   const logoHtml = state.logoUrl
     ? `<span class="ed-wrap"><span class="mc-logo"><img src="${esc(state.logoUrl)}" alt="Logo"></span><button type="button" class="del-x" onclick="clearLogo()">×</button></span>` : "";
   const brandRow = (logoHtml || coHtml) ? `<div class="mc-brand-row">${logoHtml || '<span></span>'}${coHtml}</div>` : "";
 
   const nameHtml = state.name
-    ? `<span class="ed-wrap"><span class="mc-name" ${ce} onblur="editInlineField('name',this.textContent)">${esc(state.name)}</span><button type="button" class="del-x" onclick="removeField('name')">×</button></span>` : "";
+    ? `<span class="ed-wrap"><span class="mc-name" ${ce} oninput="editInlineField('name',this.textContent)" onblur="editInlineField('name',this.textContent)">${esc(state.name)}</span><button type="button" class="del-x" onclick="removeField('name')">×</button></span>` : "";
   const enHtml = state.enName
-    ? `<span class="ed-wrap"><span class="mc-en-name" ${ce} onblur="editInlineField('enName',this.textContent)">${esc(state.enName)}</span><button type="button" class="del-x" onclick="removeField('enName')">×</button></span>` : "";
+    ? `<span class="ed-wrap"><span class="mc-en-name" ${ce} oninput="editInlineField('enName',this.textContent)" onblur="editInlineField('enName',this.textContent)">${esc(state.enName)}</span><button type="button" class="del-x" onclick="removeField('enName')">×</button></span>` : "";
   const nameLine = (nameHtml || enHtml) ? `<div class="mc-name-line">${nameHtml}${enHtml}</div>` : "";
   const sloganHtml = state.slogan
-    ? `<div class="mc-slogan"><span class="ed-wrap"><span ${ce} onblur="editInlineField('slogan',this.textContent)">${esc(state.slogan)}</span><button type="button" class="del-x" onclick="removeField('slogan')">×</button></span></div>` : "";
+    ? `<div class="mc-slogan"><span class="ed-wrap"><span ${ce} oninput="editInlineField('slogan',this.textContent)" onblur="editInlineField('slogan',this.textContent)">${esc(state.slogan)}</span><button type="button" class="del-x" onclick="removeField('slogan')">×</button></span></div>` : "";
 
   const rowsHtml = state.infoRows.map((r, i) => `
     <div class="mc-row">
-      <span class="mc-lbl" ${ce} onblur="editInfoCell(${i},'label',this.textContent)">${esc(r.label)}</span>
-      <span class="mc-val" ${ce} onblur="editInfoCell(${i},'value',this.textContent)">${esc(r.value)}</span>
+      <span class="mc-lbl" ${ce} oninput="editInfoCell(${i},'label',this.textContent)" onblur="editInfoCell(${i},'label',this.textContent)">${esc(r.label)}</span>
+      <span class="mc-val" ${ce} oninput="editInfoCell(${i},'value',this.textContent)" onblur="editInfoCell(${i},'value',this.textContent)">${esc(r.value)}</span>
       <button type="button" class="del-x" onclick="delInfoRow(${i})">×</button>
     </div>
   `).join("") + `<button type="button" class="add-row-inline" onclick="addInfoRow()">＋ 新增欄位</button>`;
@@ -718,6 +817,7 @@ function renderPreview() {
       if (slot) { selectColorSlot(slot); toast("調色：" + (SLOT_NAMES[slot] || slot)); }
     });
   });
+  persistLocal();
 }
 
 /* Logo 自動去背 + 自動裁掉空白邊界 + 純色處理 */
@@ -805,6 +905,7 @@ function cropLogoFromCard(img, box) {
   c.width = sw; c.height = sh;
   c.getContext("2d").drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
   rawLogoSource = c;
+  c.toBlob(b => { if (b) idbPut("rawLogo", b); }, "image/png");
   return processLogoCanvas(c, { removeBg: state.logoRemoveBg !== false, mono: state.logoMono !== false, accentHex: state.color });
 }
 
@@ -853,20 +954,21 @@ function onOcrPick(e) {
   img.src = URL.createObjectURL(f);
 }
 
-/* 素材上傳 */
+/* 素材上傳（同步自動存於手機本機 IndexedDB，重整不遺失） */
 function onLogoPick(e) {
   const f = e.target.files && e.target.files[0]; if (!f) return;
+  idbPut("rawLogo", f);
   const img = new Image();
   img.onload = () => {
     rawLogoSource = img;
     reprocessLogoIfLoaded();
     renderPreview();
-    toast("Logo 已自動去背裁切");
+    toast("Logo 已自動去背並存於手機");
   };
   img.src = URL.createObjectURL(f);
   e.target.value = "";
 }
-function clearLogo() { rawLogoSource = null; state.logoUrl = ""; renderPreview(); }
+function clearLogo() { rawLogoSource = null; state.logoUrl = ""; idbDel("rawLogo"); renderPreview(); }
 function onPhotoPick(e) {
   const f = e.target.files && e.target.files[0]; if (!f) return;
   const img = new Image();
@@ -875,9 +977,12 @@ function onPhotoPick(e) {
     const sc = Math.min(1, 900 / Math.max(img.naturalWidth, img.naturalHeight));
     c.width = Math.round(img.naturalWidth * sc); c.height = Math.round(img.naturalHeight * sc);
     c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    c.toBlob(b => { if (b) idbPut("photo", b); }, "image/jpeg", 0.86);
     state.photoUrl = c.toDataURL("image/jpeg", 0.86); state.showPhoto = true; document.getElementById("chkPhoto").checked = true; renderPreview();
+    toast("照片已存於手機");
   };
   img.src = URL.createObjectURL(f);
+  e.target.value = "";
 }
 function onVideoPick(e) {
   const f = e.target.files && e.target.files[0]; if (!f) return;
@@ -886,33 +991,69 @@ function onVideoPick(e) {
   const v = document.createElement("video"); v.preload = "metadata";
   v.onloadedmetadata = () => {
     if (v.duration > 10.5) { toast("超過 10 秒"); URL.revokeObjectURL(objUrl); e.target.value = ""; return; }
+    localVideoBlob = f;
+    idbPut("video", { blob: f, name: f.name });
     state.videoUrl = objUrl; document.getElementById("inVideoUrl").value = f.name;
     document.getElementById("btnDelVideo").style.display = "inline-flex"; setStyle("video");
+    toast("影片已存於手機");
   };
   v.src = objUrl;
+  e.target.value = "";
 }
-function clearVideo() { state.videoUrl = ""; document.getElementById("inVideoUrl").value = ""; document.getElementById("btnDelVideo").style.display = "none"; renderPreview(); }
+function clearVideo() {
+  localVideoBlob = null; idbDel("video");
+  state.videoUrl = ""; document.getElementById("inVideoUrl").value = "";
+  document.getElementById("btnDelVideo").style.display = "none"; renderPreview();
+}
 function convertYoutube() {
   if (!parseYtId(state.videoUrl)) { toast("請先貼入 YouTube 網址"); return; }
+  localVideoBlob = null; idbDel("video");
   setStyle("video"); toast("已套用 YouTube 影片");
+}
+
+function blobToDataUrl(blob) {
+  return new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(blob); });
+}
+async function uploadLocalAsset(kind, dataUrl) {
+  try {
+    const r = await fetch(CFG.GAS_API, {
+      method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "ecardUploadAsset", cardId: currentCardId || "card", kind, dataUrl })
+    }).then(x => x.json());
+    return (r && r.success && r.url) ? r.url : "";
+  } catch (e) { return ""; }
 }
 
 /* 儲存 + Telegram 通知 */
 async function saveCard() {
   if (localEditUsed >= 3 && !(profile && profile.donated)) { openDonateModal(); return; }
-  localEditUsed++;
-  localStorage.setItem("ck_local_edit_used", String(localEditUsed));
-  localStorage.setItem("ck_state_v8", JSON.stringify(state));
+  persistLocal();
   const btn = document.getElementById("btnSave");
   btn.disabled = true; btn.textContent = "儲存中";
   try {
+    const publishCfg = Object.assign({}, state);
+    if (publishCfg.logoUrl && publishCfg.logoUrl.startsWith("data:image/")) {
+      const u = await uploadLocalAsset("logo", publishCfg.logoUrl);
+      if (u) publishCfg.logoUrl = u;
+    }
+    if (publishCfg.photoUrl && publishCfg.photoUrl.startsWith("data:image/")) {
+      const u = await uploadLocalAsset("photo", publishCfg.photoUrl);
+      if (u) publishCfg.photoUrl = u;
+    }
+    if (publishCfg.videoUrl && publishCfg.videoUrl.startsWith("blob:") && localVideoBlob) {
+      const dataUrl = await blobToDataUrl(localVideoBlob);
+      const u = await uploadLocalAsset("video", dataUrl);
+      if (u) publishCfg.videoUrl = u;
+    }
+    localEditUsed++;
+    localStorage.setItem("ck_local_edit_used", String(localEditUsed));
     const r = await fetch(CFG.GAS_API, {
       method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ action: "ecardNotifyCreate", cardId: (profile && profile.slug) || currentCardId || "", userEmail: (session && session.user && session.user.email) || "", config: state })
+      body: JSON.stringify({ action: "ecardNotifyCreate", cardId: (profile && profile.slug) || currentCardId || "", userEmail: (session && session.user && session.user.email) || "", config: publishCfg })
     }).then(x => x.json());
     if (r && r.success && r.cardId) { currentCardId = r.cardId; localStorage.setItem("ck_my_card_id", currentCardId); }
     toast("已儲存");
-  } catch (e) { toast("已儲存"); }
+  } catch (e) { toast("已存於本機"); }
   finally { btn.disabled = false; btn.textContent = "儲存"; }
 }
 
@@ -968,6 +1109,7 @@ function toast(msg) {
 syncCssVars();
 renderSocialControls();
 renderPreview();
+restoreLocalMedia();
 loadPreviewParamIfAny();
 </script>
 </body>
