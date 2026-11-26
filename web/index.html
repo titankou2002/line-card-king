@@ -1945,15 +1945,17 @@ async function shareToLine() {
     toast("同步失敗或逾時，請再按一次發送名片");
     return;
   }
-  showBusy("開啟 LINE 分享名單...", 100, "請選擇要傳送的好友");
   const url = `https://liff.line.me/${CFG.LIFF_ID}?mode=card&id=${encodeURIComponent(slug)}`;
-  setTimeout(hideBusy, 1200);
+  hideBusy();
   if (popup && !popup.closed) {
     popup.location.href = url;
   } else {
     location.href = url;
   }
 }
+
+window.addEventListener("pageshow", hideBusy);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) hideBusy(); });
 
 async function loadPreviewParamIfAny() {
   const pid = new URLSearchParams(location.search).get("preview");
