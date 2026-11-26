@@ -182,31 +182,26 @@ window.CARD_KING_CONFIG = {
   .mc-lbl { min-width: 34px; flex-shrink: 0; color: var(--accent); font-size: 11.5px; font-weight: 700; }
   .mc-val { flex: 1; min-width: 0; word-break: break-word; }
 
-  .mc-btn-row { display: flex; justify-content: center; align-items: center; gap: 10px; }
-  .mc-btn-pri {
-    width: 68px; height: 52px; border-radius: 12px; background: var(--accent); color: var(--accent-text);
-    display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
-    font-size: 11px; font-weight: 700; line-height: 1; border: none; cursor: pointer; font-family: inherit;
-  }
-  .mc-btn-sec {
-    width: 68px; height: 52px; border-radius: 12px; background: var(--btn2-bg); color: var(--card-fg);
-    display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
-    font-size: 11px; font-weight: 700; line-height: 1; border: 1px solid rgba(197,174,110,0.28); cursor: pointer; font-family: inherit;
-  }
   .mc-btn-link {
     height: 26px; background: transparent; border: none; color: var(--accent);
     font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit;
   }
 
-  /* 全 SVG 圖示社群列（圖示 + 兩字小標） */
-  .mc-icon-row { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; padding: 2px 0; }
+  /* 10 顆統一尺寸可拖曳快捷按鈕（智慧平衡分排） */
+  .mc-action-grid { display: flex; flex-direction: column; gap: 7px; padding: 4px 0 2px; }
+  .mc-icon-row { display: flex; justify-content: center; gap: 7px; }
   .mc-icon-chip {
-    width: 44px; height: 46px; border-radius: 10px;
+    width: 50px; height: 50px; border-radius: 11px;
     background: rgba(128,128,128,0.16); border: 1px solid rgba(197,174,110,0.36);
     color: var(--accent); display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
-    text-decoration: none; cursor: pointer;
+    text-decoration: none; cursor: grab; user-select: none; -webkit-user-select: none; touch-action: none;
+    transition: transform 0.14s, border-color 0.14s, box-shadow 0.14s, opacity 0.14s;
   }
-  .mc-icon-lbl { font-size: 9.5px; font-weight: 700; line-height: 1; letter-spacing: 0.02em; }
+  .clean-view .mc-icon-chip { cursor: pointer; touch-action: auto; }
+  .mc-icon-chip.dragging { opacity: 0.45; transform: scale(1.08); cursor: grabbing; }
+  .mc-icon-chip.drag-over { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); transform: scale(1.06); }
+  .mc-icon-lbl { font-size: 10px; font-weight: 700; line-height: 1; letter-spacing: 0.02em; pointer-events: none; }
+  .mc-icon-chip svg { pointer-events: none; }
   .mc-media-click { cursor: pointer; }
 
   .mc-video-box { position: relative; width: 100%; aspect-ratio: 16/9; background: #14120f; overflow: hidden; }
@@ -268,14 +263,21 @@ window.CARD_KING_CONFIG = {
 
   .ext-stack { display: flex; flex-direction: column; gap: 7px; }
   .ext-row {
-    display: grid; grid-template-columns: 96px 1fr; align-items: center; gap: 8px;
-    padding: 6px 9px; background: var(--bg); border: 1px solid var(--border); border-radius: 9px;
+    display: grid; grid-template-columns: 44px 82px minmax(0, 1fr); align-items: center; gap: 6px;
+    padding: 6px 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 9px;
   }
-  .ext-chk { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+  .ext-mv { display: inline-flex; gap: 2px; }
+  .ext-mv button {
+    appearance: none; border: 1px solid var(--border); background: var(--surface); color: var(--t2);
+    width: 20px; height: 26px; border-radius: 5px; font-size: 11px; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; padding: 0;
+  }
+  .ext-mv button:hover { background: var(--raised); color: var(--t1); }
+  .ext-chk { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
   .ext-chk input { width: 15px; height: 15px; accent-color: #23201b; }
   .ext-row input[type="text"], .ext-row input[type="email"] {
     height: 32px; padding: 0 9px; border: 1px solid var(--border); border-radius: 7px;
-    font-size: 12.5px; background: #fff; font-family: inherit; width: 100%;
+    font-size: 12.5px; background: #fff; font-family: inherit; width: 100%; min-width: 0;
   }
 
   .modal-bg { display: none; position: fixed; inset: 0; z-index: 200; background: rgba(31,27,22,0.58); align-items: center; justify-content: center; padding: 20px; }
@@ -341,6 +343,7 @@ window.CARD_KING_CONFIG = {
     <!-- 點擊按鈕浮出的單行編輯條 -->
     <div class="inline-bar" id="btnEditBar">
       <input type="text" id="inlineBtnVal" placeholder="">
+      <button type="button" class="btn btn-sm btn-danger" onclick="hideEditingAction()">隱藏</button>
       <button type="button" class="btn btn-sm btn-pri" onclick="closeInlineBar()">完成</button>
     </div>
   </section>
@@ -453,14 +456,30 @@ const CFG = window.CARD_KING_CONFIG || {};
 const sb = (CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY) ? window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY) : null;
 
 const SVG_ICONS = {
+  phone: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>',
   line: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>',
-  oa: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3z"/><path d="M9 12l2 2 4-4"/></svg>',
-  web: '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><line x1="3" y1="12" x2="21" y2="12"/></svg>',
-  mail: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>',
-  ig: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>',
-  fb: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h-3a4 4 0 0 0-4 4v3H6v4h3v7h4v-7h3l1-4h-4V7a1 1 0 0 1 1-1h2V3z"/></svg>',
-  threads: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 11c0-4-2.5-7-6.5-7C7 4 4 7.5 4 12s3 8 7.5 8c3 0 5.5-1.3 6.5-3.5"/><path d="M9.5 10.5c1-1 2.2-1.5 3.5-1.2 2 .3 3 1.7 3 4 0 2.6-1.5 4-4 4-1.8 0-3-.9-3-2.3s1.3-2.4 3.5-2.4c1.5 0 2.8.4 3.6 1"/></svg>',
-  phone: '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>'
+  mail: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>',
+  web: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><line x1="3" y1="12" x2="21" y2="12"/></svg>',
+  oa: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3z"/><path d="M9 12l2 2 4-4"/></svg>',
+  fb: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h-3a4 4 0 0 0-4 4v3H6v4h3v7h4v-7h3l1-4h-4V7a1 1 0 0 1 1-1h2V3z"/></svg>',
+  ig: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>',
+  threads: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 11c0-4-2.5-7-6.5-7C7 4 4 7.5 4 12s3 8 7.5 8c3 0 5.5-1.3 6.5-3.5"/><path d="M9.5 10.5c1-1 2.2-1.5 3.5-1.2 2 .3 3 1.7 3 4 0 2.6-1.5 4-4 4-1.8 0-3-.9-3-2.3s1.3-2.4 3.5-2.4c1.5 0 2.8.4 3.6 1"/></svg>',
+  yt: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="4"/><polygon points="10 9 15 12 10 15 10 9" fill="currentColor" stroke="none"/></svg>',
+  tiktok: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg>'
+};
+
+const DEFAULT_ACTION_ORDER = ["phone", "line", "mail", "web", "oa", "fb", "ig", "threads", "yt", "tiktok"];
+const ACTION_META = {
+  phone:   { chk: "phoneOn",   val: "mobile",  label: "手機", ph: "輸入撥打手機號碼" },
+  line:    { chk: "lineOn",    val: "lineId",  label: "LINE", ph: "個人 LINE ID 或連結" },
+  mail:    { chk: "mailBtnOn", val: "email",   label: "信箱", ph: "name@example.com" },
+  web:     { chk: "webOn",     val: "website", label: "官網", ph: "https://..." },
+  oa:      { chk: "oaOn",      val: "oaId",    label: "官方", ph: "@297azzax（有無 @ 皆可）" },
+  fb:      { chk: "fbOn",      val: "fbId",    label: "FB",   ph: "FB 帳號或粉專連結" },
+  ig:      { chk: "igOn",      val: "igId",    label: "IG",   ph: "IG 帳號（有無 @ 皆可）" },
+  threads: { chk: "thOn",      val: "thId",    label: "脆",   ph: "Threads 帳號" },
+  yt:      { chk: "ytOn",      val: "ytId",    label: "YT",   ph: "YouTube 頻道或網址" },
+  tiktok:  { chk: "ttOn",      val: "ttId",    label: "抖音", ph: "TikTok / 抖音帳號" }
 };
 
 const FONTS = {
@@ -506,9 +525,19 @@ function defaultState() {
       { label: "電話", value: "03-486-3978" },
       { label: "地址", value: "台北市內湖區行愛路77巷16號5樓" }
     ],
+    phoneOn: true, webOn: true,
     lineOn: true, lineId: "bigt_line", oaOn: true, oaId: "@297azzax", mailBtnOn: true,
-    igOn: true, igId: "bigt.cc", fbOn: true, fbId: "bigt.cc", thOn: true, thId: "bigt.cc"
+    igOn: true, igId: "bigt.cc", fbOn: true, fbId: "bigt.cc", thOn: true, thId: "bigt.cc",
+    ytOn: true, ytId: "bigt", ttOn: true, ttId: "bigt",
+    actionOrder: DEFAULT_ACTION_ORDER.slice()
   };
+}
+
+function ensureActionOrder() {
+  const cur = Array.isArray(state.actionOrder) ? state.actionOrder.filter(k => ACTION_META[k]) : [];
+  DEFAULT_ACTION_ORDER.forEach(k => { if (!cur.includes(k)) cur.push(k); });
+  state.actionOrder = cur;
+  return cur;
 }
 
 let state = (function () {
@@ -718,44 +747,54 @@ function addInfoRow() { if (!Array.isArray(state.infoRows)) state.infoRows = [];
 function editInfoCell(i, k, val) { if (state.infoRows && state.infoRows[i]) { state.infoRows[i][k] = val.trim(); persistLocal(); } }
 function delInfoRow(i) { state.infoRows.splice(i, 1); renderPreview(); }
 
-function openBtnEditor(kind) {
+function openActionEditor(key) {
   if (cleanView) return;
-  editingInlineKey = kind;
+  const meta = ACTION_META[key]; if (!meta) return;
+  editingInlineKey = key;
   const bar = document.getElementById("btnEditBar");
   const inp = document.getElementById("inlineBtnVal");
-  inp.placeholder = kind === "mobile" ? "輸入撥打電話號碼" : "輸入官方網站網址";
-  inp.value = state[kind] || "";
-  inp.oninput = () => { state[kind] = inp.value.trim(); persistLocal(); };
+  inp.placeholder = meta.label + "：" + meta.ph;
+  inp.value = state[meta.val] || "";
+  inp.oninput = () => { state[meta.val] = inp.value.trim(); persistLocal(); renderSocialControls(); };
   bar.style.display = "flex";
   inp.focus();
+  inp.select();
+}
+function hideEditingAction() {
+  const meta = ACTION_META[editingInlineKey];
+  if (meta) { state[meta.chk] = false; renderSocialControls(); }
+  closeInlineBar();
 }
 function closeInlineBar() { document.getElementById("btnEditBar").style.display = "none"; renderPreview(); }
 
-/* 渲染進階設定裡的 SVG 社群圖示控制列 */
-function renderSocialControls() {
-  const items = [
-    { chk: "lineOn", val: "lineId", icon: SVG_ICONS.line, label: "LINE", ph: "個人 LINE ID 或連結" },
-    { chk: "oaOn", val: "oaId", icon: SVG_ICONS.oa, label: "官方", ph: "@297azzax（有無 @ 皆可）" },
-    { chk: "mailBtnOn", val: "email", icon: SVG_ICONS.mail, label: "信箱", ph: "name@example.com" },
-    { chk: "igOn", val: "igId", icon: SVG_ICONS.ig, label: "IG", ph: "IG 帳號（有無 @ 皆可）" },
-    { chk: "fbOn", val: "fbId", icon: SVG_ICONS.fb, label: "FB", ph: "FB 帳號或粉專 ID" },
-    { chk: "thOn", val: "thId", icon: SVG_ICONS.threads, label: "串文", ph: "Threads 帳號" }
-  ];
-  document.getElementById("socialPanelStack").innerHTML = items.map(it => `
-    <div class="ext-row">
-      <label class="ext-chk"><input type="checkbox" ${state[it.chk] ? "checked" : ""} onchange="setField('${it.chk}', this.checked)">${it.icon}<span>${it.label}</span></label>
-      <input type="text" data-skey="${it.val}" value="${esc(state[it.val] || '')}" placeholder="${it.ph}" oninput="setField('${it.val}', this.value)">
-    </div>
-  `).join("");
+/* 進階設定「社群圖示」清單（含上下調整順序） */
+function moveAction(key, dir) {
+  const ord = ensureActionOrder();
+  const idx = ord.indexOf(key);
+  const next = idx + dir;
+  if (idx < 0 || next < 0 || next >= ord.length) return;
+  ord.splice(idx, 1);
+  ord.splice(next, 0, key);
+  state.actionOrder = ord;
+  renderSocialControls();
+  renderPreview();
 }
 
-function focusSocialField(valKey) {
-  if (cleanView) return;
-  openEditorTab("social");
-  setTimeout(() => {
-    const inp = document.querySelector(`#socialPanelStack input[data-skey="${valKey}"]`);
-    if (inp) { inp.scrollIntoView({ behavior: "smooth", block: "center" }); inp.focus(); inp.select(); }
-  }, 60);
+function renderSocialControls() {
+  const ord = ensureActionOrder();
+  document.getElementById("socialPanelStack").innerHTML = ord.map((k, idx) => {
+    const it = ACTION_META[k];
+    return `
+      <div class="ext-row">
+        <span class="ext-mv">
+          <button type="button" title="上移" onclick="moveAction('${k}',-1)" ${idx === 0 ? "disabled" : ""}>↑</button>
+          <button type="button" title="下移" onclick="moveAction('${k}',1)" ${idx === ord.length - 1 ? "disabled" : ""}>↓</button>
+        </span>
+        <label class="ext-chk"><input type="checkbox" ${state[it.chk] ? "checked" : ""} onchange="setField('${it.chk}', this.checked)">${SVG_ICONS[k]}<span>${it.label}</span></label>
+        <input type="text" data-skey="${it.val}" value="${esc(state[it.val] || '')}" placeholder="${it.ph}" oninput="setField('${it.val}', this.value)">
+      </div>
+    `;
+  }).join("");
 }
 
 function triggerLogoUpload(e) {
@@ -809,15 +848,85 @@ function onQuickMediaPick(e) {
   e.target.value = "";
 }
 
+function splitBalancedRows(list) {
+  const n = list.length;
+  if (n <= 5) return n ? [list] : [];
+  const first = n <= 6 ? 3 : (n <= 8 ? 4 : 5);
+  return [list.slice(0, first), list.slice(first)];
+}
+
 function buildSocialIconsHtml() {
-  const chips = [];
-  if (state.lineOn && state.lineId) chips.push(`<span class="mc-icon-chip" onclick="focusSocialField('lineId')" title="加我 LINE">${SVG_ICONS.line}<span class="mc-icon-lbl">LINE</span></span>`);
-  if (state.oaOn && state.oaId) chips.push(`<span class="mc-icon-chip" onclick="focusSocialField('oaId')" title="官方帳號">${SVG_ICONS.oa}<span class="mc-icon-lbl">官方</span></span>`);
-  if (state.mailBtnOn && state.email) chips.push(`<span class="mc-icon-chip" onclick="focusSocialField('email')" title="Email">${SVG_ICONS.mail}<span class="mc-icon-lbl">信箱</span></span>`);
-  if (state.igOn && state.igId) chips.push(`<span class="mc-icon-chip" onclick="focusSocialField('igId')" title="Instagram">${SVG_ICONS.ig}<span class="mc-icon-lbl">IG</span></span>`);
-  if (state.fbOn && state.fbId) chips.push(`<span class="mc-icon-chip" onclick="focusSocialField('fbId')" title="Facebook">${SVG_ICONS.fb}<span class="mc-icon-lbl">FB</span></span>`);
-  if (state.thOn && state.thId) chips.push(`<span class="mc-icon-chip" onclick="focusSocialField('thId')" title="Threads">${SVG_ICONS.threads}<span class="mc-icon-lbl">串文</span></span>`);
-  return chips.length ? `<div class="mc-icon-row">${chips.join("")}</div>` : "";
+  const ord = ensureActionOrder();
+  const active = ord.filter(k => {
+    const m = ACTION_META[k];
+    return m && state[m.chk] && String(state[m.val] || "").trim();
+  });
+  if (!active.length) return "";
+  const rows = splitBalancedRows(active);
+  return `<div class="mc-action-grid">${rows.map(row =>
+    `<div class="mc-icon-row">${row.map(k => {
+      const m = ACTION_META[k];
+      return `<span class="mc-icon-chip" data-akey="${k}" title="${m.label}（按住可拖曳排序）">${SVG_ICONS[k]}<span class="mc-icon-lbl">${m.label}</span></span>`;
+    }).join("")}</div>`
+  ).join("")}</div>`;
+}
+
+function bindActionDrag(mount) {
+  const chips = mount.querySelectorAll(".mc-icon-chip[data-akey]");
+  chips.forEach(chip => {
+    chip.addEventListener("pointerdown", (e) => {
+      if (cleanView) return;
+      if (e.button && e.button !== 0) return;
+      const dragKey = chip.dataset.akey;
+      const sx = e.clientX, sy = e.clientY;
+      let dragging = false;
+      let overKey = "";
+      try { chip.setPointerCapture(e.pointerId); } catch (err) {}
+
+      const clearOver = () => mount.querySelectorAll(".mc-icon-chip.drag-over").forEach(x => x.classList.remove("drag-over"));
+      const onMove = (ev) => {
+        if (!dragging && Math.hypot(ev.clientX - sx, ev.clientY - sy) > 8) {
+          dragging = true;
+          chip.classList.add("dragging");
+        }
+        if (!dragging) return;
+        clearOver();
+        chip.style.pointerEvents = "none";
+        const hit = document.elementFromPoint(ev.clientX, ev.clientY);
+        chip.style.pointerEvents = "";
+        const target = hit && hit.closest ? hit.closest(".mc-icon-chip[data-akey]") : null;
+        if (target && target.dataset.akey !== dragKey) {
+          target.classList.add("drag-over");
+          overKey = target.dataset.akey;
+        } else {
+          overKey = "";
+        }
+      };
+      const onUp = () => {
+        chip.classList.remove("dragging");
+        clearOver();
+        chip.removeEventListener("pointermove", onMove);
+        chip.removeEventListener("pointerup", onUp);
+        chip.removeEventListener("pointercancel", onUp);
+        if (dragging && overKey && overKey !== dragKey) {
+          const ord = ensureActionOrder();
+          const from = ord.indexOf(dragKey), to = ord.indexOf(overKey);
+          if (from >= 0 && to >= 0) {
+            ord.splice(from, 1);
+            ord.splice(to, 0, dragKey);
+            state.actionOrder = ord;
+            renderSocialControls();
+            renderPreview();
+          }
+        } else if (!dragging) {
+          openActionEditor(dragKey);
+        }
+      };
+      chip.addEventListener("pointermove", onMove);
+      chip.addEventListener("pointerup", onUp);
+      chip.addEventListener("pointercancel", onUp);
+    });
+  });
 }
 
 function renderPreview() {
@@ -849,10 +958,6 @@ function renderPreview() {
 
   const footHtml = `
     <div class="mc-foot" data-cslot="footBg">
-      <div class="mc-btn-row">
-        <button type="button" class="mc-btn-pri" data-cslot="accent" onclick="openBtnEditor('mobile')">${SVG_ICONS.phone}<span>手機</span></button>
-        <button type="button" class="mc-btn-sec" data-cslot="btn2Bg" onclick="openBtnEditor('website')">${SVG_ICONS.web}<span>官網</span></button>
-      </div>
       ${buildSocialIconsHtml()}
       <button type="button" class="mc-btn-link" data-cslot="accent" onclick="shareToLine()">轉傳這張名片</button>
     </div>
@@ -891,6 +996,7 @@ function renderPreview() {
       else lastTap = now;
     }, { passive: true });
   });
+  bindActionDrag(mount);
 
   // 只有在展開「進階設定 → 配色」時，點背景區塊才切換調色部位，平常點字完全不打架
   mount.querySelectorAll("[data-cslot]").forEach(el => {
