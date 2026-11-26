@@ -163,8 +163,8 @@ window.CARD_KING_CONFIG = {
   .color-pick-mode [data-cslot]:hover { outline: 2px dashed var(--accent); outline-offset: -2px; }
 
   .mc-brand-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
-  .mc-logo { height: 22px; color: var(--accent); flex-shrink: 0; }
-  .mc-logo img { height: 22px; width: auto; max-width: 120px; object-fit: contain; display: block; }
+  .mc-logo { height: var(--logo-h, 32px); color: var(--accent); flex-shrink: 0; display: inline-flex; align-items: center; }
+  .mc-logo img { height: var(--logo-h, 32px); width: auto; max-width: 180px; object-fit: contain; display: block; }
   .mc-co-name { font-size: 11.5px; font-weight: 600; opacity: 0.8; }
   .mc-name-line { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px; }
   .mc-name { font-size: 21px; font-weight: 700; line-height: 1.25; }
@@ -233,6 +233,7 @@ window.CARD_KING_CONFIG = {
   .adv-card {
     background: var(--surface); border: 1px solid var(--border);
     border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 12px;
+    width: 100%; min-width: 0; max-width: 100%;
   }
   .dock-tabs {
     display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px;
@@ -243,7 +244,7 @@ window.CARD_KING_CONFIG = {
     font-size: 12.5px; font-weight: 700; color: var(--t2); cursor: pointer; font-family: inherit;
   }
   .dock-tab.active { background: var(--surface); color: var(--t1); }
-  .dock-pane { display: none; flex-direction: column; gap: 12px; }
+  .dock-pane { display: none; flex-direction: column; gap: 12px; min-width: 0; }
   .dock-pane.active { display: flex; }
 
   .slot-tabs { display: flex; flex-wrap: wrap; gap: 4px; background: var(--raised); padding: 3px; border-radius: 8px; }
@@ -383,7 +384,13 @@ window.CARD_KING_CONFIG = {
         <input type="file" id="logoFile" accept="image/*" hidden onchange="onLogoPick(event)">
         <button type="button" class="btn btn-sm" onclick="document.getElementById('logoFile').click()">上傳 Logo</button>
         <button type="button" class="btn btn-sm" onclick="clearLogo()">刪除 Logo</button>
-        <label class="ext-chk"><input type="checkbox" id="chkLogoMono" checked onchange="setField('logoMono', this.checked)">純色</label>
+        <label class="ext-chk"><input type="checkbox" id="chkLogoBg" checked onchange="onLogoOptChange()">去背</label>
+        <label class="ext-chk"><input type="checkbox" id="chkLogoMono" checked onchange="onLogoOptChange()">純色</label>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:12px;font-weight:700;color:var(--t2);flex-shrink:0;">Logo 大小</span>
+        <input type="range" id="inLogoSize" min="20" max="56" value="32" oninput="setLogoSize(this.value)" style="flex:1;accent-color:#23201b;">
+        <span id="lblLogoSize" style="font-size:12px;font-weight:700;color:var(--t2);width:36px;text-align:right;">32px</span>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
         <input type="file" id="photoFile" accept="image/*" hidden onchange="onPhotoPick(event)">
@@ -395,8 +402,8 @@ window.CARD_KING_CONFIG = {
         <button type="button" class="btn btn-sm btn-pri" onclick="document.getElementById('videoFile').click()">上傳 MP4（≤10秒/10MB）</button>
         <button type="button" class="btn btn-sm btn-danger" id="btnDelVideo" style="display:none;" onclick="clearVideo()">刪除影片</button>
       </div>
-      <div style="display:grid;grid-template-columns:1fr auto;gap:6px;">
-        <input type="url" id="inVideoUrl" oninput="setField('videoUrl', this.value)" placeholder="影片（貼上網址連結）" style="height:34px;padding:0 9px;border:1px solid var(--border);border-radius:8px;font-size:12.5px;font-family:inherit;">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;">
+        <input type="url" id="inVideoUrl" oninput="setField('videoUrl', this.value)" placeholder="影片（貼上網址連結）" style="height:34px;padding:0 9px;border:1px solid var(--border);border-radius:8px;font-size:12.5px;font-family:inherit;min-width:0;width:100%;">
         <button type="button" class="btn btn-sm btn-pri" id="btnYtConv" onclick="convertYoutube()">轉 MP4</button>
       </div>
     </div>
@@ -468,6 +475,7 @@ const STYLE_DEFAULTS = {
 let authMode = "login", session = null, profile = null;
 let colorSlot = "accent", advOpen = false, cleanView = false;
 let editingInlineKey = "";
+let rawLogoSource = null;
 let localEditUsed = Number(localStorage.getItem("ck_local_edit_used") || 0);
 let currentCardId = localStorage.getItem("ck_my_card_id") || "";
 
@@ -475,7 +483,7 @@ function defaultState() {
   return {
     style: "dark", font: "jhenghei",
     color: "#D2B878", headBg: "#23201B", bodyBg: "#23201B", footBg: "#23201B", btn2Bg: "#353028", cardFg: "#F1ECE2",
-    logoMono: true, showPhoto: false,
+    logoMono: true, logoRemoveBg: true, logoSize: 32, showPhoto: false,
     logoUrl: "https://bigt.cc/line/elitile-logo.png",
     videoUrl: "https://bigt.cc/web/assets/video/refin-moon-1920.mp4",
     photoUrl: "https://bigt.cc/web/assets/video/refin-moon-poster.jpg",
@@ -535,11 +543,23 @@ function setStyle(s) {
   state.color = def.color; state.headBg = def.headBg; state.bodyBg = def.bodyBg;
   state.footBg = def.footBg; state.btn2Bg = def.btn2Bg; state.cardFg = def.fg;
   document.querySelectorAll("#styleGrid .style-opt").forEach(el => el.classList.toggle("active", el.dataset.style === s));
-  syncCssVars(); renderPreview();
+  syncCssVars(); reprocessLogoIfLoaded(); renderPreview();
 }
 
 function setFont(f) { state.font = f; syncCssVars(); }
 function setField(k, v) { state[k] = v; renderPreview(); }
+function setLogoSize(v) {
+  state.logoSize = Math.max(20, Math.min(56, Number(v) || 32));
+  document.documentElement.style.setProperty("--logo-h", state.logoSize + "px");
+  const lbl = document.getElementById("lblLogoSize");
+  if (lbl) lbl.textContent = state.logoSize + "px";
+}
+function onLogoOptChange() {
+  state.logoRemoveBg = document.getElementById("chkLogoBg").checked;
+  state.logoMono = document.getElementById("chkLogoMono").checked;
+  reprocessLogoIfLoaded();
+  renderPreview();
+}
 
 const SLOT_NAMES = { accent: "主色", headBg: "上框", bodyBg: "中框", footBg: "下框", btn2Bg: "次鈕", fg: "文字" };
 function getSlotValue(slot) {
@@ -562,6 +582,12 @@ function syncCssVars() {
   document.documentElement.style.setProperty("--btn2-bg", state.btn2Bg);
   document.documentElement.style.setProperty("--card-fg", state.cardFg);
   document.documentElement.style.setProperty("--card-font", FONTS[state.font] || FONTS.jhenghei);
+  const sz = Math.max(20, Math.min(56, Number(state.logoSize) || 32));
+  document.documentElement.style.setProperty("--logo-h", sz + "px");
+  const sEl = document.getElementById("inLogoSize"); if (sEl) sEl.value = sz;
+  const lEl = document.getElementById("lblLogoSize"); if (lEl) lEl.textContent = sz + "px";
+  const bEl = document.getElementById("chkLogoBg"); if (bEl) bEl.checked = state.logoRemoveBg !== false;
+  const mEl = document.getElementById("chkLogoMono"); if (mEl) mEl.checked = state.logoMono !== false;
   selectColorSlot(colorSlot);
 }
 function applySlotColor(hex) {
@@ -572,7 +598,7 @@ function applySlotColor(hex) {
   else if (colorSlot === "footBg") state.footBg = u;
   else if (colorSlot === "btn2Bg") state.btn2Bg = u;
   else if (colorSlot === "fg") state.cardFg = u;
-  else state.color = u;
+  else { state.color = u; reprocessLogoIfLoaded(); }
   syncCssVars(); renderPreview();
 }
 function onHexInput(v) { const c = v.trim().startsWith("#") ? v.trim() : "#" + v.trim(); if (/^#[0-9a-fA-F]{6}$/.test(c)) applySlotColor(c); }
@@ -694,8 +720,78 @@ function renderPreview() {
   });
 }
 
+/* Logo 自動去背 + 自動裁掉空白邊界 + 純色處理 */
+function processLogoCanvas(src, opts) {
+  const sw = src.naturalWidth || src.width, sh = src.naturalHeight || src.height;
+  if (!sw || !sh) return "";
+  const sc = Math.min(1, 640 / Math.max(sw, sh));
+  const w = Math.max(1, Math.round(sw * sc)), h = Math.max(1, Math.round(sh * sc));
+  const c = document.createElement("canvas");
+  c.width = w; c.height = h;
+  const ctx = c.getContext("2d");
+  ctx.drawImage(src, 0, 0, w, h);
+
+  const imgData = ctx.getImageData(0, 0, w, h);
+  const px = imgData.data;
+  const corners = [0, (w - 1) * 4, ((h - 1) * w) * 4, ((h - 1) * w + (w - 1)) * 4];
+  const transparentCorners = corners.filter(idx => px[idx + 3] < 128).length;
+
+  if (opts.removeBg && transparentCorners < 2) {
+    let br = 0, bg = 0, bb = 0;
+    corners.forEach(idx => { br += px[idx]; bg += px[idx + 1]; bb += px[idx + 2]; });
+    br /= 4; bg /= 4; bb /= 4;
+    for (let i = 0; i < px.length; i += 4) {
+      if (px[i + 3] === 0) continue;
+      const dist = Math.hypot(px[i] - br, px[i + 1] - bg, px[i + 2] - bb);
+      if (dist < 38) px[i + 3] = 0;
+      else if (dist < 76) px[i + 3] = Math.round(((dist - 38) / 38) * px[i + 3]);
+    }
+  }
+
+  if (opts.mono && opts.accentHex) {
+    const hc = opts.accentHex.replace("#", "");
+    const ar = parseInt(hc.slice(0, 2), 16), ag = parseInt(hc.slice(2, 4), 16), ab = parseInt(hc.slice(4, 6), 16);
+    for (let i = 0; i < px.length; i += 4) {
+      if (px[i + 3] > 0) { px[i] = ar; px[i + 1] = ag; px[i + 2] = ab; }
+    }
+  }
+  ctx.putImageData(imgData, 0, 0);
+
+  // 自動緊密裁切透明白邊，避免文字 Logo 在白框裡縮成一小點
+  let minX = w, minY = h, maxX = -1, maxY = -1;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (px[(y * w + x) * 4 + 3] > 18) {
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+  if (maxX >= minX && maxY >= minY) {
+    const pad = 4;
+    const tw = (maxX - minX + 1) + pad * 2, th = (maxY - minY + 1) + pad * 2;
+    const out = document.createElement("canvas");
+    out.width = tw; out.height = th;
+    out.getContext("2d").drawImage(c, minX, minY, maxX - minX + 1, maxY - minY + 1, pad, pad, maxX - minX + 1, maxY - minY + 1);
+    return out.toDataURL("image/png");
+  }
+  return c.toDataURL("image/png");
+}
+
+function reprocessLogoIfLoaded() {
+  if (!rawLogoSource) return;
+  const processed = processLogoCanvas(rawLogoSource, {
+    removeBg: state.logoRemoveBg !== false,
+    mono: state.logoMono !== false,
+    accentHex: state.color
+  });
+  if (processed) state.logoUrl = processed;
+}
+
 /* 拍名片 AI 辨識 + 自動去背裁切 Logo */
-function cropLogoFromCard(img, box, mono, accentHex) {
+function cropLogoFromCard(img, box) {
   if (!Array.isArray(box) || box.length !== 4) return "";
   let [ymin, xmin, ymax, xmax] = box.map(Number);
   if ([ymin, xmin, ymax, xmax].some(isNaN) || ymax <= ymin || xmax <= xmin) return "";
@@ -706,25 +802,10 @@ function cropLogoFromCard(img, box, mono, accentHex) {
   const sw = Math.min(iw - sx, Math.max(10, Math.round(((xmax - xmin + padX * 2) / 1000) * iw)));
   const sh = Math.min(ih - sy, Math.max(10, Math.round(((ymax - ymin + padY * 2) / 1000) * ih)));
   const c = document.createElement("canvas");
-  const sc = Math.min(1, 520 / sw);
-  c.width = Math.max(1, Math.round(sw * sc)); c.height = Math.max(1, Math.round(sh * sc));
-  const ctx = c.getContext("2d");
-  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, c.width, c.height);
-  const d = ctx.getImageData(0, 0, c.width, c.height), px = d.data, w = c.width, h = c.height;
-  const corners = [0, (w - 1) * 4, ((h - 1) * w) * 4, ((h - 1) * w + (w - 1)) * 4];
-  let br = 0, bg = 0, bb = 0;
-  corners.forEach(idx => { br += px[idx]; bg += px[idx + 1]; bb += px[idx + 2]; });
-  br /= 4; bg /= 4; bb /= 4;
-  const hc = accentHex.replace("#", "");
-  const ar = parseInt(hc.slice(0,2),16), ag = parseInt(hc.slice(2,4),16), ab = parseInt(hc.slice(4,6),16);
-  for (let i = 0; i < px.length; i += 4) {
-    const dist = Math.hypot(px[i] - br, px[i + 1] - bg, px[i + 2] - bb);
-    if (dist < 42) px[i + 3] = 0;
-    else if (dist < 72) px[i + 3] = Math.round(((dist - 42) / 30) * 255);
-    if (mono && px[i + 3] > 0) { px[i] = ar; px[i + 1] = ag; px[i + 2] = ab; }
-  }
-  ctx.putImageData(d, 0, 0);
-  return c.toDataURL("image/png");
+  c.width = sw; c.height = sh;
+  c.getContext("2d").drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+  rawLogoSource = c;
+  return processLogoCanvas(c, { removeBg: state.logoRemoveBg !== false, mono: state.logoMono !== false, accentHex: state.color });
 }
 
 function onOcrPick(e) {
@@ -758,7 +839,7 @@ function onOcrPick(e) {
         { label: "地址", value: d.address || "" }
       ].filter(x => x.value);
       if (d.logoBox) {
-        const cr = cropLogoFromCard(img, d.logoBox, state.logoMono !== false, state.color);
+        const cr = cropLogoFromCard(img, d.logoBox);
         if (cr) state.logoUrl = cr;
       }
       renderSocialControls(); renderPreview(); toast("名片已自動填入");
@@ -777,16 +858,15 @@ function onLogoPick(e) {
   const f = e.target.files && e.target.files[0]; if (!f) return;
   const img = new Image();
   img.onload = () => {
-    const c = document.createElement("canvas");
-    const sc = Math.min(1, 560 / img.naturalWidth);
-    c.width = Math.round(img.naturalWidth * sc); c.height = Math.round(img.naturalHeight * sc);
-    const ctx = c.getContext("2d"); ctx.drawImage(img, 0, 0, c.width, c.height);
-    if (state.logoMono) { ctx.globalCompositeOperation = "source-in"; ctx.fillStyle = state.color; ctx.fillRect(0, 0, c.width, c.height); }
-    state.logoUrl = c.toDataURL("image/png"); renderPreview();
+    rawLogoSource = img;
+    reprocessLogoIfLoaded();
+    renderPreview();
+    toast("Logo 已自動去背裁切");
   };
   img.src = URL.createObjectURL(f);
+  e.target.value = "";
 }
-function clearLogo() { state.logoUrl = ""; renderPreview(); }
+function clearLogo() { rawLogoSource = null; state.logoUrl = ""; renderPreview(); }
 function onPhotoPick(e) {
   const f = e.target.files && e.target.files[0]; if (!f) return;
   const img = new Image();
