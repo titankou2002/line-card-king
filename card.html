@@ -455,6 +455,13 @@ window.CARD_KING_CONFIG = {
         <input type="range" id="inVidZoom" min="100" max="220" value="100" oninput="setVideoZoom(this.value)" style="flex:1;accent-color:#23201b;">
         <span id="lblVidZoom" style="font-size:11.5px;font-weight:700;color:var(--t2);width:34px;text-align:right;">1.0×</span>
       </div>
+      <div id="vidLoopRow" style="display:none;align-items:center;justify-content:space-between;gap:8px;padding-top:2px;">
+        <label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;color:var(--t1);cursor:pointer;">
+          <input type="checkbox" id="chkVidLoop" onchange="setVideoLoop(this.checked)" style="accent-color:#23201b;width:15px;height:15px;">
+          動動圖（短片自動連播 10 秒）
+        </label>
+        <span id="lblVidLoopState" style="font-size:11.5px;font-weight:700;color:var(--t3);">關</span>
+      </div>
       <div style="display:flex;gap:6px;justify-content:flex-end;">
         <button type="button" class="btn btn-sm" onclick="closeVidTrimBar()">關閉</button>
         <button type="button" class="btn btn-sm btn-pri" id="btnApplyTrim" onclick="applyVideoTrim()">套用目前位置</button>
@@ -505,7 +512,8 @@ window.CARD_KING_CONFIG = {
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
         <input type="file" id="videoFile" accept="video/*,.mp4,.mov,.m4v" hidden onchange="onVideoPick(event)">
-        <button type="button" class="btn btn-sm btn-pri" id="btnUploadVid" onclick="document.getElementById('videoFile').click()">上傳影片（自動切10秒）</button>
+        <button type="button" class="btn btn-sm btn-pri" id="btnUploadVid" onclick="document.getElementById('videoFile').click()">上傳影片 / 動動圖</button>
+        <button type="button" class="btn btn-sm" id="btnVidLoopDock" onclick="setVideoLoop(!state.videoLoop)">動動圖：關</button>
         <button type="button" class="btn btn-sm" onclick="openVidTrimBar()">調整位置</button>
         <button type="button" class="btn btn-sm" id="btnToggleVidUrl" onclick="toggleVidUrlBox()">貼影片連結 ▾</button>
         <button type="button" class="btn btn-sm btn-danger" id="btnDelVideo" style="display:none;" onclick="clearVideo()">刪除影片</button>
@@ -1618,6 +1626,27 @@ function openVidTrimBar() {
   } else if (timeRow) {
     timeRow.style.display = "none";
   }
+  const loopRow = document.getElementById("vidLoopRow");
+  if (loopRow) loopRow.style.display = VIDEO_STYLES.includes(state.style) ? "flex" : "none";
+  syncVideoLoopUi();
+}
+function syncVideoLoopUi() {
+  const on = !!state.videoLoop;
+  const chk = document.getElementById("chkVidLoop");
+  if (chk) chk.checked = on;
+  const lbl = document.getElementById("lblVidLoopState");
+  if (lbl) { lbl.textContent = on ? "開（10秒連播）" : "關"; lbl.style.color = on ? "#2f6b4b" : "var(--t3)"; }
+  const btn = document.getElementById("btnVidLoopDock");
+  if (btn) {
+    btn.textContent = on ? "動動圖：開" : "動動圖：關";
+    btn.classList.toggle("btn-pri", on);
+  }
+}
+function setVideoLoop(on) {
+  state.videoLoop = !!on;
+  dirtySinceSave = true;
+  syncVideoLoopUi();
+  persistLocal();
 }
 function closeVidTrimBar() {
   const bar = document.getElementById("vidTrimBar");
@@ -1663,7 +1692,7 @@ function setVideoZoom(v) {
   persistLocal();
 }
 
-function trimVideoTo10s(videoEl, fallbackBlob, startSec, vPosPct, vZoomPct, vPosXPct) {
+function trimVideoTo10s(videoEl, fallbackBlob, startSec, vPosPct, vZoomPct, vPosXPct, loopTo10s) {
   return new Promise(async (resolve) => {
     let audioCtx = null;
     try {
@@ -1717,6 +1746,15 @@ function trimVideoTo10s(videoEl, fallbackBlob, startSec, vPosPct, vZoomPct, vPos
         const out = chunks.length ? new Blob(chunks, { type: mimeType.split(";")[0] || "video/mp4" }) : fallbackBlob;
         resolve(out.size > 0 ? out : fallbackBlob);
       };
+      const remain = Math.max(0.8, (videoEl.duration || 10) - (startSec || 0));
+      const doLoop = !!(loopTo10s && remain < 9.5);
+      const targetMs = doLoop ? 9800 : Math.min(10000, remain * 1000);
+      videoEl.loop = !!(doLoop && !(startSec > 0));
+      const onEndedLoop = () => {
+        if (!doLoop) return;
+        try { videoEl.currentTime = startSec || 0; videoEl.play().catch(() => {}); } catch (e) {}
+      };
+      if (doLoop && startSec > 0) videoEl.addEventListener("ended", onEndedLoop);
       await new Promise(res => {
         const done = () => { videoEl.removeEventListener("seeked", done); res(); };
         videoEl.addEventListener("seeked", done);
@@ -1731,15 +1769,15 @@ function trimVideoTo10s(videoEl, fallbackBlob, startSec, vPosPct, vZoomPct, vPos
       }
       rec.start(250);
       const startAt = performance.now();
-      const remain = Math.max(1, (videoEl.duration || 10) - (startSec || 0));
-      const targetMs = Math.min(10000, remain * 1000);
       let rafId = 0;
       const tick = () => {
         const elapsed = performance.now() - startAt;
         try { ctx.drawImage(videoEl, sx, sy, sw, sh, 0, 0, targetW, targetH); } catch (e) {}
-        setVidProgress(15 + Math.min(78, (elapsed / targetMs) * 78), "轉成橫式 16:9 含音軌影片中...");
-        if (elapsed >= targetMs || videoEl.ended) {
+        setVidProgress(15 + Math.min(78, (elapsed / targetMs) * 78), doLoop ? "製作動動圖（自動連播 10 秒）..." : "轉成橫式 16:9 含音軌影片中...");
+        if (elapsed >= targetMs || (!doLoop && videoEl.ended)) {
           cancelAnimationFrame(rafId);
+          videoEl.removeEventListener("ended", onEndedLoop);
+          videoEl.loop = false;
           videoEl.pause();
           if (rec.state !== "inactive") rec.stop();
           return;
@@ -1802,12 +1840,14 @@ async function applyVideoTrim() {
     const poster = await captureVideoPoster(v);
     const vw = v.videoWidth || 720, vh = v.videoHeight || 405;
     const isPortrait = (vw / vh) < 1.5;
+    const needLoop = !!(state.videoLoop && rawVideoDuration > 0 && rawVideoDuration < 9.5);
     let finalBlob = srcBlob;
-    if (isPortrait || rawVideoDuration > 10.5 || srcBlob.size > 9.5 * 1024 * 1024 || Number(state.videoPosX ?? 50) !== 50 || Number(state.videoPos ?? 50) !== 50 || Number(state.videoZoom || 100) !== 100) {
-      finalBlob = await trimVideoTo10s(v, srcBlob, trimStartSec, state.videoPos ?? 50, state.videoZoom || 100, state.videoPosX ?? 50);
+    if (needLoop || isPortrait || rawVideoDuration > 10.5 || srcBlob.size > 9.5 * 1024 * 1024 || Number(state.videoPosX ?? 50) !== 50 || Number(state.videoPos ?? 50) !== 50 || Number(state.videoZoom || 100) !== 100) {
+      finalBlob = await trimVideoTo10s(v, srcBlob, trimStartSec, state.videoPos ?? 50, state.videoZoom || 100, state.videoPosX ?? 50, needLoop);
       state.videoPosX = 50;
       state.videoPos = 50;
       state.videoZoom = 100;
+      if (needLoop) rawVideoDuration = 10;
     }
     URL.revokeObjectURL(tmpUrl);
     localVideoBlob = finalBlob;
@@ -1815,9 +1855,9 @@ async function applyVideoTrim() {
     state.videoUrl = URL.createObjectURL(finalBlob);
     if (poster) state.photoUrl = poster;
     renderPreview();
-    setVidProgress(100, "已轉成橫式影片", 1000);
+    setVidProgress(100, needLoop ? "動動圖已完成（10秒連播）" : "已轉成橫式影片", 1000);
     closeVidTrimBar();
-    toast("已套用橫式 16:9 影片");
+    toast(needLoop ? "已製作成 10 秒連播動動圖" : "已套用橫式 16:9 影片");
   } catch (e) {
     setVidProgress(null);
     toast("已套用目前畫面位置");
@@ -1867,10 +1907,12 @@ function onVideoPick(e) {
     if (handled) return;
     handled = true;
     rawVideoDuration = isFinite(probe.duration) ? probe.duration : 0;
+    const isShortClip = rawVideoDuration > 0 && rawVideoDuration <= 5.5;
+    setVideoLoop(isShortClip);
     await grabPosterSafe();
     setVidProgress(100, "影片已更新", 900);
     openVidTrimBar();
-    toast(rawVideoDuration > 10.5 ? "影片已載入，可拉選要切的 10 秒與畫面位置" : "影片已更新，可拉選上下位置");
+    toast(isShortClip ? "已開啟「動動圖」：發送時自動連播 10 秒" : (rawVideoDuration > 10.5 ? "影片已載入，可拉選要切的 10 秒與畫面位置" : "影片已更新，可拉選上下位置"));
     setTimeout(() => { input.value = ""; }, 300);
   };
   probe.addEventListener("playing", grabPosterSafe, { once: true });
@@ -1933,8 +1975,9 @@ async function ensureVideoUploadable() {
   if (!localVideoBlob || !String(state.videoUrl || "").startsWith("blob:")) return true;
   const tooBig = localVideoBlob.size > 9.5 * 1024 * 1024;
   const tooLong = rawVideoDuration > 10.5;
-  if (!tooBig && !tooLong) return true;
-  showBusy("影片過大，自動壓縮至 10 秒內...", 25, "約需 10～15 秒，請勿離開畫面");
+  const needLoop = !!(state.videoLoop && rawVideoDuration > 0 && rawVideoDuration < 9.5);
+  if (!tooBig && !tooLong && !needLoop) return true;
+  showBusy(needLoop ? "製作動動圖（自動連播 10 秒）..." : "影片過大，自動壓縮至 10 秒內...", 25, "約需 10～15 秒，請勿離開畫面");
   rawPickedVideoBlob = rawPickedVideoBlob || localVideoBlob;
   await applyVideoTrim();
   return !!(localVideoBlob && localVideoBlob.size <= 10 * 1024 * 1024);
@@ -2370,6 +2413,7 @@ function toast(msg) {
 syncCssVars();
 renderSocialControls();
 renderPreview();
+syncVideoLoopUi();
 restoreLocalMedia();
 loadPreviewParamIfAny();
 initAdminBar();
