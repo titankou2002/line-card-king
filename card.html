@@ -1569,8 +1569,10 @@ function processLogoCanvas(src, opts) {
     const out = document.createElement("canvas");
     out.width = tw; out.height = th;
     out.getContext("2d").drawImage(c, minX, minY, maxX - minX + 1, maxY - minY + 1, pad, pad, maxX - minX + 1, maxY - minY + 1);
+    state.logoAspect = Math.round((tw / th) * 100) / 100;
     return out.toDataURL("image/png");
   }
+  state.logoAspect = Math.round((w / h) * 100) / 100;
   return c.toDataURL("image/png");
 }
 
